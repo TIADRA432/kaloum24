@@ -22,9 +22,16 @@ class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY", "change-moi-en-production-svp")
 
     # ---------- Base de données ----------
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
+    # Render (comme Heroku en son temps) fournit une URL postgres:// —
+    # SQLAlchemy 1.4+ exige postgresql:// et refuse l'ancien préfixe.
+    # Sans cette normalisation, la connexion échoue net au démarrage sur
+    # tout hébergeur qui suit encore cette convention historique.
+    _db_url = os.environ.get(
         "DATABASE_URL", f"sqlite:///{os.path.join(BASE_DIR, 'instance', 'kaloum24.db')}"
     )
+    if _db_url.startswith("postgres://"):
+        _db_url = _db_url.replace("postgres://", "postgresql://", 1)
+    SQLALCHEMY_DATABASE_URI = _db_url
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     PERMANENT_SESSION_LIFETIME = timedelta(days=14)
