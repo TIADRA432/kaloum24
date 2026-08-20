@@ -258,6 +258,37 @@ def create_app(config_class=Config):
         db.session.commit()
         print(f"Administrateur « {username} » créé.")
 
+    @app.cli.command("bootstrap-admin")
+    def bootstrap_admin():
+        """Crée un compte administrateur de façon NON interactive, à partir des
+        variables d'environnement ADMIN_USERNAME / ADMIN_EMAIL / ADMIN_PASSWORD.
+
+        Pensée pour tourner sans risque à chaque démarrage d'un service
+        hébergé (Render, etc.) : ne fait rien si les variables ne sont pas
+        toutes renseignées, et ne fait rien non plus si ce pseudo existe déjà
+        — idempotent, jamais de doublon ni d'écrasement d'un mot de passe
+        déjà en place.
+        """
+        username = os.environ.get("ADMIN_USERNAME", "").strip()
+        email = os.environ.get("ADMIN_EMAIL", "").strip().lower()
+        password = os.environ.get("ADMIN_PASSWORD", "")
+
+        if not (username and email and password):
+            print("bootstrap-admin : variables manquantes, rien à faire.")
+            return
+        if len(password) < 8:
+            print("bootstrap-admin : ADMIN_PASSWORD trop court, rien à faire.")
+            return
+        if User.query.filter((User.username == username) | (User.email == email)).first():
+            print(f"bootstrap-admin : « {username} » existe déjà, rien à faire.")
+            return
+
+        user = User(username=username, email=email, role="admin")
+        user.set_password(password)
+        db.session.add(user)
+        db.session.commit()
+        print(f"bootstrap-admin : administrateur « {username} » créé.")
+
     @app.cli.command("check-prod")
     def check_prod():
         """Audite la configuration avant une mise en production."""
