@@ -1,0 +1,39 @@
+# Service systemd pour Kaloum24.
+#
+# Installation :
+#   sudo cp deploiement/kaloum24.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now kaloum24
+#   sudo systemctl status kaloum24
+#
+# Journaux : journalctl -u kaloum24 -f
+
+[Unit]
+Description=Kaloum24 — portail d'actualités
+After=network.target
+
+[Service]
+Type=notify
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/kaloum24
+Environment="PATH=/var/www/kaloum24/venv/bin"
+EnvironmentFile=/var/www/kaloum24/.env
+
+ExecStart=/var/www/kaloum24/venv/bin/gunicorn -c deploiement/gunicorn.conf.py "app:app"
+ExecReload=/bin/kill -s HUP $MAINPID
+
+# Redémarrage automatique en cas de plantage.
+Restart=always
+RestartSec=5
+
+# Cloisonnement : le service ne peut écrire que dans les dossiers listés.
+# Limite les dégâts si l'application était compromise.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/var/www/kaloum24/instance /var/www/kaloum24/static/uploads /var/www/kaloum24/logs
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,176 @@
+{% import "_icons.html" as icons %}<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+{# Applique le thème avant le rendu pour éviter un flash de couleur au chargement. #}
+<script>
+(function () {
+  try {
+    var t = localStorage.getItem("theme");
+    if (!t) {
+      t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {
+    document.documentElement.setAttribute("data-theme", "light");
+  }
+})();
+</script>
+
+<title>{% block title %}{{ site_name }} — {{ site_tagline }}{% endblock %}</title>
+<meta name="description" content="{% block meta_description %}{{ config.SITE_DESCRIPTION }}{% endblock %}">
+<link rel="canonical" href="{% block canonical %}{{ site_url }}{{ request.path }}{% endblock %}">
+
+{# --- Open Graph : aperçu correct lors des partages WhatsApp et Facebook --- #}
+<meta property="og:site_name" content="{{ site_name }}">
+<meta property="og:locale" content="{{ config.SITE_LOCALE }}">
+<meta property="og:type" content="{% block og_type %}website{% endblock %}">
+<meta property="og:title" content="{% block og_title %}{{ site_name }} — {{ site_tagline }}{% endblock %}">
+<meta property="og:description" content="{% block og_description %}{{ config.SITE_DESCRIPTION }}{% endblock %}">
+<meta property="og:url" content="{{ site_url }}{{ request.path }}">
+{% block og_image %}{% endblock %}
+<meta name="twitter:card" content="summary_large_image">
+{% block twitter_extra %}{% endblock %}
+
+<link rel="alternate" type="application/rss+xml" title="{{ site_name }} — flux RSS" href="{{ url_for('main.rss') }}">
+{# Polices et scripts servis depuis ce serveur : aucune requête vers un CDN
+   externe. Une connexion de moins à ouvrir, et le site reste complet même en
+   cas de coupure du CDN — décisif sur connexion lente. #}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/fonts.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+{% block head_extra %}{% endblock %}
+</head>
+<body>
+
+<a class="skip-link" href="#contenu">Aller au contenu</a>
+
+{% if ticker_articles %}
+<div class="ticker" role="region" aria-label="Dernières actualités">
+  <div class="ticker__track">
+    {% for a in ticker_articles %}
+      <a class="ticker__item" href="{{ url_for('main.article_detail', slug=a.slug) }}">{{ a.category.name }} — {{ a.title }}</a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<header class="masthead">
+  <div class="masthead__inner">
+    <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="primaryNav" aria-label="Ouvrir le menu">
+      <span></span><span></span><span></span>
+    </button>
+
+    <a class="wordmark" href="{{ url_for('main.home') }}">{{ site_name }}<span class="wordmark__dot">.</span></a>
+
+    <div class="masthead__meta">
+      <span class="masthead__date">{{ today_label }}</span>
+      {% if config.WEATHER_ENABLED %}<span class="weather" id="weather" hidden></span>{% endif %}
+    </div>
+
+    <form class="search-form" action="{{ url_for('main.search') }}" method="get" role="search">
+      <input type="search" name="q" placeholder="Rechercher…" value="{{ request.args.get('q', '') }}" aria-label="Rechercher un article">
+      <button type="submit" aria-label="Lancer la recherche">→</button>
+    </form>
+
+    <button class="icon-btn" id="themeToggle" aria-label="Passer en mode sombre" title="Mode sombre / clair">
+      <span class="theme-toggle__moon">{{ icons.social('moon') }}</span>
+      <span class="theme-toggle__sun">{{ icons.social('sun') }}</span>
+    </button>
+
+    <div class="masthead__auth">
+      {% if current_user.is_authenticated %}
+        {% if current_user.is_moderator %}
+          <a href="{{ url_for('admin.dashboard') }}" class="auth-link">Admin{% if pending_comments_count %}<span class="badge-count">{{ pending_comments_count }}</span>{% endif %}</a>
+        {% endif %}
+        <a href="{{ url_for('auth.profile') }}" class="auth-link">{{ current_user.username }}</a>
+        <a href="{{ url_for('auth.logout') }}" class="auth-link auth-link--muted">Déconnexion</a>
+      {% else %}
+        <a href="{{ url_for('auth.login') }}" class="auth-link">Connexion</a>
+        <a href="{{ url_for('auth.register') }}" class="auth-link auth-link--cta">Créer un compte</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <nav class="primary-nav" id="primaryNav" aria-label="Rubriques">
+    {% for cat in nav_categories %}
+      <a href="{{ url_for('main.category', slug=cat.slug) }}"
+         class="primary-nav__item {{ 'is-active' if request.view_args and request.view_args.get('slug') == cat.slug }}">{{ cat.name }}</a>
+    {% endfor %}
+    {% if not current_user.is_authenticated or not current_user.is_subscriber %}
+      <a href="{{ url_for('payments.subscribe') }}" class="primary-nav__item primary-nav__item--premium">Abonnement</a>
+    {% endif %}
+    {% if social_links %}
+    <div class="primary-nav__socials">
+      {% for nom, lien, icone in social_links %}
+        <a href="{{ lien }}" target="_blank" rel="noopener" aria-label="{{ nom }}" title="{{ nom }}">{{ icons.social(icone) }}</a>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </nav>
+</header>
+
+<main id="contenu">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-stack">
+        {% for category, message in messages %}
+          <div class="flash flash--{{ category }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+  <div class="site-footer__grid">
+    <div class="footer-col">
+      <p class="wordmark wordmark--footer">{{ site_name }}<span class="wordmark__dot">.</span></p>
+      <p class="footer-tagline">{{ site_tagline }}</p>
+      {% if social_links %}
+      <div class="footer-socials">
+        {% for nom, lien, icone in social_links %}
+          <a href="{{ lien }}" target="_blank" rel="noopener" aria-label="{{ nom }}">{{ icons.social(icone) }}</a>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    <div class="footer-col">
+      <h3>Rubriques</h3>
+      <ul>
+        {% for cat in nav_categories %}
+          <li><a href="{{ url_for('main.category', slug=cat.slug) }}">{{ cat.name }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h3>Le journal</h3>
+      <ul>
+        <li><a href="{{ url_for('payments.subscribe') }}">Abonnement</a></li>
+        <li><a href="{{ url_for('auth.register') }}">Créer un compte</a></li>
+        <li><a href="{{ url_for('main.search') }}">Recherche</a></li>
+        <li><a href="{{ url_for('main.rss') }}">Flux RSS</a></li>
+      </ul>
+    </div>
+    <div class="footer-col footer-col--newsletter">
+      <h3>Lettre d'info</h3>
+      <p>Le résumé du jour, chaque matin.</p>
+      <form class="newsletter-form" onsubmit="event.preventDefault(); this.querySelector('button').textContent='Inscrit';">
+        <input type="email" placeholder="ton@email.com" required aria-label="Adresse e-mail pour la lettre d'info">
+        <button type="submit">S'inscrire</button>
+      </form>
+    </div>
+  </div>
+  <div class="site-footer__bottom">
+    <span>© {{ current_year }} {{ site_name }}</span>
+    <span><a href="{{ url_for('main.rss') }}">RSS</a> · <a href="{{ url_for('main.sitemap') }}">Plan du site</a></span>
+  </div>
+</footer>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

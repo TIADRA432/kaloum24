@@ -1,0 +1,39 @@
+{% extends "admin/_base.html" %}
+{% block admin_title %}Rubriques{% endblock %}
+{% block admin_content %}
+
+<div class="section-head"><h2>{{ categories|length }} rubrique(s)</h2></div>
+
+<form method="post" style="display:flex; gap:0.6rem; align-items:flex-end; margin-bottom:2rem; max-width:480px;">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="field" style="flex:1; margin:0;">
+    <label for="name">Nouvelle rubrique</label>
+    <input type="text" id="name" name="name" required minlength="2" placeholder="Ex. : Environnement">
+  </div>
+  <button type="submit" class="btn">Ajouter</button>
+</form>
+
+<div class="table-scroll">
+<table class="admin-table">
+  <thead><tr><th>Nom</th><th>Adresse</th><th>Articles</th><th>Actions</th></tr></thead>
+  <tbody>
+    {% for c in categories %}
+    <tr>
+      <td>{{ c.name }}</td>
+      <td><code>/categorie/{{ c.slug }}</code></td>
+      <td>{{ c.articles|length }}</td>
+      <td class="row-actions">
+        <a class="link-btn" href="{{ url_for('main.category', slug=c.slug) }}">Voir</a>
+        <form method="post" action="{{ url_for('admin.delete_category', category_id=c.id) }}"
+              onsubmit="return confirm('Supprimer cette rubrique ?');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="link-btn link-btn--danger">Supprimer</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+
+{% endblock %}

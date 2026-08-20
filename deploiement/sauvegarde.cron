@@ -1,0 +1,10 @@
+# Sauvegarde quotidienne de Kaloum24, à 3 h du matin.
+# Installation : sudo cp deploiement/sauvegarde.cron /etc/cron.d/kaloum24
+# (le fichier doit se terminer par une ligne vide)
+
+0 3 * * * www-data cd /var/www/kaloum24 && venv/bin/python scripts/sauvegarde.py >> /var/www/kaloum24/logs/sauvegarde.log 2>&1
+
+# IMPORTANT : ces archives restent sur le même serveur que le site.
+# Ajoute une copie vers un stockage externe, par exemple avec rclone :
+# 30 3 * * * www-data rclone copy /var/www/kaloum24/sauvegardes distant:kaloum24-sauvegardes
+

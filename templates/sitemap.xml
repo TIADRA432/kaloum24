@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>{{ site_url }}{{ url_for('main.home') }}</loc>
+    <changefreq>hourly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  {%- for c in categories %}
+  <url>
+    <loc>{{ site_url }}{{ url_for('main.category', slug=c.slug) }}</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  {%- endfor %}
+  {%- for a in articles %}
+  <url>
+    <loc>{{ site_url }}{{ url_for('main.article_detail', slug=a.slug) }}</loc>
+    <lastmod>{{ a.updated_at.strftime('%Y-%m-%d') }}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  {%- endfor %}
+</urlset>

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Recherche « {{ query }} » — {{ site_name }}{% endblock %}
+{% block content %}
+
+<span class="eyebrow">Recherche</span>
+<h1 class="page-title">
+  {% if query %}Résultats pour « {{ query }} »{% else %}Rechercher un article{% endif %}
+</h1>
+
+{% if query and not results %}
+<p class="empty-state">Aucun article ne correspond à « {{ query }} ».</p>
+{% elif results %}
+<div class="article-grid">
+  {% for a in results %}
+  <a class="card" href="{{ url_for('main.article_detail', slug=a.slug) }}">
+    {% if a.image_url %}<div class="card__image"><img src="{{ a.image_url }}" alt=""></div>{% endif %}
+    <span class="eyebrow">{{ a.category.name }}</span>
+    <h3 class="card__title">{{ a.title }}{% if a.is_premium %} <span class="badge-premium">Abonnés</span>{% endif %}{% if a.source == "agregateur" %} <span class="badge-agrege">Agrégé</span>{% endif %}{% if a.source == "reseaux_sociaux" %} <span class="badge-agrege">Réseaux sociaux</span>{% endif %}</h3>
+    <p class="card__summary">{{ a.summary }}</p>
+    <span class="card__meta">{{ a.created_at|time_ago }}</span>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<p class="empty-state">Utilise la barre de recherche en haut de page.</p>
+{% endif %}
+
+{% endblock %}

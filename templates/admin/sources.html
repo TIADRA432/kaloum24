@@ -1,0 +1,113 @@
+{% extends "admin/_base.html" %}
+{% block admin_title %}Sources d'agrégation{% endblock %}
+{% block admin_content %}
+
+<p style="max-width:64ch; color:var(--text-muted); margin-top:0;">
+  Une source surveillée par flux RSS/Atom. Kaloum24 n'importe jamais que le
+  titre, un extrait et le lien vers l'article original (Mode 1) — jamais le
+  contenu intégral. Voir <code>PLAN_AGREGATEUR.md</code> à la racine du projet.
+</p>
+
+<div class="section-head">
+  <h2>{{ sources|length }} source(s)</h2>
+  <a href="{{ url_for('admin.new_source') }}">+ Nouvelle source</a>
+</div>
+
+<div class="table-scroll">
+<table class="admin-table">
+  <thead>
+    <tr>
+      <th>Nom</th><th>Pays</th><th>Confiance</th><th>Fréquence</th>
+      <th>Conformité</th><th>Contenu</th><th>Statut</th><th>Collectés</th><th>Dernière collecte</th><th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for s in sources %}
+    <tr>
+      <td>
+        {{ s.name }}
+        {% if s.last_error %}
+        <br><span class="pill pill--signale" title="{{ s.last_error }}">Erreur</span>
+        {% endif %}
+      </td>
+      <td>{{ s.country or '—' }}</td>
+      <td>{{ s.trust_level }}</td>
+      <td>{{ s.fetch_frequency_minutes }} min</td>
+      <td>
+        {% if s.compliance_checked %}
+          <span class="pill pill--approuve">Vérifiée</span>
+        {% else %}
+          <span class="pill pill--en_attente">À vérifier</span>
+        {% endif %}
+      </td>
+      <td>
+        {% if s.content_mode == "integral" %}
+          <span class="pill pill--signale" title="{{ s.content_license_justification }}">Intégral</span>
+        {% else %}
+          <span class="pill pill--brouillon">Extrait</span>
+        {% endif %}
+      </td>
+      <td>
+        {% if s.is_active %}
+          <span class="pill pill--approuve">Active</span>
+        {% else %}
+          <span class="pill pill--brouillon">Inactive</span>
+        {% endif %}
+      </td>
+      <td>{{ compteurs.get(s.id, 0) }}</td>
+      <td>{{ s.last_fetched_at|fr_datetime if s.last_fetched_at else 'jamais' }}</td>
+      <td class="row-actions">
+        <a class="link-btn" href="{{ url_for('admin.edit_source', source_id=s.id) }}">Modifier</a>
+        <button type="button" class="link-btn" data-tester-source="{{ s.id }}"
+                data-url="{{ url_for('admin.test_source', source_id=s.id) }}">Tester</button>
+        <form method="post" action="{{ url_for('admin.delete_source', source_id=s.id) }}"
+              onsubmit="return confirm('Supprimer cette source ?');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="link-btn link-btn--danger">Supprimer</button>
+        </form>
+      </td>
+    </tr>
+    <tr class="apercu-source" id="apercu-{{ s.id }}" hidden>
+      <td colspan="10" style="background:var(--paper-raised);"></td>
+    </tr>
+    {% else %}
+    <tr><td colspan="10" class="empty-state">Aucune source. <a href="{{ url_for('admin.new_source') }}">Ajouter la première</a>.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll("[data-tester-source]").forEach(function (bouton) {
+  bouton.addEventListener("click", function () {
+    var id = bouton.dataset.testerSource;
+    var ligne = document.getElementById("apercu-" + id);
+    var cellule = ligne.querySelector("td");
+    ligne.hidden = false;
+    cellule.textContent = "Lecture du flux…";
+
+    fetch(bouton.dataset.url, {
+      method: "POST",
+      headers: {"X-CSRFToken": "{{ csrf_token() }}"},
+    })
+      .then(function (r) { return r.json().then(function (j) { return {ok: r.ok, j: j}; }); })
+      .then(function (res) {
+        if (!res.ok) {
+          cellule.textContent = "Erreur : " + res.j.erreur;
+          return;
+        }
+        var html = "<strong>" + res.j.nombre_items + " item(s) trouvé(s)</strong><ul style='margin:0.5rem 0 0 1.2rem;'>";
+        res.j.apercu.forEach(function (item) {
+          html += "<li>" + item.title + "</li>";
+        });
+        html += "</ul>";
+        cellule.innerHTML = html;
+      })
+      .catch(function () { cellule.textContent = "Erreur réseau."; });
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Créer un compte — {{ site_name }}{% endblock %}
+{% block content %}
+<div class="form-box">
+  <span class="eyebrow">Compte</span>
+  <h1>Créer un compte</h1>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="field">
+      <label for="username">Pseudo</label>
+      <input type="text" id="username" name="username" required minlength="3" value="{{ username or '' }}" autofocus>
+    </div>
+    <div class="field">
+      <label for="email">E-mail</label>
+      <input type="email" id="email" name="email" required value="{{ email or '' }}">
+    </div>
+    <div class="field">
+      <label for="password">Mot de passe</label>
+      <input type="password" id="password" name="password" required minlength="8">
+      <p class="field-hint">8 caractères minimum.</p>
+    </div>
+    <div class="field">
+      <label for="password_confirm">Confirmer le mot de passe</label>
+      <input type="password" id="password_confirm" name="password_confirm" required minlength="8">
+    </div>
+    <button type="submit" class="btn btn--block">Créer mon compte</button>
+  </form>
+  <p class="form-foot">Déjà inscrit ? <a href="{{ url_for('auth.login') }}">Connecte-toi</a>.</p>
+</div>
+{% endblock %}

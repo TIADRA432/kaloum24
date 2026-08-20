@@ -1,0 +1,92 @@
+{% extends "admin/_base.html" %}
+{% block admin_title %}Tableau de bord{% endblock %}
+{% block admin_content %}
+
+<div class="stat-grid">
+  <div class="stat-card"><div class="stat-card__value">{{ stats.articles_publies }}</div><div class="stat-card__label">Articles publiés</div></div>
+  <div class="stat-card"><div class="stat-card__value">{{ stats.brouillons }}</div><div class="stat-card__label">Brouillons</div></div>
+  <div class="stat-card {{ 'stat-card--alert' if stats.commentaires_en_attente }}">
+    <div class="stat-card__value">{{ stats.commentaires_en_attente }}</div><div class="stat-card__label">À modérer</div></div>
+  <div class="stat-card {{ 'stat-card--alert' if stats.commentaires_signales }}">
+    <div class="stat-card__value">{{ stats.commentaires_signales }}</div><div class="stat-card__label">Signalés</div></div>
+  <div class="stat-card"><div class="stat-card__value">{{ stats.lectures }}</div><div class="stat-card__label">Lectures</div></div>
+  <div class="stat-card"><div class="stat-card__value">{{ stats.utilisateurs }}</div><div class="stat-card__label">Utilisateurs</div></div>
+  <div class="stat-card"><div class="stat-card__value">{{ stats.abonnes }}</div><div class="stat-card__label">Abonnés</div></div>
+  <div class="stat-card {{ 'stat-card--alert' if stats.whatsapp_en_attente }}">
+    <div class="stat-card__value">{{ stats.whatsapp_en_attente }}</div><div class="stat-card__label">Brouillons WhatsApp</div></div>
+  <div class="stat-card"><div class="stat-card__value">{{ stats.correspondants_actifs }}</div><div class="stat-card__label">Correspondants actifs</div></div>
+</div>
+
+<div class="section-head"><h2>Supervision de l'agrégation</h2></div>
+<div class="stat-grid">
+  <div class="stat-card"><div class="stat-card__value">{{ stats.sources_actives }}</div><div class="stat-card__label">Sources actives</div></div>
+  <div class="stat-card {{ 'stat-card--alert' if stats.sources_en_erreur }}">
+    <div class="stat-card__value">{{ stats.sources_en_erreur }}</div><div class="stat-card__label">Sources en erreur</div></div>
+  <div class="stat-card"><div class="stat-card__value">{{ stats.collectes_24h }}</div><div class="stat-card__label">Collectés (24 h)</div></div>
+  <div class="stat-card"><div class="stat-card__value">{{ stats.collectes_7j }}</div><div class="stat-card__label">Collectés (7 j)</div></div>
+  <div class="stat-card {{ 'stat-card--alert' if stats.a_traiter }}">
+    <div class="stat-card__value">{{ stats.a_traiter }}</div><div class="stat-card__label">À traiter</div></div>
+  <div class="stat-card"><div class="stat-card__value">{{ stats.acceptes }}</div><div class="stat-card__label">Acceptés</div></div>
+  <div class="stat-card"><div class="stat-card__value">{{ stats.doublons_detectes }}</div><div class="stat-card__label">Doublons détectés</div></div>
+  <div class="stat-card"><div class="stat-card__value">{{ stats.articles_ignores }}</div><div class="stat-card__label">Articles ignorés</div></div>
+</div>
+
+{% if sources_en_erreur %}
+<div class="table-scroll" style="margin-bottom:2rem;">
+<table class="admin-table">
+  <thead><tr><th>Source</th><th>Dernière erreur</th><th>Dernière tentative</th></tr></thead>
+  <tbody>
+    {% for s in sources_en_erreur %}
+    <tr>
+      <td><a href="{{ url_for('admin.edit_source', source_id=s.id) }}">{{ s.name }}</a></td>
+      <td>{{ s.last_error }}</td>
+      <td>{{ s.last_fetched_at|fr_datetime if s.last_fetched_at else '—' }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+
+<div class="section-head">
+  <h2>Derniers articles</h2>
+  <a href="{{ url_for('admin.new_article') }}">+ Nouvel article</a>
+</div>
+
+<div class="table-scroll">
+<table class="admin-table">
+  <thead><tr><th>Titre</th><th>Rubrique</th><th>Statut</th><th>Date</th></tr></thead>
+  <tbody>
+    {% for a in derniers_articles %}
+    <tr>
+      <td><a href="{{ url_for('admin.edit_article', article_id=a.id) }}">{{ a.title }}</a></td>
+      <td>{{ a.category.name }}</td>
+      <td><span class="pill pill--{{ a.status }}">{{ {'publie':'Publié','brouillon':'Brouillon'}.get(a.status, a.status) }}</span></td>
+      <td>{{ a.created_at|fr_date }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="4" class="empty-state">Aucun article. <a href="{{ url_for('admin.new_article') }}">Créer le premier</a>.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+
+{% if populaires %}
+<div class="section-head" style="margin-top:2.5rem;"><h2>Articles les plus lus</h2></div>
+<div class="table-scroll">
+<table class="admin-table">
+  <thead><tr><th>Titre</th><th>Lectures</th><th>Commentaires</th></tr></thead>
+  <tbody>
+    {% for a in populaires %}
+    <tr>
+      <td><a href="{{ url_for('main.article_detail', slug=a.slug) }}">{{ a.title }}</a></td>
+      <td>{{ a.views }}</td>
+      <td>{{ a.comments|length }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+
+{% endblock %}

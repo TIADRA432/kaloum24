@@ -1,0 +1,93 @@
+{% extends "admin/_base.html" %}
+{% block admin_title %}Correspondants WhatsApp{% endblock %}
+{% block admin_content %}
+
+<p style="max-width:60ch; color:var(--text-muted); margin-top:0;">
+  Un correspondant enregistré peut envoyer du texte et une photo par WhatsApp ;
+  ça arrive ici en brouillon, jamais publié automatiquement. Un numéro non
+  enregistré ne peut rien soumettre.
+</p>
+
+{% if not config.WHATSAPP_ENABLED %}
+<div class="flash flash--info" style="max-width:60ch;">
+  <strong>Réception désactivée.</strong> Mets <code>WHATSAPP_ENABLED=1</code> dans
+  <code>.env</code> une fois les identifiants Meta configurés ci-dessous. Les
+  correspondants peuvent déjà être enregistrés en attendant.
+</div>
+{% elif not config.WHATSAPP_ACCESS_TOKEN or not config.WHATSAPP_PHONE_NUMBER_ID %}
+<div class="flash flash--error" style="max-width:60ch;">
+  <strong>Configuration incomplète.</strong> <code>WHATSAPP_ACCESS_TOKEN</code> et
+  <code>WHATSAPP_PHONE_NUMBER_ID</code> doivent être renseignés dans
+  <code>.env</code> — voir le README, section Publication par WhatsApp.
+</div>
+{% else %}
+<div class="flash flash--success" style="max-width:60ch;">
+  Configuration active. URL du webhook à saisir dans le dashboard Meta :<br>
+  <code>{{ site_url }}{{ url_for('whatsapp.incoming') }}</code>
+</div>
+{% endif %}
+
+<form method="post" style="display:flex; gap:0.6rem; align-items:flex-end; margin-bottom:2rem; max-width:560px; flex-wrap:wrap;">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="field" style="flex:1; min-width:180px; margin:0;">
+    <label for="name">Nom</label>
+    <input type="text" id="name" name="name" required minlength="2" placeholder="Ex. : Mariama Diallo">
+  </div>
+  <div class="field" style="flex:1; min-width:180px; margin:0;">
+    <label for="phone">Numéro WhatsApp</label>
+    <input type="text" id="phone" name="phone" required placeholder="224620000000">
+  </div>
+  <button type="submit" class="btn">Ajouter</button>
+</form>
+
+<div class="table-scroll">
+<table class="admin-table">
+  <thead><tr><th>Nom</th><th>Numéro</th><th>Statut</th><th>Articles envoyés</th><th>Depuis</th><th>Actions</th></tr></thead>
+  <tbody>
+    {% for c in correspondents %}
+    <tr>
+      <td>{{ c.name }}</td>
+      <td><code>{{ c.phone_number }}</code></td>
+      <td>
+        {% if c.is_active %}
+          <span class="pill pill--approuve">Actif</span>
+        {% else %}
+          <span class="pill pill--brouillon">Inactif</span>
+        {% endif %}
+      </td>
+      <td>{{ c.user.articles|length }}</td>
+      <td>{{ c.created_at|fr_date }}</td>
+      <td class="row-actions">
+        <form method="post" action="{{ url_for('admin.toggle_correspondent', correspondent_id=c.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="link-btn">{{ 'Désactiver' if c.is_active else 'Activer' }}</button>
+        </form>
+        <form method="post" action="{{ url_for('admin.delete_correspondent', correspondent_id=c.id) }}"
+              onsubmit="return confirm('Supprimer ce correspondant ? Ses articles déjà en ligne resteront publiés.');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="link-btn link-btn--danger">Supprimer</button>
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" class="empty-state">Aucun correspondant enregistré.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<div class="section-head" style="margin-top:2.5rem;"><h2>Comment ça marche, côté correspondant</h2></div>
+<div style="max-width:60ch; font-size:0.92rem; color:var(--text-muted); line-height:1.7;">
+  <p>Depuis le numéro WhatsApp enregistré ci-dessus :</p>
+  <ol style="margin-left:1.2rem;">
+    <li>Il envoie son texte — la première ligne devient le titre de l'article.</li>
+    <li>Il envoie une photo si besoin (facultatif).</li>
+    <li>Il écrit <strong>PUBLIER</strong> pour transmettre à la rédaction.</li>
+  </ol>
+  <p><strong>ANNULER</strong> efface le brouillon en cours, <strong>STATUT</strong> en rappelle
+  l'avancement, <strong>AIDE</strong> renvoie ces instructions. L'article arrive toujours en
+  <strong>brouillon</strong> dans <a href="{{ url_for('admin.articles', statut='brouillon') }}">Articles</a> —
+  à relire et publier normalement.</p>
+</div>
+
+{% endblock %}

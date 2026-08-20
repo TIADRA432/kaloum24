@@ -1,0 +1,65 @@
+{% extends "admin/_base.html" %}
+{% block admin_title %}Commentaires{% endblock %}
+{% block admin_content %}
+
+<div class="section-head">
+  <h2>Modération</h2>
+  {% if filtre == 'en_attente' and comments %}
+  <form method="post" action="{{ url_for('admin.approve_all') }}"
+        onsubmit="return confirm('Approuver tous les commentaires en attente ?');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="link-btn">Tout approuver</button>
+  </form>
+  {% endif %}
+</div>
+
+<div class="row-actions" style="margin-bottom:1.25rem;">
+  <a class="btn btn--small {{ 'btn--ghost' if filtre != 'en_attente' }}" href="{{ url_for('admin.comments', statut='en_attente') }}">En attente</a>
+  <a class="btn btn--small {{ 'btn--ghost' if filtre != 'signales' }}" href="{{ url_for('admin.comments', statut='signales') }}">Signalés</a>
+  <a class="btn btn--small {{ 'btn--ghost' if filtre != 'approuve' }}" href="{{ url_for('admin.comments', statut='approuve') }}">Approuvés</a>
+  <a class="btn btn--small {{ 'btn--ghost' if filtre != 'rejete' }}" href="{{ url_for('admin.comments', statut='rejete') }}">Rejetés</a>
+</div>
+
+<div class="table-scroll">
+<table class="admin-table">
+  <thead><tr><th>Auteur</th><th>Commentaire</th><th>Article</th><th>Statut</th><th>Actions</th></tr></thead>
+  <tbody>
+    {% for c in comments %}
+    <tr>
+      <td>{{ c.user.username }}{% if c.parent_id %}<br><small>(réponse)</small>{% endif %}</td>
+      <td style="max-width:320px;">{{ c.content }}</td>
+      <td><a href="{{ url_for('main.article_detail', slug=c.article.slug) }}">{{ c.article.title|truncate(50) }}</a></td>
+      <td>
+        <span class="pill pill--{{ c.status }}">{{ {'en_attente':'En attente','approuve':'Approuvé','rejete':'Rejeté'}.get(c.status, c.status) }}</span>
+        {% if c.reported %} <span class="pill pill--signale">Signalé</span>{% endif %}
+      </td>
+      <td class="row-actions">
+        {% if c.status != 'approuve' %}
+        <form method="post" action="{{ url_for('admin.moderate_comment', comment_id=c.id, statut=filtre) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="status" value="approuve">
+          <button type="submit" class="link-btn">Approuver</button>
+        </form>
+        {% endif %}
+        {% if c.status != 'rejete' %}
+        <form method="post" action="{{ url_for('admin.moderate_comment', comment_id=c.id, statut=filtre) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="status" value="rejete">
+          <button type="submit" class="link-btn">Rejeter</button>
+        </form>
+        {% endif %}
+        <form method="post" action="{{ url_for('admin.delete_comment', comment_id=c.id, statut=filtre) }}"
+              onsubmit="return confirm('Supprimer ce commentaire ?');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="link-btn link-btn--danger">Supprimer</button>
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5" class="empty-state">Aucun commentaire dans cette catégorie.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+
+{% endblock %}

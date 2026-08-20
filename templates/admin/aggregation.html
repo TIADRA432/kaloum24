@@ -1,0 +1,114 @@
+{% extends "admin/_base.html" %}
+{% block admin_title %}Agrégation{% endblock %}
+{% block admin_content %}
+
+<p style="max-width:64ch; color:var(--text-muted); margin-top:0;">
+  Les articles ci-dessous viennent des sources surveillées, triés par score
+  décroissant. <strong>Accepter</strong> crée un brouillon Kaloum24 — jamais
+  publié directement — pré-rempli avec l'extrait et l'attribution à la
+  source, prêt à être complété avant publication.
+</p>
+
+{% if topic_filtre %}
+<div class="flash flash--info" style="max-width:64ch;">
+  Filtré sur le sujet « {{ topic_filtre.representative_title }} »
+  ({{ topic_filtre.sources_count }} source(s)).
+  <a href="{{ url_for('admin.aggregation_queue', statut=statut) }}">Retirer le filtre</a>
+</div>
+{% endif %}
+
+<div class="row-actions" style="margin-bottom:1.25rem;">
+  <a class="btn btn--small {{ 'btn--ghost' if statut != 'nouveau' }}"
+     href="{{ url_for('admin.aggregation_queue', statut='nouveau', topic_id=topic_id) }}">Nouveaux</a>
+  <a class="btn btn--small {{ 'btn--ghost' if statut != 'accepte' }}"
+     href="{{ url_for('admin.aggregation_queue', statut='accepte', topic_id=topic_id) }}">Acceptés</a>
+  <a class="btn btn--small {{ 'btn--ghost' if statut != 'rejete' }}"
+     href="{{ url_for('admin.aggregation_queue', statut='rejete', topic_id=topic_id) }}">Rejetés</a>
+  <a class="btn btn--small {{ 'btn--ghost' if statut != 'archive' }}"
+     href="{{ url_for('admin.aggregation_queue', statut='archive', topic_id=topic_id) }}">Archivés</a>
+</div>
+
+{% if sujets_actifs %}
+<div class="section-head"><h2>Sujets suivis par plusieurs sources</h2></div>
+<div class="row-actions" style="margin-bottom:1.5rem; flex-wrap:wrap;">
+  {% for s in sujets_actifs %}
+  <a class="btn btn--small {{ 'btn--ghost' if topic_id != s.id }}"
+     href="{{ url_for('admin.aggregation_queue', statut=statut, topic_id=s.id) }}">
+    {{ s.representative_title|truncate(40) }} ({{ s.sources_count }})
+  </a>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="section-head"><h2>{{ articles|length }} article(s)</h2></div>
+
+{% if articles %}
+<div class="table-scroll">
+<table class="admin-table">
+  <thead>
+    <tr>
+      <th>Titre</th><th>Source</th><th>Badge</th><th>Score</th><th>Sujet</th><th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for a in articles %}
+    <tr>
+      <td style="max-width:320px;">
+        <a href="{{ a.external_url }}" target="_blank" rel="noopener noreferrer">
+          {{ a.title|truncate(80) }}
+        </a>
+        {% if a.excerpt %}<br><small style="color:var(--text-muted);">{{ a.excerpt|truncate(100) }}</small>{% endif %}
+      </td>
+      <td>{{ a.source.name }}</td>
+      <td>
+        {% if a.badge == "rouge" %}<span class="badge-score badge-score--rouge">🔴 Très important</span>
+        {% elif a.badge == "orange" %}<span class="badge-score badge-score--orange">🟠 Important</span>
+        {% elif a.badge == "jaune" %}<span class="badge-score badge-score--jaune">🟡 À surveiller</span>
+        {% else %}<span class="badge-score badge-score--blanc">⚪ Faible priorité</span>
+        {% endif %}
+      </td>
+      <td><strong>{{ "%.0f"|format(a.score_total or 0) }}</strong></td>
+      <td>
+        {% if a.topic %}
+        <a href="{{ url_for('admin.aggregation_queue', statut=statut, topic_id=a.topic.id) }}">
+          {{ a.topic.sources_count }} source(s)
+        </a>
+        {% else %}—{% endif %}
+      </td>
+      <td class="row-actions">
+        {% if a.status != "accepte" %}
+        <form method="post" action="{{ url_for('admin.accept_collected', collected_id=a.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="link-btn">Accepter</button>
+        </form>
+        {% else %}
+        {% if a.published_article %}
+        <a class="link-btn" href="{{ url_for('admin.edit_article', article_id=a.published_article.id) }}">Voir le brouillon</a>
+        {% endif %}
+        {% endif %}
+        {% if a.status != "rejete" %}
+        <form method="post" action="{{ url_for('admin.moderate_collected', collected_id=a.id, statut=statut) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="status" value="rejete">
+          <button type="submit" class="link-btn link-btn--danger">Rejeter</button>
+        </form>
+        {% endif %}
+        {% if a.status != "archive" %}
+        <form method="post" action="{{ url_for('admin.moderate_collected', collected_id=a.id, statut=statut) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="status" value="archive">
+          <button type="submit" class="link-btn">Archiver</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p class="empty-state">Aucun article dans cette sélection. Active une source et lance
+  <code>flask collect-sources</code> pour en récupérer.</p>
+{% endif %}
+
+{% endblock %}

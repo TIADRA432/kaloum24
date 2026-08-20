@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Accès refusé — {{ site_name }}{% endblock %}
+{% block content %}
+<div class="empty-state">
+  <span class="eyebrow">Erreur 403</span>
+  <h1 class="page-title">Accès refusé</h1>
+  <p>Tu n'as pas les droits nécessaires pour voir cette page.</p>
+  <a class="btn" href="{{ url_for('main.home') }}">Retour à l'accueil</a>
+</div>
+{% endblock %}

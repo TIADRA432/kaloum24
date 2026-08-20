@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Fichier trop volumineux — {{ site_name }}{% endblock %}
+{% block content %}
+<div class="empty-state">
+  <span class="eyebrow">Erreur 413</span>
+  <h1 class="page-title">Fichier trop volumineux</h1>
+  <p>L'image dépasse la taille maximale autorisée (8 Mo). Compresse-la et réessaie.</p>
+  <a class="btn" href="{{ url_for('main.home') }}">Retour à l'accueil</a>
+</div>
+{% endblock %}

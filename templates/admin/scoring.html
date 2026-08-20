@@ -1,0 +1,149 @@
+{% extends "admin/_base.html" %}
+{% block admin_title %}Scoring{% endblock %}
+{% block admin_content %}
+
+<p style="max-width:64ch; color:var(--text-muted); margin-top:0;">
+  Ajuste les pondérations puis clique sur <strong>Aperçu</strong> pour voir leur
+  effet sur les 15 derniers articles collectés, sans rien enregistrer. Une fois
+  satisfait, clique sur <strong>Enregistrer</strong> — tous les articles récents
+  sont alors re-notés avec les nouvelles valeurs.
+</p>
+
+{% set v = form if form else config %}
+
+<form method="post" id="scoringForm">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <div class="scoring-weights">
+    <div class="field">
+      <label for="weight_importance">Importance</label>
+      <input type="number" step="0.05" min="0" max="1" id="weight_importance"
+             name="weight_importance" value="{{ v.weight_importance }}" class="poids">
+    </div>
+    <div class="field">
+      <label for="weight_freshness">Fraîcheur</label>
+      <input type="number" step="0.05" min="0" max="1" id="weight_freshness"
+             name="weight_freshness" value="{{ v.weight_freshness }}" class="poids">
+    </div>
+    <div class="field">
+      <label for="weight_popularity">Popularité</label>
+      <input type="number" step="0.05" min="0" max="1" id="weight_popularity"
+             name="weight_popularity" value="{{ v.weight_popularity }}" class="poids">
+    </div>
+    <div class="field">
+      <label for="weight_relevance">Pertinence</label>
+      <input type="number" step="0.05" min="0" max="1" id="weight_relevance"
+             name="weight_relevance" value="{{ v.weight_relevance }}" class="poids">
+    </div>
+    <div class="field">
+      <label for="weight_trust">Fiabilité source</label>
+      <input type="number" step="0.05" min="0" max="1" id="weight_trust"
+             name="weight_trust" value="{{ v.weight_trust }}" class="poids">
+    </div>
+  </div>
+  <p class="scoring-sum">Somme actuelle : <span id="sommeAffichee">—</span> (doit faire 1.00)</p>
+
+  <div class="section-head" style="margin-top:2rem;"><h2>Seuils des badges</h2></div>
+  <div class="scoring-weights">
+    <div class="field">
+      <label for="threshold_high">🔴 Très important à partir de</label>
+      <input type="number" step="1" min="0" max="100" id="threshold_high"
+             name="threshold_high" value="{{ v.threshold_high }}">
+    </div>
+    <div class="field">
+      <label for="threshold_medium">🟠 Important à partir de</label>
+      <input type="number" step="1" min="0" max="100" id="threshold_medium"
+             name="threshold_medium" value="{{ v.threshold_medium }}">
+    </div>
+    <div class="field">
+      <label for="threshold_low">🟡 À surveiller à partir de</label>
+      <input type="number" step="1" min="0" max="100" id="threshold_low"
+             name="threshold_low" value="{{ v.threshold_low }}">
+    </div>
+  </div>
+  <p class="field-hint" style="margin-top:-0.8rem;">En dessous du dernier seuil : ⚪ faible priorité.</p>
+
+  <div class="field" style="max-width:640px;">
+    <label for="importance_keywords">Mots-clés d'importance (séparés par des virgules)</label>
+    <textarea id="importance_keywords" name="importance_keywords" rows="2">{{ v.importance_keywords }}</textarea>
+    <p class="field-hint">Vocabulaire global qui signale un événement potentiellement majeur —
+      distinct des mots-clés propres à chaque source.</p>
+  </div>
+
+  <div class="field" style="max-width:320px;">
+    <label for="topic_similarity_threshold">Seuil de regroupement par sujet (0–100)</label>
+    <input type="number" step="1" min="0" max="100" id="topic_similarity_threshold"
+           name="topic_similarity_threshold" value="{{ v.topic_similarity_threshold }}">
+    <p class="field-hint">70 par défaut — voir PLAN_AGREGATEUR.md pour la limite connue de cette méthode.</p>
+  </div>
+
+  <button type="submit" name="action" value="apercu" class="btn btn--ghost">Aperçu</button>
+  <button type="submit" name="action" value="enregistrer" class="btn">Enregistrer</button>
+</form>
+
+<div class="section-head" style="margin-top:2.5rem;">
+  <h2>Aperçu sur les 15 derniers articles collectés</h2>
+</div>
+
+{% if apercus %}
+<div class="table-scroll">
+<table class="admin-table">
+  <thead>
+    <tr>
+      <th>Titre</th><th>Source</th><th>Badge</th><th>Total</th>
+      <th>Import.</th><th>Fraîch.</th><th>Popul.</th><th>Pertin.</th><th>Confiance</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for article, d in apercus %}
+    <tr>
+      <td style="max-width:280px;">{{ article.title|truncate(70) }}</td>
+      <td>{{ article.source.name }}</td>
+      <td>
+        {% set score = d.total %}
+        {% if score >= config_pour_apercu.threshold_high %}
+          <span class="badge-score badge-score--rouge">🔴 Très important</span>
+        {% elif score >= config_pour_apercu.threshold_medium %}
+          <span class="badge-score badge-score--orange">🟠 Important</span>
+        {% elif score >= config_pour_apercu.threshold_low %}
+          <span class="badge-score badge-score--jaune">🟡 À surveiller</span>
+        {% else %}
+          <span class="badge-score badge-score--blanc">⚪ Faible priorité</span>
+        {% endif %}
+      </td>
+      <td><strong>{{ "%.0f"|format(d.total) }}</strong></td>
+      <td>{{ "%.0f"|format(d.importance) }}</td>
+      <td>{{ "%.0f"|format(d.fraicheur) }}</td>
+      <td>{{ "%.0f"|format(d.popularite) }}</td>
+      <td>{{ "%.0f"|format(d.pertinence) }}</td>
+      <td>{{ "%.0f"|format(d.confiance) }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p class="empty-state">Aucun article collecté pour l'instant — active une source et lance
+  <code>flask collect-sources</code> pour voir l'aperçu ici.</p>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var champs = document.querySelectorAll(".poids");
+  var affichage = document.getElementById("sommeAffichee");
+
+  function recalculer() {
+    var somme = 0;
+    champs.forEach(function (c) { somme += parseFloat(c.value) || 0; });
+    affichage.textContent = somme.toFixed(2);
+    affichage.style.color = Math.abs(somme - 1) < 0.011 ? "var(--wire)" : "var(--signal)";
+  }
+
+  champs.forEach(function (c) { c.addEventListener("input", recalculer); });
+  recalculer();
+})();
+</script>
+{% endblock %}

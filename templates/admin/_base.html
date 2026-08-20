@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<span class="eyebrow">Espace rédaction</span>
+<h1 class="page-title">{% block admin_title %}Tableau de bord{% endblock %}</h1>
+
+<div class="admin-shell">
+  <nav class="admin-nav">
+    <a href="{{ url_for('admin.dashboard') }}" class="{{ 'is-active' if request.endpoint == 'admin.dashboard' }}">Tableau de bord</a>
+    <a href="{{ url_for('admin.articles') }}" class="{{ 'is-active' if request.endpoint in ['admin.articles','admin.new_article','admin.edit_article'] }}">Articles</a>
+    <a href="{{ url_for('admin.comments') }}" class="{{ 'is-active' if request.endpoint == 'admin.comments' }}">
+      Commentaires{% if pending_comments_count %} <span class="badge-count">{{ pending_comments_count }}</span>{% endif %}
+    </a>
+    {% if current_user.is_admin %}
+    <a href="{{ url_for('admin.categories') }}" class="{{ 'is-active' if request.endpoint == 'admin.categories' }}">Rubriques</a>
+    <a href="{{ url_for('admin.sources') }}" class="{{ 'is-active' if request.endpoint in ['admin.sources','admin.new_source','admin.edit_source'] }}">Sources</a>
+    <a href="{{ url_for('admin.scoring') }}" class="{{ 'is-active' if request.endpoint == 'admin.scoring' }}">Scoring</a>
+    <a href="{{ url_for('admin.aggregation_queue') }}" class="{{ 'is-active' if request.endpoint == 'admin.aggregation_queue' }}">
+      Agrégation{% if pending_collected_count %} <span class="badge-count">{{ pending_collected_count }}</span>{% endif %}
+    </a>
+    <a href="{{ url_for('admin.correspondents') }}" class="{{ 'is-active' if request.endpoint in ['admin.correspondents'] }}">Correspondants</a>
+    <a href="{{ url_for('admin.moderation_log') }}" class="{{ 'is-active' if request.endpoint == 'admin.moderation_log' }}">Journal</a>
+    <a href="{{ url_for('admin.users') }}" class="{{ 'is-active' if request.endpoint == 'admin.users' }}">Utilisateurs</a>
+    {% endif %}
+    <a href="{{ url_for('main.home') }}">← Retour au site</a>
+  </nav>
+
+  <div>{% block admin_content %}{% endblock %}</div>
+</div>
+{% endblock %}

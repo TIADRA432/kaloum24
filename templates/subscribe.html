@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Abonnement — {{ site_name }}{% endblock %}
+{% block content %}
+
+<span class="eyebrow eyebrow--wire">Édition abonnés</span>
+<h1 class="page-title">Un accès complet à {{ site_name }}</h1>
+
+<div class="content-layout">
+  <div>
+    <p style="max-width:60ch; font-size:1.05rem; color:var(--text-muted);">
+      L'abonnement débloque les enquêtes et analyses réservées, sans publicité,
+      et soutient directement la rédaction.
+    </p>
+    <ul style="display:grid; gap:0.6rem; margin:1.5rem 0; font-size:0.98rem;">
+      <li>✓ Tous les articles premium, en illimité</li>
+      <li>✓ Accès prioritaire aux enquêtes longues</li>
+      <li>✓ Résiliable à tout moment</li>
+    </ul>
+
+    {% if current_user.is_authenticated and current_user.is_subscriber %}
+      <p class="flash flash--success">Tu es déjà abonné — merci pour ton soutien.</p>
+    {% elif not stripe_ready %}
+      <p class="flash flash--info">
+        Les paiements ne sont pas encore activés sur ce site.
+        Un administrateur doit renseigner les clés Stripe (voir le README).
+      </p>
+    {% elif current_user.is_authenticated %}
+      <form method="post" action="{{ url_for('payments.create_checkout_session') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn--gold">S'abonner — {{ config.SUBSCRIPTION_PRICE_LABEL }}</button>
+      </form>
+    {% else %}
+      <a class="btn btn--gold" href="{{ url_for('auth.login', next=url_for('payments.subscribe')) }}">Se connecter pour s'abonner</a>
+    {% endif %}
+  </div>
+
+  <aside>
+    <div class="subscribe-box">
+      <span class="eyebrow eyebrow--wire">Formule unique</span>
+      <h3>{{ config.SUBSCRIPTION_PRICE_LABEL }}</h3>
+      <p>Paiement sécurisé par carte via Stripe. Facturation récurrente, annulable à tout moment.</p>
+    </div>
+  </aside>
+</div>
+
+{% endblock %}

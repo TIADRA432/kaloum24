@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Base de données non initialisée</title>
+{# Page volontairement autonome : elle n'hérite pas de base.html, qui
+   interroge la base pour construire le menu — ce qui échouerait aussi. #}
+<style>
+  body { margin: 0; background: #F1EEE6; color: #14171F;
+         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+         line-height: 1.6; padding: 2rem 1.5rem; }
+  .boite { max-width: 640px; margin: 3rem auto; background: #FBFAF6;
+           border: 1px solid #D8D2C2; border-left: 4px solid #C4181F;
+           border-radius: 2px; padding: 2rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 0.5rem; }
+  .sous-titre { color: #6B6558; margin: 0 0 1.5rem; }
+  pre { background: #14171F; color: #F1EEE6; padding: 1rem; border-radius: 2px;
+        overflow-x: auto; font-size: 0.9rem; }
+  code { background: #EEE9DA; padding: 0.1rem 0.35rem; border-radius: 2px;
+         font-size: 0.9em; }
+  ol { padding-left: 1.3rem; }
+  li { margin-bottom: 0.6rem; }
+  .note { font-size: 0.9rem; color: #6B6558; border-top: 1px solid #D8D2C2;
+          margin-top: 1.5rem; padding-top: 1rem; }
+</style>
+</head>
+<body>
+<div class="boite">
+  <h1>Base de données non initialisée</h1>
+  <p class="sous-titre">Les tables du site n'existent pas encore.</p>
+
+  <p>Depuis le dossier du projet, avec l'environnement virtuel activé :</p>
+
+  <pre>flask db upgrade
+flask seed-db     <span style="color:#9FA3AE;"># facultatif : contenu de démonstration</span></pre>
+
+  <p>Si <code>flask</code> répond « No such command 'db' », c'est que la variable
+  <code>FLASK_APP</code> n'est pas définie :</p>
+
+  <ol>
+    <li>Linux / macOS : <code>export FLASK_APP=app.py</code></li>
+    <li>Windows (cmd) : <code>set FLASK_APP=app.py</code></li>
+    <li>Windows (PowerShell) : <code>$env:FLASK_APP="app.py"</code></li>
+  </ol>
+
+  <p class="note">
+    Vérifie aussi que l'environnement virtuel activé est bien celui de
+    <em>ce</em> dossier, et non celui d'une copie précédente du projet.
+    Pour connaître le fichier de base réellement utilisé :<br>
+    <code>python -c "from app import create_app; print(create_app().config['SQLALCHEMY_DATABASE_URI'])"</code>
+  </p>
+</div>
+</body>
+</html>

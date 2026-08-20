@@ -1,0 +1,32 @@
+{% extends "admin/_base.html" %}
+{% block admin_title %}Journal de modération{% endblock %}
+{% block admin_content %}
+
+<p style="max-width:64ch; color:var(--text-muted); margin-top:0;">
+  Les 200 dernières actions de modération — humaines et automatiques. Une
+  action sans auteur (« Système ») vient d'un filtre automatique, pas d'un
+  administrateur.
+</p>
+
+{% if entrees %}
+<div class="table-scroll">
+<table class="admin-table">
+  <thead><tr><th>Date</th><th>Action</th><th>Cible</th><th>Auteur</th><th>Détail</th></tr></thead>
+  <tbody>
+    {% for e in entrees %}
+    <tr>
+      <td>{{ e.created_at|fr_datetime }}</td>
+      <td>{{ e.action.replace('_', ' ') }}</td>
+      <td>{{ e.target_type }} #{{ e.target_id }}</td>
+      <td>{{ e.actor.username if e.actor else 'Système' }}</td>
+      <td style="max-width:320px;">{{ e.detail or '—' }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p class="empty-state">Aucune action de modération enregistrée pour l'instant.</p>
+{% endif %}
+
+{% endblock %}

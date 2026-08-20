@@ -1,0 +1,16 @@
+# Collecte périodique des sources d'agrégation, toutes les 15 minutes.
+# Installation : sudo cp deploiement/collecte-sources.cron /etc/cron.d/kaloum24-sources
+# (le fichier doit se terminer par une ligne vide)
+#
+# La commande elle-même respecte la fréquence configurée par source (voir
+# admin → Sources) : passer cron toutes les 15 minutes ne veut pas dire que
+# chaque source est interrogée toutes les 15 minutes, seulement que la
+# vérification a lieu à cette cadence. Une source configurée à 60 minutes
+# n'est réellement collectée qu'une fois par heure.
+
+# cron n'exécute jamais de shell de connexion : il ne lit ni .env ni
+# .bashrc. FLASK_APP doit donc être fixé explicitement sur la ligne — sans
+# ça, `flask collect-sources` échoue avec « could not locate a Flask
+# application ».
+*/15 * * * * www-data cd /var/www/kaloum24 && FLASK_APP=app.py venv/bin/flask collect-sources >> /var/www/kaloum24/logs/collecte-sources.log 2>&1
+

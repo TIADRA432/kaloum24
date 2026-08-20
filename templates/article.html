@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+{% import "_icons.html" as icons %}
+
+{% block title %}{{ article.title }} — {{ site_name }}{% endblock %}
+{% block meta_description %}{{ article.summary }}{% endblock %}
+{% block og_type %}article{% endblock %}
+{% block og_title %}{{ article.title }}{% endblock %}
+{% block og_description %}{{ article.summary }}{% endblock %}
+{% block og_image %}
+  {% if article.image_url %}
+  <meta property="og:image" content="{{ site_url }}{{ article.image_url }}">
+  <meta property="og:image:alt" content="{{ article.title }}">
+  {% endif %}
+{% endblock %}
+{% block twitter_extra %}
+<meta property="article:published_time" content="{{ article.created_at.isoformat() }}">
+<meta property="article:section" content="{{ article.category.name }}">
+{% endblock %}
+
+{% block head_extra %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  "headline": {{ article.title|tojson }},
+  "description": {{ article.summary|tojson }},
+  "datePublished": "{{ article.created_at.isoformat() }}",
+  "dateModified": "{{ article.updated_at.isoformat() }}",
+  "author": {"@type": "Person", "name": {{ article.author.username|tojson }}},
+  "publisher": {"@type": "Organization", "name": {{ site_name|tojson }}}
+  {%- if article.image_url %},
+  "image": "{{ site_url }}{{ article.image_url }}"
+  {%- endif %}
+}
+</script>
+{% endblock %}
+
+{% block content %}
+{% set article_url = site_url ~ url_for('main.article_detail', slug=article.slug) %}
+
+<article>
+  <header class="article-header">
+    <span class="eyebrow">
+      <a href="{{ url_for('main.category', slug=article.category.slug) }}">{{ article.category.name }}</a>
+      {% if article.is_premium %} · <span class="badge-premium">Abonnés</span>{% endif %}
+      {% if article.source == "agregateur" %} · <span class="badge-agrege">Agrégé</span>{% endif %}
+      {% if article.source == "reseaux_sociaux" %} · <span class="badge-agrege">Réseaux sociaux</span>{% endif %}
+    </span>
+    <h1>{{ article.title }}</h1>
+    <p class="article-header__summary">{{ article.summary }}</p>
+    <div class="article-byline">
+      <span>Par {{ article.author.username }}</span>
+      <span>{{ article.created_at|fr_datetime }}</span>
+      <span>{{ article.content|reading_time }} min de lecture</span>
+      <span>{{ vues_affichees }} lectures</span>
+    </div>
+  </header>
+
+  <div class="article-toolbar">
+    {% if config.TTS_ENABLED and not is_locked %}
+    <button class="tool-btn" id="ttsButton" data-lang="{{ config.TTS_LANG }}" aria-pressed="false">
+      {{ icons.social('speaker') }} <span class="tts-label">Écouter</span>
+    </button>
+    {% endif %}
+
+    <span class="tool-label">Partager</span>
+    <button class="tool-btn tool-btn--whatsapp" data-partage="whatsapp"
+            data-url="{{ article_url }}" data-titre="{{ article.title }}">
+      {{ icons.social('whatsapp') }} <span class="partage-label">WhatsApp</span>
+    </button>
+    <button class="tool-btn" data-partage="x" data-url="{{ article_url }}" data-titre="{{ article.title }}">
+      {{ icons.social('x') }} <span class="partage-label">X</span>
+    </button>
+    <button class="tool-btn" data-partage="facebook" data-url="{{ article_url }}" data-titre="{{ article.title }}">
+      {{ icons.social('facebook') }} <span class="partage-label">Facebook</span>
+    </button>
+    <button class="tool-btn" data-partage="copier" data-url="{{ article_url }}">
+      {{ icons.social('link') }} <span class="partage-label">Copier le lien</span>
+    </button>
+  </div>
+
+  {% if article.image_url %}
+  <figure class="article-image"><img src="{{ article.image_url }}" alt="{{ article.title }}"></figure>
+  {% if article.image_credit %}
+  <p class="article-image-credit">{{ article.image_credit }}</p>
+  {% endif %}
+  {% endif %}
+
+  {% if article.source == "agregateur" and article.collected_source %}
+  <div class="attribution-source">
+    {% if article.collected_source.source.content_mode == "integral" %}
+      Communiqué officiel repris intégralement — source :
+    {% else %}
+      Contenu agrégé — article original sur
+    {% endif %}
+    <a href="{{ article.collected_source.external_url }}" target="_blank" rel="noopener noreferrer">
+      {{ article.collected_source.source.name }} ↗
+    </a>
+  </div>
+  {% endif %}
+
+  {% if article.source == "reseaux_sociaux" and article.source_url and article.source_platform == "facebook" %}
+  <div class="social-embed">
+    <p class="social-embed__label">Publication d'origine :</p>
+    <div id="fb-root"></div>
+    <div class="fb-post" data-href="{{ article.source_url }}" data-width="500" data-show-text="false"></div>
+  </div>
+  <script async defer crossorigin="anonymous"
+          src="https://connect.facebook.net/fr_FR/sdk.js#xfbml=1&version=v19.0"></script>
+  <p class="social-embed__fallback">
+    Le post ne s'affiche pas ? Il est peut-être devenu privé ou a été supprimé depuis —
+    <a href="{{ article.source_url }}" target="_blank" rel="noopener noreferrer">voir directement sur Facebook ↗</a>
+  </p>
+  {% endif %}
+
+  {% if is_locked %}
+    <div class="article-body">{{ article.content|striptags|truncate(320, True, '…') }}</div>
+    <div class="paywall">
+      <div class="paywall__fade"></div>
+      <div class="paywall__box">
+        <span class="eyebrow eyebrow--wire">Article abonnés</span>
+        <h3>La suite est réservée aux abonnés</h3>
+        <p>Débloque cet article et tous les contenus premium de {{ site_name }} pour {{ config.SUBSCRIPTION_PRICE_LABEL }}.</p>
+        <a class="btn btn--gold" href="{{ url_for('payments.subscribe') }}">Voir l'offre d'abonnement</a>
+      </div>
+    </div>
+  {% else %}
+    <div class="article-body">{{ article.content|safe }}</div>
+  {% endif %}
+
+  <section class="comments" id="commentaires">
+    {% set racines = article.approved_comments | selectattr('parent_id', 'none') | list %}
+    <h2>Commentaires ({{ article.approved_comments|length }})</h2>
+
+    {% if current_user.is_authenticated %}
+      {% if current_user.is_banned %}
+      <div class="login-prompt"><p>Ton compte ne peut plus commenter. Contacte la rédaction.</p></div>
+      {% else %}
+      <form class="comment-form" method="post" action="{{ url_for('main.post_comment', slug=article.slug) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="field">
+          <label for="content">Ton commentaire</label>
+          <textarea id="content" name="content" required maxlength="2000" placeholder="Réagis à cet article…"></textarea>
+        </div>
+        <button type="submit" class="btn">Publier</button>
+        <p class="comment-note">Les commentaires sont vérifiés par la modération avant publication.</p>
+      </form>
+      {% endif %}
+    {% else %}
+    <div class="login-prompt">
+      <p><a href="{{ url_for('auth.login', next=request.path) }}">Connecte-toi</a> ou <a href="{{ url_for('auth.register') }}">crée un compte</a> pour commenter.</p>
+    </div>
+    {% endif %}
+
+    {% macro rendre_commentaire(c, profondeur=0) %}
+    <div class="comment {{ 'comment--reply' if profondeur > 0 }}"
+         {% if profondeur > 0 %}style="margin-left:{{ ([profondeur, 4]|min) * 1.2 }}rem;"{% endif %}>
+      <div class="comment__meta">
+        <strong>{{ c.user.username }}</strong>
+        {% if c.user_id == article.author_id %}<span class="comment__author-tag">Rédaction</span>{% endif %}
+        · {{ c.created_at|time_ago }}
+      </div>
+      <div class="comment__body">{{ c.content }}</div>
+      {% if current_user.is_authenticated and not current_user.is_banned %}
+      <div class="comment__actions">
+        <button type="button" data-repondre="{{ c.id }}">Répondre</button>
+        <form method="post" action="{{ url_for('main.report_comment', comment_id=c.id) }}" style="display:inline;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit">Signaler</button>
+        </form>
+      </div>
+      <form class="reply-form" id="reply-{{ c.id }}" hidden method="post"
+            action="{{ url_for('main.post_comment', slug=article.slug) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="parent_id" value="{{ c.id }}">
+        <div class="field">
+          <textarea name="content" required maxlength="2000"
+                    placeholder="Répondre à {{ c.user.username }}…"></textarea>
+        </div>
+        <button type="submit" class="btn btn--small">Répondre</button>
+      </form>
+      {% endif %}
+
+      {% for r in c.replies|selectattr('status', 'equalto', 'approuve')|sort(attribute='created_at') %}
+        {{ rendre_commentaire(r, profondeur + 1) }}
+      {% endfor %}
+    </div>
+    {% endmacro %}
+
+    <div class="comment-list">
+      {% for c in racines %}
+        {{ rendre_commentaire(c) }}
+      {% else %}
+      <p class="empty-state">Aucun commentaire pour l'instant — sois le premier à réagir.</p>
+      {% endfor %}
+    </div>
+  </section>
+</article>
+
+{% if similaires %}
+<aside class="sidebar-block" style="margin-top:3rem; max-width:68ch; margin-left:auto; margin-right:auto;">
+  <div class="section-head"><h2>À lire aussi</h2></div>
+  <div class="most-read">
+    {% for a in similaires %}
+    <a class="most-read__item" href="{{ url_for('main.article_detail', slug=a.slug) }}">
+      <span class="most-read__rank">{{ loop.index }}</span>
+      <span class="most-read__title">{{ a.title }}</span>
+    </a>
+    {% endfor %}
+  </div>
+</aside>
+{% endif %}
+
+{% endblock %}

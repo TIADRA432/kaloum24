@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block content %}
+
+<section class="hero">
+  {% if hero %}
+  <a class="hero-lead" href="{{ url_for('main.article_detail', slug=hero.slug) }}">
+    {% if hero.image_url %}
+    <div class="hero-lead__image-wrap"><img src="{{ hero.image_url }}" alt=""></div>
+    {% endif %}
+    <span class="eyebrow">{{ hero.category.name }} · {{ hero.created_at|time_ago }}</span>
+    <h1 class="hero-lead__title">{{ hero.title }}{% if hero.is_premium %} <span class="badge-premium">Abonnés</span>{% endif %}</h1>
+    <p class="hero-lead__summary">{{ hero.summary }}</p>
+  </a>
+  {% endif %}
+
+  <div class="hero-secondary">
+    {% for a in secondary %}
+    <a class="hero-secondary__item {{ 'hero-secondary__item--noimg' if not a.image_url }}" href="{{ url_for('main.article_detail', slug=a.slug) }}">
+      {% if a.image_url %}
+      <div class="hero-secondary__image"><img src="{{ a.image_url }}" alt=""></div>
+      {% endif %}
+      <div>
+        <span class="eyebrow">{{ a.category.name }}</span>
+        <h2 class="hero-secondary__title">{{ a.title }}{% if a.is_premium %} <span class="badge-premium">Abonnés</span>{% endif %}{% if a.source == "agregateur" %} <span class="badge-agrege">Agrégé</span>{% endif %}{% if a.source == "reseaux_sociaux" %} <span class="badge-agrege">Réseaux sociaux</span>{% endif %}</h2>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+
+<div class="content-layout">
+  <div>
+    <div class="section-head"><h2>Dernières actualités</h2></div>
+    {% if latest %}
+    <div class="article-grid">
+      {% for a in latest %}
+      <a class="card" href="{{ url_for('main.article_detail', slug=a.slug) }}">
+        {% if a.image_url %}<div class="card__image"><img src="{{ a.image_url }}" alt=""></div>{% endif %}
+        <span class="eyebrow">{{ a.category.name }}</span>
+        <h3 class="card__title">{{ a.title }}{% if a.is_premium %} <span class="badge-premium">Abonnés</span>{% endif %}{% if a.source == "agregateur" %} <span class="badge-agrege">Agrégé</span>{% endif %}{% if a.source == "reseaux_sociaux" %} <span class="badge-agrege">Réseaux sociaux</span>{% endif %}</h3>
+        <p class="card__summary">{{ a.summary }}</p>
+        <span class="card__meta">{{ a.created_at|time_ago }} · {{ a.views }} lectures</span>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="empty-state">Aucun article publié pour le moment.</p>
+    {% endif %}
+
+    {% for cat, articles in par_rubrique %}
+    <section class="rubrique-block">
+      <div class="section-head">
+        <h2>{{ cat.name }}</h2>
+        <a href="{{ url_for('main.category', slug=cat.slug) }}">Tout voir →</a>
+      </div>
+      <div class="article-grid">
+        {% for a in articles %}
+        <a class="card" href="{{ url_for('main.article_detail', slug=a.slug) }}">
+          {% if a.image_url %}<div class="card__image"><img src="{{ a.image_url }}" alt=""></div>{% endif %}
+          <h3 class="card__title">{{ a.title }}{% if a.is_premium %} <span class="badge-premium">Abonnés</span>{% endif %}{% if a.source == "agregateur" %} <span class="badge-agrege">Agrégé</span>{% endif %}{% if a.source == "reseaux_sociaux" %} <span class="badge-agrege">Réseaux sociaux</span>{% endif %}</h3>
+          <span class="card__meta">{{ a.created_at|time_ago }}</span>
+        </a>
+        {% endfor %}
+      </div>
+    </section>
+    {% endfor %}
+  </div>
+
+  <aside>
+    <div class="sidebar-block">
+      <div class="section-head"><h2>Les plus lus</h2></div>
+      <div class="most-read">
+        {% for a in most_read %}
+        <a class="most-read__item" href="{{ url_for('main.article_detail', slug=a.slug) }}">
+          <span class="most-read__rank">{{ loop.index }}</span>
+          <span class="most-read__title">{{ a.title }}</span>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+
+    {% if not current_user.is_authenticated or not current_user.is_subscriber %}
+    <div class="subscribe-box">
+      <span class="eyebrow eyebrow--wire">Édition abonnés</span>
+      <h3>Accède à tous les articles</h3>
+      <p>Enquêtes et analyses réservées, sans publicité, dès {{ config.SUBSCRIPTION_PRICE_LABEL }}.</p>
+      <a class="btn btn--gold" href="{{ url_for('payments.subscribe') }}">S'abonner</a>
+    </div>
+    {% endif %}
+  </aside>
+</div>
+
+{% endblock %}

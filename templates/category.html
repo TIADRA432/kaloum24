@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{{ category.name }} — {{ site_name }}{% endblock %}
+{% block content %}
+
+<div class="content-layout">
+  <div>
+    <span class="eyebrow">Rubrique</span>
+    <h1 class="page-title">{{ category.name }}</h1>
+
+    {% if pagination.items %}
+    <div class="article-grid">
+      {% for a in pagination.items %}
+      <a class="card" href="{{ url_for('main.article_detail', slug=a.slug) }}">
+        {% if a.image_url %}<div class="card__image"><img src="{{ a.image_url }}" alt=""></div>{% endif %}
+        <span class="eyebrow">{{ a.category.name }}</span>
+        <h3 class="card__title">{{ a.title }}{% if a.is_premium %} <span class="badge-premium">Abonnés</span>{% endif %}{% if a.source == "agregateur" %} <span class="badge-agrege">Agrégé</span>{% endif %}{% if a.source == "reseaux_sociaux" %} <span class="badge-agrege">Réseaux sociaux</span>{% endif %}</h3>
+        <p class="card__summary">{{ a.summary }}</p>
+        <span class="card__meta">{{ a.created_at|time_ago }} · {{ a.views }} lectures</span>
+      </a>
+      {% endfor %}
+    </div>
+
+    <div class="pagination">
+      {% if pagination.has_prev %}
+        <a href="{{ url_for('main.category', slug=category.slug, page=pagination.prev_num) }}">← Précédent</a>
+      {% endif %}
+      <span class="is-current">Page {{ pagination.page }} / {{ pagination.pages or 1 }}</span>
+      {% if pagination.has_next %}
+        <a href="{{ url_for('main.category', slug=category.slug, page=pagination.next_num) }}">Suivant →</a>
+      {% endif %}
+    </div>
+    {% else %}
+    <p class="empty-state">Aucun article publié dans cette rubrique pour le moment.</p>
+    {% endif %}
+  </div>
+
+  <aside>
+    <div class="sidebar-block">
+      <div class="section-head"><h2>Les plus lus</h2></div>
+      <div class="most-read">
+        {% for a in most_read %}
+        <a class="most-read__item" href="{{ url_for('main.article_detail', slug=a.slug) }}">
+          <span class="most-read__rank">{{ loop.index }}</span>
+          <span class="most-read__title">{{ a.title }}</span>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+  </aside>
+</div>
+
+{% endblock %}

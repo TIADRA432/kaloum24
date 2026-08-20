@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Trop de requêtes — {{ site_name }}{% endblock %}
+{% block content %}
+<div class="empty-state">
+  <span class="eyebrow">Erreur 429</span>
+  <h1 class="page-title">Trop de tentatives</h1>
+  <p>Tu as effectué trop d'actions en peu de temps. Patiente quelques minutes,
+     puis réessaie.</p>
+  <a class="btn" href="{{ url_for('main.home') }}">Retour à l'accueil</a>
+</div>
+{% endblock %}

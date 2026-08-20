@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Erreur du serveur — {{ site_name }}{% endblock %}
+{% block content %}
+<div class="empty-state">
+  <span class="eyebrow">Erreur 500</span>
+  <h1 class="page-title">Une erreur est survenue</h1>
+  <p>Le problème a été enregistré. Si ça persiste, préviens la rédaction.</p>
+  <a class="btn" href="{{ url_for('main.home') }}">Retour à l'accueil</a>
+</div>
+{% endblock %}

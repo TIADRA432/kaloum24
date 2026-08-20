@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Mon compte — {{ site_name }}{% endblock %}
+{% block content %}
+
+<span class="eyebrow">Compte</span>
+<h1 class="page-title">{{ current_user.username }}</h1>
+
+<div class="content-layout">
+  <div>
+    <div class="section-head"><h2>Informations</h2></div>
+    <div class="table-scroll">
+    <table class="admin-table">
+      <tr><th>Pseudo</th><td>{{ current_user.username }}</td></tr>
+      <tr><th>E-mail</th><td>{{ current_user.email }}</td></tr>
+      <tr><th>Rôle</th><td>{{ current_user.role }}</td></tr>
+      <tr><th>Membre depuis</th><td>{{ current_user.created_at|fr_date }}</td></tr>
+      <tr>
+        <th>Abonnement</th>
+        <td>
+          {% if current_user.is_subscriber %}
+            <span class="pill pill--approuve">Actif</span>
+          {% else %}
+            <span class="pill pill--brouillon">Aucun</span> — <a href="{{ url_for('payments.subscribe') }}" style="text-decoration:underline;">s'abonner</a>
+          {% endif %}
+        </td>
+      </tr>
+    </table>
+    </div>
+
+    <div class="section-head" style="margin-top:2.5rem;"><h2>Changer de mot de passe</h2></div>
+    <form method="post" action="{{ url_for('auth.change_password') }}" style="max-width:400px;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field">
+        <label for="actuel">Mot de passe actuel</label>
+        <input type="password" id="actuel" name="actuel" required>
+      </div>
+      <div class="field">
+        <label for="nouveau">Nouveau mot de passe</label>
+        <input type="password" id="nouveau" name="nouveau" required minlength="8">
+      </div>
+      <div class="field">
+        <label for="confirmation">Confirmer</label>
+        <input type="password" id="confirmation" name="confirmation" required minlength="8">
+      </div>
+      <button type="submit" class="btn">Enregistrer</button>
+    </form>
+  </div>
+
+  <aside>
+    {% if current_user.is_moderator %}
+    <div class="sidebar-block">
+      <div class="section-head"><h2>Rédaction</h2></div>
+      <a class="btn btn--ghost btn--block" href="{{ url_for('admin.dashboard') }}">Espace rédaction</a>
+    </div>
+    {% endif %}
+  </aside>
+</div>
+
+{% endblock %}

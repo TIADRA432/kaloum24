@@ -1,0 +1,133 @@
+{% extends "admin/_base.html" %}
+{% block admin_title %}{{ "Modifier la source" if source else "Nouvelle source" }}{% endblock %}
+{% block admin_content %}
+{% set val = source if source else form %}
+
+<form method="post" style="max-width:640px;">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <div class="field">
+    <label for="name">Nom</label>
+    <input type="text" id="name" name="name" required minlength="2"
+           placeholder="Ex. : GuinéeNews" value="{{ val.name if val else '' }}">
+  </div>
+
+  <div class="field">
+    <label for="site_url">URL du site</label>
+    <input type="url" id="site_url" name="site_url" required
+           placeholder="https://guineenews.org" value="{{ val.site_url if val else '' }}">
+  </div>
+
+  <div class="field">
+    <label for="feed_url">URL du flux RSS/Atom</label>
+    <input type="url" id="feed_url" name="feed_url" required
+           placeholder="https://guineenews.org/feed/" value="{{ val.feed_url if val else '' }}">
+    <p class="field-hint">Vérifie-la d'abord dans un lecteur de flux ou avec le bouton
+      « Tester » depuis la liste des sources, une fois celle-ci enregistrée.</p>
+  </div>
+
+  <div class="field">
+    <label for="country">Pays</label>
+    <input type="text" id="country" name="country" placeholder="Ex. : Guinée"
+           value="{{ val.country if val and val.country else '' }}">
+  </div>
+
+  <div class="field">
+    <label for="category_id">Rubrique par défaut</label>
+    <select id="category_id" name="category_id">
+      <option value="">— Aucune —</option>
+      {% for cat in categories %}
+      <option value="{{ cat.id }}"
+        {% if val and val.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="field">
+    <label for="trust_level">Niveau de confiance (0–100)</label>
+    <input type="number" id="trust_level" name="trust_level" min="0" max="100"
+           value="{{ val.trust_level if val else 50 }}">
+    <p class="field-hint">Pondère le score de chaque article venant de cette source.
+      Une agence établie mérite plus de poids qu'un blog inconnu.</p>
+  </div>
+
+  <div class="field">
+    <label for="fetch_frequency_minutes">Fréquence de collecte (minutes)</label>
+    <input type="number" id="fetch_frequency_minutes" name="fetch_frequency_minutes" min="5"
+           value="{{ val.fetch_frequency_minutes if val else 60 }}">
+    <p class="field-hint">Minimum 5 minutes — en dessous, on sollicite le site source pour rien.</p>
+  </div>
+
+  <div class="field">
+    <label for="keywords_include">Mots-clés à privilégier (séparés par des virgules)</label>
+    <input type="text" id="keywords_include" name="keywords_include"
+           placeholder="Guinée, Conakry, CEDEAO"
+           value="{{ val.keywords_include if val and val.keywords_include else '' }}">
+  </div>
+
+  <div class="field">
+    <label for="keywords_exclude">Mots-clés à exclure</label>
+    <input type="text" id="keywords_exclude" name="keywords_exclude"
+           placeholder="publicité, sponsorisé"
+           value="{{ val.keywords_exclude if val and val.keywords_exclude else '' }}">
+  </div>
+
+  <div class="field">
+    <label for="source_category">Classification de la source</label>
+    <select id="source_category" name="source_category">
+      <option value="media" {% if not val or val.source_category == 'media' %}selected{% endif %}>Média (presse)</option>
+      <option value="gouvernemental" {% if val and val.source_category == 'gouvernemental' %}selected{% endif %}>Gouvernemental</option>
+      <option value="institutionnel" {% if val and val.source_category == 'institutionnel' %}selected{% endif %}>Institutionnel (ONU, CEDEAO, agence publique…)</option>
+    </select>
+    <p class="field-hint">Un média reste toujours en extrait + lien (Mode 1). Seule une
+      source gouvernementale ou institutionnelle peut prétendre au mode intégral ci-dessous.</p>
+  </div>
+
+  <div class="field">
+    <label for="content_mode">Mode de récupération du contenu</label>
+    <select id="content_mode" name="content_mode">
+      <option value="extrait" {% if not val or val.content_mode == 'extrait' %}selected{% endif %}>Extrait + lien (Mode 1 — par défaut)</option>
+      <option value="integral" {% if val and val.content_mode == 'integral' %}selected{% endif %}>Intégral (gouvernemental/institutionnel justifié uniquement)</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label for="content_license_justification">Justification du mode intégral (si applicable)</label>
+    <textarea id="content_license_justification" name="content_license_justification" rows="3"
+              placeholder="Ex. : Communiqués du Ministère de la Communication, publiés comme libres de reproduction par tout média — voir [lien]. Vérifié le JJ/MM/AAAA.">{{ val.content_license_justification if val and val.content_license_justification else '' }}</textarea>
+    <p class="field-hint">Obligatoire (20 caractères minimum) pour activer le mode intégral —
+      accord écrit, conditions de syndication publiées par la source, ou communiqué qui se
+      déclare lui-même libre de reproduction. Une case cochée seule ne suffit jamais : ce
+      texte reste la trace de la décision.</p>
+  </div>
+
+  <div class="field-check">
+    <input type="checkbox" id="compliance_checked" name="compliance_checked"
+           {% if val and val.compliance_checked %}checked{% endif %}>
+    <label for="compliance_checked">
+      J'ai vérifié que <code>robots.txt</code> autorise la lecture du flux et que
+      les CGU du site n'interdisent pas la syndication.
+    </label>
+  </div>
+
+  <div class="field">
+    <label for="compliance_notes">Notes de conformité (facultatif)</label>
+    <input type="text" id="compliance_notes" name="compliance_notes"
+           placeholder="Ex. : robots.txt vérifié le 10/08/2026, aucune restriction"
+           value="{{ val.compliance_notes if val and val.compliance_notes else '' }}">
+  </div>
+
+  <div class="field-check">
+    <input type="checkbox" id="is_active" name="is_active"
+           {% if val and val.is_active %}checked{% endif %}>
+    <label for="is_active">Activer la collecte pour cette source</label>
+  </div>
+  <p class="field-hint" style="margin-top:-0.6rem; margin-bottom:1.2rem;">
+    Impossible d'activer sans avoir coché la case de conformité ci-dessus.
+  </p>
+
+  <button type="submit" class="btn">{{ "Enregistrer" if source else "Créer la source" }}</button>
+  <a class="btn btn--ghost" href="{{ url_for('admin.sources') }}">Annuler</a>
+</form>
+
+{% endblock %}
