@@ -291,7 +291,7 @@ class Source(db.Model):
 
     __table_args__ = (
         db.CheckConstraint(
-            "is_active = 0 OR compliance_checked = 1",
+            "is_active = FALSE OR compliance_checked = TRUE",
             name="ck_source_active_requires_compliance",
         ),
         db.CheckConstraint(

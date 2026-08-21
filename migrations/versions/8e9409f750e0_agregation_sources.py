@@ -55,7 +55,7 @@ def upgrade():
     sa.Column('last_fetched_at', sa.DateTime(), nullable=True),
     sa.Column('last_error', sa.String(length=300), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.CheckConstraint('is_active = 0 OR compliance_checked = 1', name='ck_source_active_requires_compliance'),
+    sa.CheckConstraint('is_active = FALSE OR compliance_checked = TRUE', name='ck_source_active_requires_compliance'),
     sa.ForeignKeyConstraint(['category_id'], ['categories.id'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('name')
