@@ -15,8 +15,10 @@ from utils import (
     moderator_required, admin_required, unique_slug,
     sanitize_html, strip_html, save_uploaded_image, normalize_phone,
 )
+import collector
 import feed_client
 import scoring_engine
+import topic_matcher
 from social_embed import valider_url_reseau_social
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
@@ -640,6 +642,41 @@ def test_source(source_id):
             for i in items[:5]
         ],
     })
+
+
+@admin_bp.route("/sources/<int:source_id>/collecter", methods=["POST"])
+@login_required
+@admin_required
+def collect_now(source_id):
+    """Collecte immédiatement une seule source et ENREGISTRE les résultats
+    (contrairement à /tester, qui ne fait que prévisualiser).
+
+    Existe pour les hébergeurs où la commande `flask collect-sources` ne
+    peut pas être programmée en tâche de fond (pas d'accès shell/cron
+    disponible) — un déclenchement manuel depuis l'admin reste possible.
+    Régle par la même occasion le sujet et le score des nouveaux articles,
+    comme le ferait un cycle complet de `flask collect-sources`.
+    """
+    source = Source.query.get_or_404(source_id)
+    if not source.is_active or not source.compliance_checked:
+        flash("Cette source doit être active et sa conformité vérifiée avant "
+             "de pouvoir être collectée.", "error")
+        return redirect(url_for("admin.sources"))
+
+    resultat = collector.collecter_source(source)
+
+    if resultat["statut"] == "ok" and resultat["nouveaux"] > 0:
+        topic_matcher.rattacher_sujets()
+        scoring_engine.noter_articles()
+        flash(f"{resultat['nouveaux']} nouvel(aux) article(s) collecté(s) depuis "
+             f"« {source.name} ».", "success")
+    elif resultat["statut"] == "ok":
+        flash(f"Collecte effectuée — aucun nouvel article depuis « {source.name} » "
+             "(tout est déjà connu).", "info")
+    else:
+        flash(f"Échec de la collecte pour « {source.name} » : {resultat['erreur']}", "error")
+
+    return redirect(url_for("admin.sources"))
 
 
 # ---------------------------------------------------------------- scoring

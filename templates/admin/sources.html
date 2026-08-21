@@ -60,6 +60,12 @@
         <a class="link-btn" href="{{ url_for('admin.edit_source', source_id=s.id) }}">Modifier</a>
         <button type="button" class="link-btn" data-tester-source="{{ s.id }}"
                 data-url="{{ url_for('admin.test_source', source_id=s.id) }}">Tester</button>
+        {% if s.is_active and s.compliance_checked %}
+        <form method="post" action="{{ url_for('admin.collect_now', source_id=s.id) }}" style="display:inline;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="link-btn">Collecter maintenant</button>
+        </form>
+        {% endif %}
         <form method="post" action="{{ url_for('admin.delete_source', source_id=s.id) }}"
               onsubmit="return confirm('Supprimer cette source ?');">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

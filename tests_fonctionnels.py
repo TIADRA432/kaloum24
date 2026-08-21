@@ -2284,6 +2284,75 @@ with app.test_client() as c:
     ok("Article ordinaire : aucune trace du widget Facebook",
        "fb-post" not in page_web2 and "connect.facebook.net" not in page_web2)
 
+# =============================================== collecte immédiate depuis l'admin
+with app.app_context():
+    src_cn = Source(name="Source Test Collecter Maintenant", site_url="https://cn.test",
+                    feed_url="https://cn.test/feed/", compliance_checked=True, is_active=True)
+    src_cn_inactive = Source(name="Source Inactive Collecter", site_url="https://cni.test",
+                             feed_url="https://cni.test/feed/", compliance_checked=False,
+                             is_active=False)
+    db.session.add_all([src_cn, src_cn_inactive])
+    db.session.commit()
+    _src_cn_id, _src_cn_inactive_id = src_cn.id, src_cn_inactive.id
+
+with app.test_client() as admin:
+    tok = csrf(admin, "/connexion")
+    admin.post("/connexion", data={"csrf_token": tok, "identifiant": "admin",
+                                   "password": "ChangeMoi123!"}, follow_redirects=True)
+
+    # Source inactive/non conforme : la route refuse, aucune collecte.
+    tok = csrf(admin, "/admin/sources")
+    r = admin.post(f"/admin/sources/{_src_cn_inactive_id}/collecter",
+                   data={"csrf_token": tok}, follow_redirects=True)
+    ok("Collecter maintenant : refuse sur une source inactive",
+       "active" in text(r).lower() and "conformité" in text(r).lower()
+       or "vérifiée" in text(r).lower())
+
+    # Source active/conforme, flux simulé : collecte réellement enregistrée,
+    # sujet et score calculés dans la foulée (comme un cycle complet).
+    with _mock.patch("collector.feed_client.robots_autorise", return_value=(True, None)), \
+         _mock.patch("collector.feed_client.fetch_feed", return_value=[
+             {"url": "https://cn.test/1", "title": "Article via collecter maintenant",
+              "excerpt": "Un extrait de test.", "image_url": None,
+              "author": None, "published_at": None},
+         ]):
+        tok = csrf(admin, "/admin/sources")
+        r = admin.post(f"/admin/sources/{_src_cn_id}/collecter",
+                       data={"csrf_token": tok}, follow_redirects=True)
+    ok("Collecter maintenant : confirme le nombre de nouveaux articles",
+       "nouvel" in text(r).lower())
+
+    with app.app_context():
+        col = CollectedArticle.query.filter_by(source_id=_src_cn_id).first()
+        ok("Collecter maintenant : l'article est bien persiste en base",
+           col is not None and col.title == "Article via collecter maintenant")
+        ok("Collecter maintenant : le score a ete calcule (pas seulement collecte)",
+           col.score_total is not None and col.score_total > 0)
+
+    # Rejouer sur la même source ne duplique rien (même flux simulé).
+    with _mock.patch("collector.feed_client.robots_autorise", return_value=(True, None)), \
+         _mock.patch("collector.feed_client.fetch_feed", return_value=[
+             {"url": "https://cn.test/1", "title": "Article via collecter maintenant",
+              "excerpt": "Un extrait de test.", "image_url": None,
+              "author": None, "published_at": None},
+         ]):
+        tok = csrf(admin, "/admin/sources")
+        admin.post(f"/admin/sources/{_src_cn_id}/collecter", data={"csrf_token": tok})
+    with app.app_context():
+        ok("Collecter maintenant : relancer ne duplique pas l'article",
+           CollectedArticle.query.filter_by(source_id=_src_cn_id).count() == 1)
+
+with app.test_client() as simple_user5:
+    tok = csrf(simple_user5, "/inscription")
+    simple_user5.post("/inscription", data={
+        "csrf_token": tok, "username": "lecteur_collect_now_test",
+        "email": "lecteur_collect_now_test@example.com",
+        "password": "MotDePasse1", "password_confirm": "MotDePasse1"})
+    _tok_su5 = csrf(simple_user5, "/compte")
+    ok("Collecter maintenant bloque pour un simple utilisateur (403)",
+       simple_user5.post(f"/admin/sources/{_src_cn_id}/collecter",
+                         data={"csrf_token": _tok_su5}).status_code == 403)
+
 os.close(_db_fd)
 os.unlink(_db_path)
 
