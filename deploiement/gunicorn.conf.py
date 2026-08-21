@@ -36,3 +36,27 @@ loglevel = os.environ.get("GUNICORN_LOG_LEVEL", "info")
 access_log_format = '%({X-Forwarded-For}i)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" %(D)sµs'
 
 preload_app = False   # doit rester False : chaque worker a son propre tampon de vues
+
+
+def on_starting(server):
+    """S'exécute une seule fois, avant que le moindre worker ne démarre —
+    jamais une fois par worker. Sert à créer l'administrateur de démarrage
+    (flask bootstrap-admin) sur un hébergeur où la commande de démarrage
+    n'est configurable qu'à la création du service (Render, notamment) :
+    plutôt que de dépendre de cette commande externe, cette étape vit ici,
+    dans du code versionné et déployé avec le reste du projet.
+
+    Idempotent par construction (voir app.py, bootstrap-admin) : ne fait
+    rien si les variables ADMIN_* sont absentes ou si le compte existe déjà.
+    """
+    import subprocess
+    try:
+        resultat = subprocess.run(
+            ["flask", "bootstrap-admin"],
+            capture_output=True, text=True, timeout=30,
+        )
+        for ligne in (resultat.stdout + resultat.stderr).splitlines():
+            server.log.info("bootstrap-admin: %s", ligne)
+    except Exception as exc:
+        server.log.warning("bootstrap-admin : n'a pas pu s'exécuter (%s) — "
+                           "sans conséquence si un admin existe déjà.", exc)
