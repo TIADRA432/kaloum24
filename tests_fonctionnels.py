@@ -198,7 +198,7 @@ with app.test_client() as admin:
         "summary": "Verification que le HTML de l'editeur est conserve.",
         "content": "<p>Un <strong>gras</strong> et un <a href='https://exemple.test'>lien</a>.</p>"
                    "<h2>Un intertitre</h2><ul><li>Point un</li></ul>",
-        "category_id": cat, "publish": "on"}, follow_redirects=True)
+        "category_id": cat, "status": "publie"}, follow_redirects=True)
     page = text(admin.get("/article/article-avec-mise-en-forme-riche"))
     ok("HTML riche conserve (gras, titre, liste)",
        "<strong>gras</strong>" in page and "<h2>" in page and "<li>Point un</li>" in page)
@@ -214,7 +214,7 @@ with app.test_client() as admin:
                    "<script>alert('xss')</script>"
                    "<img src=x onerror=\"alert('xss')\">"
                    "<a href=\"javascript:alert('xss')\">lien piege</a>",
-        "category_id": cat, "publish": "on"}, follow_redirects=True)
+        "category_id": cat, "status": "publie"}, follow_redirects=True)
     page = text(admin.get("/article/article-contenant-du-code-malveillant"))
     corps = page.split('class="article-body"')[1].split("</div>")[0] if 'class="article-body"' in page else page
     # La page contient légitimement des balises <script> (thème, JSON-LD) :
@@ -244,7 +244,7 @@ with app.test_client() as admin:
         "csrf_token": tok, "title": "Article avec image envoyee",
         "summary": "Verification de l'upload depuis le formulaire d'article.",
         "content": "<p>Contenu suffisamment long pour passer la validation.</p>",
-        "category_id": cat, "publish": "on", "image_file": image_test("une.png"),
+        "category_id": cat, "status": "publie", "image_file": image_test("une.png"),
         "image_credit": "Photo : Agence Test"},
         content_type="multipart/form-data", follow_redirects=True)
     page = text(admin.get("/article/article-avec-image-envoyee"))
@@ -1635,7 +1635,7 @@ with app.test_client() as admin:
     admin.post(f"/admin/articles/{art_attr_id}/modifier", data={
         "csrf_token": tok, "title": _titre_attr, "summary": _resume_attr,
         "content": _contenu_attr, "category_id": str(_cat_attr_id),
-        "publish": "on"})
+        "status": "publie"})
 
 with app.app_context():
     _slug_attr = db.session.get(Article, art_attr_id).slug
@@ -2042,7 +2042,7 @@ with app.test_client() as admin:
     tok = csrf(admin, f"/admin/articles/{_art_integral_id}/modifier")
     admin.post(f"/admin/articles/{_art_integral_id}/modifier", data={
         "csrf_token": tok, "title": _titre_p, "summary": _resume_p,
-        "content": _contenu_p, "category_id": str(_cat_p), "publish": "on"})
+        "content": _contenu_p, "category_id": str(_cat_p), "status": "publie"})
 
 with app.app_context():
     _slug_integral = db.session.get(Article, _art_integral_id).slug
@@ -2230,7 +2230,7 @@ with app.test_client() as admin:
         "content": "Un commentaire suffisamment etoffe sur ce post qui a beaucoup circule.",
         "category_id": str(_cat_id_rs),
         "source_url": "https://www.facebook.com/Test/posts/pfbid02test999",
-        "publish": "on",
+        "status": "publie",
     })
 
     # --- la provenance agrégateur/whatsapp n'est jamais modifiable par ce formulaire ---
@@ -2352,6 +2352,176 @@ with app.test_client() as simple_user5:
     ok("Collecter maintenant bloque pour un simple utilisateur (403)",
        simple_user5.post(f"/admin/sources/{_src_cn_id}/collecter",
                          data={"csrf_token": _tok_su5}).status_code == 403)
+
+# =============================================== workflow éditorial étendu
+from scheduler import publier_articles_programmes  # noqa: E402
+
+# Clients simples (sans `with`) : la même leçon que pour les tests de
+# commentaires imbriqués plus haut dans ce fichier — un `with app.test_client()`
+# imbriqué à l'intérieur d'un autre casse la pile de contexte Flask, et fait
+# resoudre current_user vers un utilisateur d'une requete precedente devenu
+# detache de sa session. D'ou l'erreur "DetachedInstanceError" rencontree en
+# ecrivant cette section : jamais un bug du workflow editorial lui-meme.
+admin = app.test_client()
+tok = csrf(admin, "/connexion")
+admin.post("/connexion", data={"csrf_token": tok, "identifiant": "admin",
+                               "password": "ChangeMoi123!"}, follow_redirects=True)
+with app.app_context():
+    _cat_id_wf = Category.query.first().id
+
+# --- création directe en "en_relecture" ---
+tok = csrf(admin, "/admin/articles/nouveau")
+admin.post("/admin/articles/nouveau", data={
+    "csrf_token": tok, "title": "Article en relecture test",
+    "summary": "Un resume suffisant pour cet article de test.",
+    "content": "Un contenu suffisamment etoffe pour passer la validation du formulaire.",
+    "category_id": str(_cat_id_wf), "status": "en_relecture",
+})
+with app.app_context():
+    art_rel = Article.query.filter_by(title="Article en relecture test").first()
+    ok("Creation en_relecture : statut correctement enregistre",
+       art_rel is not None and art_rel.status == "en_relecture")
+
+lecteur_wf = app.test_client()
+r = lecteur_wf.get("/")
+ok("Article en_relecture : invisible sur l'accueil public",
+   "Article en relecture test" not in text(r))
+
+# --- programmation : validation d'une date manquante ---
+tok = csrf(admin, "/admin/articles/nouveau")
+r = admin.post("/admin/articles/nouveau", data={
+    "csrf_token": tok, "title": "Article programme sans date",
+    "summary": "Un resume suffisant pour cet article de test.",
+    "content": "Un contenu suffisamment etoffe pour passer la validation du formulaire.",
+    "category_id": str(_cat_id_wf), "status": "programme",
+})
+ok("Programmation sans date : refusee avec message explicite",
+   "date" in text(r).lower() and "programm" in text(r).lower())
+with app.app_context():
+    ok("Programmation sans date : aucun article cree",
+       Article.query.filter_by(title="Article programme sans date").first() is None)
+
+# --- programmation : date dans le passé refusée ---
+passe = (_dt.utcnow() - _td(hours=1)).strftime("%Y-%m-%dT%H:%M")
+tok = csrf(admin, "/admin/articles/nouveau")
+r = admin.post("/admin/articles/nouveau", data={
+    "csrf_token": tok, "title": "Article programme dans le passe",
+    "summary": "Un resume suffisant pour cet article de test.",
+    "content": "Un contenu suffisamment etoffe pour passer la validation du formulaire.",
+    "category_id": str(_cat_id_wf), "status": "programme", "scheduled_at": passe,
+})
+ok("Programmation dans le passe : refusee", "futur" in text(r).lower())
+
+# --- programmation valide : cycle complet ---
+futur = (_dt.utcnow() + _td(hours=3)).strftime("%Y-%m-%dT%H:%M")
+tok = csrf(admin, "/admin/articles/nouveau")
+admin.post("/admin/articles/nouveau", data={
+    "csrf_token": tok, "title": "Article programme cycle complet",
+    "summary": "Un resume suffisant pour cet article de test.",
+    "content": "Un contenu suffisamment etoffe pour passer la validation du formulaire.",
+    "category_id": str(_cat_id_wf), "status": "programme", "scheduled_at": futur,
+})
+with app.app_context():
+    art_prog = Article.query.filter_by(title="Article programme cycle complet").first()
+    ok("Programmation valide : statut = programme, scheduled_at enregistre",
+       art_prog.status == "programme" and art_prog.scheduled_at is not None)
+    _art_prog_id = art_prog.id
+
+with app.app_context():
+    n = publier_articles_programmes()
+    ok("publier_articles_programmes : n'a rien publie avant l'heure",
+       db.session.get(Article, _art_prog_id).status == "programme")
+
+# Simuler le passage de l'heure, puis republier.
+with app.app_context():
+    art_prog = db.session.get(Article, _art_prog_id)
+    art_prog.scheduled_at = _dt.utcnow() - _td(minutes=1)
+    db.session.commit()
+    n = publier_articles_programmes()
+    ok("publier_articles_programmes : publie exactement 1 article dont l'heure est passee",
+       n == 1)
+    ok("publier_articles_programmes : statut devient publie",
+       db.session.get(Article, _art_prog_id).status == "publie")
+
+lecteur_wf2 = app.test_client()
+r = lecteur_wf2.get("/")
+ok("Article programme puis publie : visible sur l'accueil public",
+   "Article programme cycle complet" in text(r))
+
+# Relancer sans article du : idempotent, aucun changement.
+with app.app_context():
+    n = publier_articles_programmes()
+    ok("publier_articles_programmes : idempotent (rien a publier une seconde fois)", n == 0)
+
+# --- déclenchement manuel depuis l'admin (filet de sécurité) ---
+futur2 = (_dt.utcnow() + _td(hours=1)).strftime("%Y-%m-%dT%H:%M")
+tok = csrf(admin, "/admin/articles/nouveau")
+admin.post("/admin/articles/nouveau", data={
+    "csrf_token": tok, "title": "Article pour test bouton manuel",
+    "summary": "Un resume suffisant pour cet article de test.",
+    "content": "Un contenu suffisamment etoffe pour passer la validation du formulaire.",
+    "category_id": str(_cat_id_wf), "status": "programme", "scheduled_at": futur2,
+})
+with app.app_context():
+    art_m = Article.query.filter_by(title="Article pour test bouton manuel").first()
+    art_m.scheduled_at = _dt.utcnow() - _td(minutes=1)
+    db.session.commit()
+    art_m_id = art_m.id
+
+tok = csrf(admin, "/admin/articles")
+r = admin.post("/admin/articles/publier-programmes",
+               data={"csrf_token": tok}, follow_redirects=True)
+ok("Route manuelle publier-programmes : confirme la publication",
+   "publié" in text(r).lower())
+with app.app_context():
+    ok("Route manuelle publier-programmes : statut reellement mis a jour",
+       db.session.get(Article, art_m_id).status == "publie")
+
+# --- archivage ---
+with app.app_context():
+    art_arch = Article.query.filter_by(status="publie").first()
+    art_arch_id, slug_arch, titre_arch = art_arch.id, art_arch.slug, art_arch.title
+tok = csrf(admin, "/admin/articles")
+admin.post(f"/admin/articles/{art_arch_id}/archiver", data={"csrf_token": tok})
+with app.app_context():
+    ok("Archivage : statut devient archive",
+       db.session.get(Article, art_arch_id).status == "archive")
+
+lecteur_wf3 = app.test_client()
+r = lecteur_wf3.get(f"/article/{slug_arch}")
+ok("Archivage : page individuelle inaccessible publiquement (404)",
+   r.status_code == 404)
+
+# --- filtres de la liste admin par statut ---
+def _contenu_tableau_admin(page_html):
+    """Isole le corps du tableau (<tbody>...</tbody>) — le reste de la page
+    contient le bandeau défilant (ticker), commun à toutes les pages, qui
+    affiche legitimement les derniers articles publiés quel que soit le
+    filtre affiché : le tester ici donnerait un faux résultat."""
+    debut = page_html.find("<tbody>")
+    fin = page_html.find("</tbody>")
+    return page_html[debut:fin] if debut != -1 and fin != -1 else page_html
+
+page_prog = _contenu_tableau_admin(text(admin.get("/admin/articles?statut=programme")))
+ok("Filtre 'programme' : n'affiche que les articles encore programmes",
+   "Article programme cycle complet" not in page_prog)  # déjà publié entre-temps
+
+page_arch = _contenu_tableau_admin(text(admin.get("/admin/articles?statut=archive")))
+ok("Filtre 'archive' : affiche bien l'article tout juste archive",
+   titre_arch in page_arch)
+ok("Filtre 'archive' : n'affiche pas un article encore publie",
+   "Article programme cycle complet" not in page_arch)
+
+simple_user6 = app.test_client()
+tok = csrf(simple_user6, "/inscription")
+simple_user6.post("/inscription", data={
+    "csrf_token": tok, "username": "lecteur_workflow_test",
+    "email": "lecteur_workflow_test@example.com",
+    "password": "MotDePasse1", "password_confirm": "MotDePasse1"})
+_tok_su6 = csrf(simple_user6, "/compte")
+ok("Route publier-programmes bloquee pour un simple utilisateur (403)",
+   simple_user6.post("/admin/articles/publier-programmes",
+                     data={"csrf_token": _tok_su6}).status_code == 403)
 
 os.close(_db_fd)
 os.unlink(_db_path)

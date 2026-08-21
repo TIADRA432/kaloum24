@@ -239,6 +239,18 @@ def create_app(config_class=Config):
         total = sum(r["nouveaux"] for r in resultats)
         print(f"\n{total} nouvel(aux) article(s) collecté(s) au total.")
 
+    @app.cli.command("publish-scheduled")
+    def publish_scheduled_cmd():
+        """Publie les articles programmés dont l'heure est arrivée.
+
+        À lancer périodiquement via cron/tâche planifiée (voir deploiement/) —
+        toutes les 5 à 15 minutes est raisonnable, une programmation n'a pas
+        besoin d'une précision à la seconde près.
+        """
+        from scheduler import publier_articles_programmes
+        n = publier_articles_programmes()
+        print(f"{n} article(s) programmé(s) publié(s).")
+
     @app.cli.command("create-admin")
     def create_admin():
         """Crée un compte administrateur de façon interactive."""

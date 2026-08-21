@@ -35,6 +35,8 @@ def dashboard():
         "articles": Article.query.count(),
         "articles_publies": Article.query.filter_by(status="publie").count(),
         "brouillons": Article.query.filter_by(status="brouillon").count(),
+        "en_relecture": Article.query.filter_by(status="en_relecture").count(),
+        "programmes": Article.query.filter_by(status="programme").count(),
         "commentaires_en_attente": Comment.query.filter_by(status="en_attente").count(),
         "commentaires_signales": Comment.query.filter_by(reported=True).count(),
         "utilisateurs": User.query.count(),
@@ -73,9 +75,29 @@ def dashboard():
 
 # ------------------------------------------------------------------ articles
 
+STATUTS_ARTICLE_FORMULAIRE = ("brouillon", "en_relecture", "programme", "publie")
+
+
 def _lire_formulaire_article():
     source_url = request.form.get("source_url", "").strip()
     plateforme, erreur_url = valider_url_reseau_social(source_url)
+
+    statut_choisi = request.form.get("status", "brouillon")
+    scheduled_at = None
+    erreur_scheduled = None
+    if statut_choisi == "programme":
+        brut = request.form.get("scheduled_at", "").strip()
+        if not brut:
+            erreur_scheduled = "Choisis une date et une heure pour programmer la publication."
+        else:
+            try:
+                scheduled_at = datetime.strptime(brut, "%Y-%m-%dT%H:%M")
+                if scheduled_at <= datetime.utcnow():
+                    erreur_scheduled = ("La date de programmation doit être dans le futur "
+                                        "(heure UTC).")
+            except ValueError:
+                erreur_scheduled = "Date de programmation invalide."
+
     return {
         "title": request.form.get("title", "").strip(),
         "summary": request.form.get("summary", "").strip(),
@@ -85,10 +107,12 @@ def _lire_formulaire_article():
         "category_id": request.form.get("category_id", type=int),
         "is_premium": bool(request.form.get("is_premium")),
         "is_featured": bool(request.form.get("is_featured")),
-        "status": "publie" if request.form.get("publish") else "brouillon",
+        "status": statut_choisi,
+        "scheduled_at": scheduled_at,
         "source_url": source_url or None,
         "source_platform": plateforme,
         "_erreur_source_url": erreur_url,   # préfixe _ : champ interne, jamais écrit en base
+        "_erreur_scheduled": erreur_scheduled,
     }
 
 
@@ -102,8 +126,12 @@ def _valider(donnees):
         erreurs.append("Le contenu est trop court (30 caractères minimum).")
     if not donnees["category_id"] or not db.session.get(Category, donnees["category_id"]):
         erreurs.append("Choisis une catégorie valide.")
+    if donnees["status"] not in STATUTS_ARTICLE_FORMULAIRE:
+        erreurs.append("Statut invalide.")
     if donnees["_erreur_source_url"]:
         erreurs.append(donnees["_erreur_source_url"])
+    if donnees["_erreur_scheduled"]:
+        erreurs.append(donnees["_erreur_scheduled"])
     return erreurs
 
 
@@ -124,10 +152,37 @@ def _traiter_image(donnees):
 def articles():
     statut = request.args.get("statut", "")
     query = Article.query
-    if statut in ("publie", "brouillon"):
+    if statut in ("publie", "brouillon", "en_relecture", "programme", "archive"):
         query = query.filter_by(status=statut)
     liste = query.order_by(Article.created_at.desc()).all()
     return render_template("admin/articles.html", articles=liste, statut=statut)
+
+
+@admin_bp.route("/articles/<int:article_id>/archiver", methods=["POST"])
+@login_required
+@moderator_required
+def archive_article(article_id):
+    """Retire un article de la circulation publique sans le supprimer ni
+    perdre son historique — distinct d'un retour à l'état brouillon, qui
+    laisserait croire qu'il n'a jamais été publié."""
+    article = Article.query.get_or_404(article_id)
+    article.status = "archive"
+    db.session.commit()
+    flash("Article archivé.", "info")
+    return redirect(url_for("admin.articles"))
+
+
+@admin_bp.route("/articles/publier-programmes", methods=["POST"])
+@login_required
+@admin_required
+def publish_scheduled_now():
+    """Version déclenchable depuis l'admin de `flask publish-scheduled` —
+    sert à vérifier manuellement que la programmation fonctionne, et de
+    filet de sécurité si la tâche planifiée externe ne s'exécute pas."""
+    from scheduler import publier_articles_programmes
+    n = publier_articles_programmes()
+    flash(f"{n} article(s) programmé(s) publié(s).", "success" if n else "info")
+    return redirect(url_for("admin.articles"))
 
 
 @admin_bp.route("/articles/nouveau", methods=["GET", "POST"])
@@ -161,6 +216,7 @@ def new_article():
             is_premium=donnees["is_premium"],
             is_featured=donnees["is_featured"],
             status=donnees["status"],
+            scheduled_at=donnees["scheduled_at"],
             # Une URL de réseau social valide classe l'article en
             # conséquence ; sans elle, comportement inchangé ("web").
             source=("reseaux_sociaux" if donnees["source_platform"] else "web"),
@@ -210,6 +266,7 @@ def edit_article(article_id):
         article.category_id = donnees["category_id"]
         article.is_premium = donnees["is_premium"]
         article.status = donnees["status"]
+        article.scheduled_at = donnees["scheduled_at"]
 
         # La provenance d'un article venu de l'agrégateur ou de WhatsApp ne
         # se modifie jamais depuis ce formulaire — seuls "web" et

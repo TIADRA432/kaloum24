@@ -462,8 +462,10 @@ table.admin-table th { font-family: var(--font-mono); font-size: 0.7rem;
   padding: 0.15rem 0.5rem; border-radius: 2px; white-space: nowrap; }
 .pill--publie, .pill--approuve { background: #DCEAE9; color: #1F5451; }
 .pill--brouillon { background: #EEE9DA; color: #6B6558; }
-.pill--en_attente { background: #F5E4C9; color: #8A5A17; }
+.pill--en_attente, .pill--en_relecture { background: #F5E4C9; color: #8A5A17; }
 .pill--rejete { background: #F3D9D9; color: #971217; }
+.pill--programme { background: #DCE4F5; color: #1F3E70; }
+.pill--archive { background: var(--paper-raised); color: var(--text-muted); border: 1px solid var(--line); }
 .pill--signale { background: var(--signal); color: #fff; }
 
 /* Badges de score de l'agrégateur (rouge/orange/jaune/blanc) */

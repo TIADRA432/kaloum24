@@ -611,7 +611,7 @@ kaloum24/
 ├── social_embed.py         # validation des URL de reseaux sociaux (Facebook)
 ├── seed_sources.py         # configuration des 15 sources d'agrégation vérifiées
 ├── seed.py                 # contenu de démonstration
-├── tests_fonctionnels.py   # 329 tests de bout en bout
+├── tests_fonctionnels.py   # 354 tests de bout en bout
 ├── mesure_poids.py         # mesure du poids des pages
 ├── blueprints/
 │   ├── main.py             # accueil, rubriques, article, commentaires, RSS, météo
@@ -643,7 +643,7 @@ kaloum24/
 python tests_fonctionnels.py
 ```
 
-329 tests couvrant : pages publiques, paywall, cycle de vie des commentaires,
+354 tests couvrant : pages publiques, paywall, cycle de vie des commentaires,
 rôles et permissions, protection CSRF, **assainissement XSS**, upload d'images
 (y compris le rejet des fichiers non-images), réinitialisation de mot de passe,
 flux RSS et sitemap, balises Open Graph, redirection ouverte, validation des
@@ -670,7 +670,9 @@ les trois contournements possibles, migration vérifiée sur une source déjà
 existante en base, extraction contre un vrai flux institutionnel, seed idempotent des 3
 sources institutionnelles vérifiées, intégration Facebook — validation
 d'URL, provenance jamais écrasée sur un article agrégateur/WhatsApp,
-widget officiel absent de tout article ordinaire).
+widget officiel absent de tout article ordinaire, workflow éditorial étendu
+— en relecture, programmation avec cycle complet vérifié, archivage,
+idempotence).
 
 Base temporaire : tes données ne sont pas touchées.
 

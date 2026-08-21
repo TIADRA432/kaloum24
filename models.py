@@ -93,7 +93,12 @@ class Article(db.Model):
     image_credit = db.Column(db.String(200))
     is_premium = db.Column(db.Boolean, nullable=False, default=False)
     is_featured = db.Column(db.Boolean, nullable=False, default=False)
+    # 'brouillon', 'en_relecture', 'programme', 'publie' ou 'archive' — voir
+    # _valider() dans blueprints/admin.py pour les règles de transition.
     status = db.Column(db.String(20), nullable=False, default="publie")
+    # Renseigné uniquement quand status == "programme" : moment (UTC) où
+    # `flask publish-scheduled` doit faire passer l'article en "publie".
+    scheduled_at = db.Column(db.DateTime)
     source = db.Column(db.String(20), nullable=False, default="web")  # 'web', 'whatsapp', 'agregateur' ou 'reseaux_sociaux'
     # Renseignés uniquement quand source == "reseaux_sociaux" : l'URL du
     # post d'origine (Facebook pour l'instant) et la plateforme détectée.

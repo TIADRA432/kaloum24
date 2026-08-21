@@ -7,11 +7,21 @@
   <a href="{{ url_for('admin.new_article') }}">+ Nouvel article</a>
 </div>
 
-<div class="row-actions" style="margin-bottom:1.25rem;">
+<div class="row-actions" style="margin-bottom:1.25rem; flex-wrap:wrap;">
   <a class="btn btn--small {{ 'btn--ghost' if statut }}" href="{{ url_for('admin.articles') }}">Tous</a>
   <a class="btn btn--small {{ 'btn--ghost' if statut != 'publie' }}" href="{{ url_for('admin.articles', statut='publie') }}">Publiés</a>
   <a class="btn btn--small {{ 'btn--ghost' if statut != 'brouillon' }}" href="{{ url_for('admin.articles', statut='brouillon') }}">Brouillons</a>
+  <a class="btn btn--small {{ 'btn--ghost' if statut != 'en_relecture' }}" href="{{ url_for('admin.articles', statut='en_relecture') }}">En relecture</a>
+  <a class="btn btn--small {{ 'btn--ghost' if statut != 'programme' }}" href="{{ url_for('admin.articles', statut='programme') }}">Programmés</a>
+  <a class="btn btn--small {{ 'btn--ghost' if statut != 'archive' }}" href="{{ url_for('admin.articles', statut='archive') }}">Archivés</a>
 </div>
+
+{% if statut == 'programme' %}
+<form method="post" action="{{ url_for('admin.publish_scheduled_now') }}" style="margin-bottom:1.25rem;">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button type="submit" class="btn btn--small btn--ghost">Vérifier maintenant (publier ceux dont l'heure est passée)</button>
+</form>
+{% endif %}
 
 <div class="table-scroll">
 <table class="admin-table">
@@ -26,12 +36,25 @@
         {% if a.source == 'whatsapp' %} <span class="pill pill--signale" style="background:var(--wire);">WhatsApp</span>{% endif %}
       </td>
       <td>{{ a.category.name }}</td>
-      <td><span class="pill pill--{{ a.status }}">{{ {'publie':'Publié','brouillon':'Brouillon'}.get(a.status, a.status) }}</span></td>
+      <td>
+        <span class="pill pill--{{ a.status }}">{{
+          {'publie':'Publié','brouillon':'Brouillon','en_relecture':'En relecture',
+           'programme':'Programmé','archive':'Archivé'}.get(a.status, a.status) }}</span>
+        {% if a.status == 'programme' and a.scheduled_at %}
+        <br><small style="color:var(--text-muted);">{{ a.scheduled_at|fr_datetime }} (UTC)</small>
+        {% endif %}
+      </td>
       <td>{{ a.views }}</td>
       <td>{{ a.created_at|fr_date }}</td>
       <td class="row-actions">
         <a class="link-btn" href="{{ url_for('main.article_detail', slug=a.slug) }}">Voir</a>
         <a class="link-btn" href="{{ url_for('admin.edit_article', article_id=a.id) }}">Modifier</a>
+        {% if a.status == 'publie' %}
+        <form method="post" action="{{ url_for('admin.archive_article', article_id=a.id) }}" style="display:inline;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="link-btn">Archiver</button>
+        </form>
+        {% endif %}
         <form method="post" action="{{ url_for('admin.delete_article', article_id=a.id) }}"
               onsubmit="return confirm('Supprimer définitivement cet article ?');">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

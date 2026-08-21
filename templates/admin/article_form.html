@@ -91,10 +91,25 @@
     <label for="is_featured">Mettre à la une (remplace l'article actuellement à la une)</label>
   </div>
 
-  <div class="field-check">
-    <input type="checkbox" id="publish" name="publish"
-           {% if not val or val.status == 'publie' %}checked{% endif %}>
-    <label for="publish">Publier (sinon enregistré en brouillon)</label>
+  <div class="field">
+    <label for="status">Statut</label>
+    <select id="status" name="status">
+      <option value="brouillon" {% if val and val.status == 'brouillon' %}selected{% endif %}>Brouillon</option>
+      <option value="en_relecture" {% if val and val.status == 'en_relecture' %}selected{% endif %}>En relecture</option>
+      <option value="programme" {% if val and val.status == 'programme' %}selected{% endif %}>Programmé</option>
+      <option value="publie" {% if not val or val.status == 'publie' %}selected{% endif %}>Publié</option>
+    </select>
+    <p class="field-hint">« En relecture » signale qu'il est prêt pour un second regard, sans le
+      publier. « Programmé » le publie tout seul à la date choisie ci-dessous.</p>
+  </div>
+
+  <div class="field" id="champProgrammation"
+       {% if not val or val.status != 'programme' %}hidden{% endif %}>
+    <label for="scheduled_at">Publier automatiquement le (heure UTC)</label>
+    <input type="datetime-local" id="scheduled_at" name="scheduled_at"
+           value="{{ val.scheduled_at.strftime('%Y-%m-%dT%H:%M') if val and val.scheduled_at else '' }}">
+    <p class="field-hint">Vérifie qu'une tâche planifiée <code>flask publish-scheduled</code> tourne
+      bien côté serveur — sinon rien ne se publiera automatiquement à l'heure dite.</p>
   </div>
 
   <button type="submit" class="btn">{{ "Enregistrer" if article else "Créer l'article" }}</button>
@@ -103,6 +118,16 @@
 {% endblock %}
 
 {% block scripts %}
+<script>
+(function () {
+  var select = document.getElementById("status");
+  var champ = document.getElementById("champProgrammation");
+  if (!select || !champ) return;
+  select.addEventListener("change", function () {
+    champ.hidden = select.value !== "programme";
+  });
+})();
+</script>
 <script src="{{ url_for('static', filename='vendor/quill/quill.min.js') }}"></script>
 <script>
 (function () {

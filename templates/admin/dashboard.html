@@ -5,6 +5,8 @@
 <div class="stat-grid">
   <div class="stat-card"><div class="stat-card__value">{{ stats.articles_publies }}</div><div class="stat-card__label">Articles publiés</div></div>
   <div class="stat-card"><div class="stat-card__value">{{ stats.brouillons }}</div><div class="stat-card__label">Brouillons</div></div>
+  <div class="stat-card"><div class="stat-card__value">{{ stats.en_relecture }}</div><div class="stat-card__label">En relecture</div></div>
+  <div class="stat-card"><div class="stat-card__value">{{ stats.programmes }}</div><div class="stat-card__label">Programmés</div></div>
   <div class="stat-card {{ 'stat-card--alert' if stats.commentaires_en_attente }}">
     <div class="stat-card__value">{{ stats.commentaires_en_attente }}</div><div class="stat-card__label">À modérer</div></div>
   <div class="stat-card {{ 'stat-card--alert' if stats.commentaires_signales }}">
