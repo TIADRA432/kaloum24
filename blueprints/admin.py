@@ -10,6 +10,7 @@ from extensions import db
 from models import (
     Article, Category, Comment, User, Correspondent, Source,
     CollectedArticle, ScoringConfig, Topic, COLLECTED_STATUSES, ModerationLog,
+    ArticleSource, EditorialComment, ArticleRevision, ARTICLE_TYPES, TYPES_SOURCE_ARTICLE,
 )
 from utils import (
     moderator_required, admin_required, unique_slug,
@@ -105,6 +106,7 @@ def _lire_formulaire_article():
         "image_url": request.form.get("image_url", "").strip(),
         "image_credit": request.form.get("image_credit", "").strip(),
         "category_id": request.form.get("category_id", type=int),
+        "article_type": request.form.get("article_type", "article"),
         "is_premium": bool(request.form.get("is_premium")),
         "is_featured": bool(request.form.get("is_featured")),
         "status": statut_choisi,
@@ -128,6 +130,8 @@ def _valider(donnees):
         erreurs.append("Choisis une catégorie valide.")
     if donnees["status"] not in STATUTS_ARTICLE_FORMULAIRE:
         erreurs.append("Statut invalide.")
+    if donnees["article_type"] not in ARTICLE_TYPES:
+        erreurs.append("Type de contenu invalide.")
     if donnees["_erreur_source_url"]:
         erreurs.append(donnees["_erreur_source_url"])
     if donnees["_erreur_scheduled"]:
@@ -144,6 +148,37 @@ def _traiter_image(donnees):
             return erreur
         donnees["image_url"] = url
     return None
+
+
+# Champs surveillés pour l'historique — "content" à part car son texte
+# complet ne vaut pas la peine d'être dupliqué à chaque modification (voir
+# ArticleRevision, models.py). Les autres gardent leur valeur avant/après
+# intégrale : ce sont des champs courts par nature.
+_CHAMPS_HISTORISES = ("title", "summary", "category_id", "status", "article_type")
+
+
+def _enregistrer_revisions(article, donnees):
+    """Compare l'état actuel de `article` aux nouvelles valeurs de
+    `donnees` AVANT toute affectation, et journalise chaque champ changé.
+    À appeler avant de modifier `article`, jamais après."""
+    for champ in _CHAMPS_HISTORISES:
+        ancienne = getattr(article, champ)
+        nouvelle = donnees.get(champ if champ != "content" else "content_html")
+        if str(ancienne) != str(nouvelle):
+            db.session.add(ArticleRevision(
+                article_id=article.id, author_id=current_user.id, field_name=champ,
+                old_value=str(ancienne) if ancienne is not None else None,
+                new_value=str(nouvelle) if nouvelle is not None else None,
+            ))
+
+    ancien_contenu = strip_html(article.content or "")
+    nouveau_contenu = strip_html(donnees["content_html"] or "")
+    if ancien_contenu != nouveau_contenu:
+        db.session.add(ArticleRevision(
+            article_id=article.id, author_id=current_user.id, field_name="content",
+            old_value=f"{len(ancien_contenu)} caractères",
+            new_value=f"{len(nouveau_contenu)} caractères",
+        ))
 
 
 @admin_bp.route("/articles")
@@ -212,6 +247,7 @@ def new_article():
             image_url=donnees["image_url"] or None,
             image_credit=donnees["image_credit"] or None,
             category_id=donnees["category_id"],
+            article_type=donnees["article_type"],
             author_id=current_user.id,
             is_premium=donnees["is_premium"],
             is_featured=donnees["is_featured"],
@@ -256,6 +292,8 @@ def edit_article(article_id):
             return render_template("admin/article_form.html", categories=categories,
                                    article=article, form=donnees)
 
+        _enregistrer_revisions(article, donnees)
+
         if donnees["title"] != article.title:
             article.slug = unique_slug(donnees["title"], Article, exclude_id=article.id)
         article.title = donnees["title"]
@@ -264,6 +302,7 @@ def edit_article(article_id):
         article.image_url = donnees["image_url"] or None
         article.image_credit = donnees["image_credit"] or None
         article.category_id = donnees["category_id"]
+        article.article_type = donnees["article_type"]
         article.is_premium = donnees["is_premium"]
         article.status = donnees["status"]
         article.scheduled_at = donnees["scheduled_at"]
@@ -294,6 +333,73 @@ def edit_article(article_id):
 
     return render_template("admin/article_form.html", categories=categories,
                            article=article, form=None)
+
+
+# --------------------------------------------------- sources et commentaires
+# éditoriaux d'un article (Phase 1 du plan rédaction, voir PLAN_REDACTION.md)
+
+@admin_bp.route("/articles/<int:article_id>/sources", methods=["POST"])
+@login_required
+@moderator_required
+def add_article_source(article_id):
+    article = Article.query.get_or_404(article_id)
+    nom = request.form.get("nom", "").strip()
+    if len(nom) < 2:
+        flash("Le nom de la source doit faire au moins 2 caractères.", "error")
+        return redirect(url_for("admin.edit_article", article_id=article.id))
+
+    type_source = request.form.get("type_source", "").strip()
+    db.session.add(ArticleSource(
+        article_id=article.id, nom=nom,
+        url=request.form.get("url", "").strip() or None,
+        type_source=type_source if type_source in TYPES_SOURCE_ARTICLE else None,
+        citation=request.form.get("citation", "").strip() or None,
+    ))
+    db.session.commit()
+    flash("Source ajoutée.", "success")
+    return redirect(url_for("admin.edit_article", article_id=article.id))
+
+
+@admin_bp.route("/articles/<int:article_id>/sources/<int:source_id>/supprimer", methods=["POST"])
+@login_required
+@moderator_required
+def delete_article_source(article_id, source_id):
+    source = ArticleSource.query.filter_by(id=source_id, article_id=article_id).first_or_404()
+    db.session.delete(source)
+    db.session.commit()
+    flash("Source retirée.", "info")
+    return redirect(url_for("admin.edit_article", article_id=article_id))
+
+
+@admin_bp.route("/articles/<int:article_id>/commentaires-editoriaux", methods=["POST"])
+@login_required
+@moderator_required
+def add_editorial_comment(article_id):
+    article = Article.query.get_or_404(article_id)
+    contenu = request.form.get("content", "").strip()
+    if len(contenu) < 2:
+        flash("Le commentaire ne peut pas être vide.", "error")
+        return redirect(url_for("admin.edit_article", article_id=article.id))
+
+    db.session.add(EditorialComment(
+        article_id=article.id, author_id=current_user.id, content=contenu,
+    ))
+    db.session.commit()
+    flash("Commentaire ajouté.", "success")
+    return redirect(url_for("admin.edit_article", article_id=article.id))
+
+
+@admin_bp.route("/articles/<int:article_id>/commentaires-editoriaux/<int:comment_id>/resoudre",
+                methods=["POST"])
+@login_required
+@moderator_required
+def toggle_editorial_comment(article_id, comment_id):
+    commentaire = EditorialComment.query.filter_by(
+        id=comment_id, article_id=article_id
+    ).first_or_404()
+    commentaire.resolved = not commentaire.resolved
+    db.session.commit()
+    return redirect(url_for("admin.edit_article", article_id=article_id))
 
 
 @admin_bp.route("/articles/<int:article_id>/supprimer", methods=["POST"])

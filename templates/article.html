@@ -43,6 +43,10 @@
     <span class="eyebrow">
       <a href="{{ url_for('main.category', slug=article.category.slug) }}">{{ article.category.name }}</a>
       {% if article.is_premium %} · <span class="badge-premium">Abonnés</span>{% endif %}
+      {% if article.article_type != "article" %} · <span class="badge-agrege">{{
+        {'breve':'Brève','depeche':'Dépêche','reportage':'Reportage','interview':'Interview',
+         'analyse':'Analyse','tribune':'Tribune','chronique':'Chronique','enquete':'Enquête',
+         'portrait':'Portrait','fact_checking':'Fact-checking'}.get(article.article_type) }}</span>{% endif %}
       {% if article.source == "agregateur" %} · <span class="badge-agrege">Agrégé</span>{% endif %}
       {% if article.source == "reseaux_sociaux" %} · <span class="badge-agrege">Réseaux sociaux</span>{% endif %}
     </span>

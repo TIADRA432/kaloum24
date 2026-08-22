@@ -18,6 +18,19 @@
   </div>
 
   <div class="field">
+    <label for="article_type">Type de contenu</label>
+    <select id="article_type" name="article_type">
+      {% for t, label in [('article','Article'), ('breve','Brève'), ('depeche','Dépêche'),
+                          ('reportage','Reportage'), ('interview','Interview'),
+                          ('analyse','Analyse'), ('tribune','Tribune'),
+                          ('chronique','Chronique'), ('enquete','Enquête'),
+                          ('portrait','Portrait'), ('fact_checking','Fact-checking')] %}
+      <option value="{{ t }}" {% if val and val.article_type == t %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="field">
     <label for="summary">Résumé</label>
     <textarea id="summary" name="summary" required minlength="10" rows="2"
               maxlength="400">{{ val.summary if val else '' }}</textarea>
@@ -115,6 +128,100 @@
   <button type="submit" class="btn">{{ "Enregistrer" if article else "Créer l'article" }}</button>
   <a class="btn btn--ghost" href="{{ url_for('admin.articles') }}">Annuler</a>
 </form>
+
+{% if article %}
+<div class="section-head" style="margin-top:2.5rem;"><h2>Sources citées</h2></div>
+<div style="max-width:760px;">
+  {% for s in article.sources_citees %}
+  <div style="padding:0.6rem 0; border-bottom:1px solid var(--line);">
+    <strong>{{ s.nom }}</strong>
+    {% if s.type_source %}<span class="pill pill--brouillon">{{ s.type_source }}</span>{% endif %}
+    {% if s.url %} — <a href="{{ s.url }}" target="_blank" rel="noopener noreferrer">{{ s.url }}</a>{% endif %}
+    {% if s.citation %}<br><em>« {{ s.citation }} »</em>{% endif %}
+    <form method="post" action="{{ url_for('admin.delete_article_source', article_id=article.id, source_id=s.id) }}"
+          style="display:inline;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="link-btn link-btn--danger">Retirer</button>
+    </form>
+  </div>
+  {% else %}
+  <p class="empty-state">Aucune source citée pour l'instant.</p>
+  {% endfor %}
+
+  <form method="post" action="{{ url_for('admin.add_article_source', article_id=article.id) }}"
+        style="margin-top:1rem;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="field"><label for="src_nom">Nom de la source</label>
+      <input type="text" id="src_nom" name="nom" required minlength="2"></div>
+    <div class="field"><label for="src_url">URL (facultatif)</label>
+      <input type="url" id="src_url" name="url"></div>
+    <div class="field"><label for="src_type">Type</label>
+      <select id="src_type" name="type_source">
+        <option value="">—</option>
+        <option value="site_officiel">Site officiel</option>
+        <option value="media">Média</option>
+        <option value="reseau_social">Réseau social</option>
+        <option value="document">Document</option>
+        <option value="interview">Interview</option>
+      </select></div>
+    <div class="field"><label for="src_citation">Citation utilisée (facultatif)</label>
+      <input type="text" id="src_citation" name="citation"></div>
+    <button type="submit" class="btn btn--small btn--ghost">Ajouter la source</button>
+  </form>
+</div>
+
+<div class="section-head" style="margin-top:2.5rem;"><h2>Commentaires éditoriaux (internes)</h2></div>
+<p style="max-width:64ch; color:var(--text-muted);">Jamais visibles du lecteur public — un échange entre
+  relecteur et auteur.</p>
+<div style="max-width:760px;">
+  {% for c in article.commentaires_editoriaux|sort(attribute='created_at', reverse=true) %}
+  <div style="padding:0.6rem 0; border-bottom:1px solid var(--line); {{ 'opacity:0.55;' if c.resolved }}">
+    <strong>{{ c.author.username }}</strong>
+    <small style="color:var(--text-muted);">{{ c.created_at|fr_datetime }}</small>
+    {% if c.resolved %}<span class="pill pill--approuve">Résolu</span>{% endif %}
+    <p style="margin:0.3rem 0;">{{ c.content }}</p>
+    <form method="post"
+          action="{{ url_for('admin.toggle_editorial_comment', article_id=article.id, comment_id=c.id) }}"
+          style="display:inline;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="link-btn">{{ "Rouvrir" if c.resolved else "Marquer résolu" }}</button>
+    </form>
+  </div>
+  {% else %}
+  <p class="empty-state">Aucun commentaire éditorial pour l'instant.</p>
+  {% endfor %}
+
+  <form method="post" action="{{ url_for('admin.add_editorial_comment', article_id=article.id) }}"
+        style="margin-top:1rem;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="field">
+      <textarea name="content" rows="2" placeholder="Ex. : Vérifier cette information avant publication." required></textarea>
+    </div>
+    <button type="submit" class="btn btn--small btn--ghost">Ajouter le commentaire</button>
+  </form>
+</div>
+
+{% if article.revisions %}
+<div class="section-head" style="margin-top:2.5rem;"><h2>Historique des modifications</h2></div>
+<div class="table-scroll" style="max-width:760px;">
+<table class="admin-table">
+  <thead><tr><th>Date</th><th>Champ</th><th>Avant</th><th>Après</th><th>Par</th></tr></thead>
+  <tbody>
+    {% for r in article.revisions|sort(attribute='created_at', reverse=true) %}
+    <tr>
+      <td>{{ r.created_at|fr_datetime }}</td>
+      <td>{{ r.field_name }}</td>
+      <td style="max-width:220px;">{{ (r.old_value or '—')|truncate(60) }}</td>
+      <td style="max-width:220px;">{{ (r.new_value or '—')|truncate(60) }}</td>
+      <td>{{ r.author.username if r.author else '—' }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+{% endif %}
+
 {% endblock %}
 
 {% block scripts %}

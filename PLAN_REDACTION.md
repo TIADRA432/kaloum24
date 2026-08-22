@@ -109,13 +109,13 @@ configuré aujourd'hui — à trancher explicitement, pas supposé.
 
 ## I. Plan de phases
 
-| Phase | Contenu | Taille approx. |
-| --- | --- | --- |
-| **1** | Types de contenu, sources structurées, commentaires éditoriaux, historique de modifications | 3-4 jours |
-| **2** | Rôle rédacteur, workflow à boucle (soumis/à relire/correction), file de relecture | 3-4 jours |
-| **3** | Assistant IA (après décision sur l'API à utiliser) | 4-6 jours |
-| **4** | Médiathèque réutilisable | 2-3 jours |
-| Hors périmètre (§C) | Mode hors ligne, calendrier, notifications, analytique | Non chiffré — à revisiter une fois une vraie équipe en place |
+| Phase | Contenu | Taille approx. | Statut |
+| --- | --- | --- | --- |
+| **1** | Types de contenu, sources structurées, commentaires éditoriaux, historique de modifications | 3-4 jours | ✅ Fait — 373 tests, vérifié en conditions réelles |
+| **2** | Rôle rédacteur, workflow à boucle (soumis/à relire/correction), file de relecture | 3-4 jours | À faire |
+| **3** | Assistant IA (après décision sur l'API à utiliser) | 4-6 jours | À faire |
+| **4** | Médiathèque réutilisable | 2-3 jours | À faire |
+| Hors périmètre (§C) | Mode hors ligne, calendrier, notifications, analytique | Non chiffré — à revisiter une fois une vraie équipe en place | — |
 
 ## J. Prochaine étape
 

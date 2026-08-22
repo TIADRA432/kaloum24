@@ -2523,6 +2523,187 @@ ok("Route publier-programmes bloquee pour un simple utilisateur (403)",
    simple_user6.post("/admin/articles/publier-programmes",
                      data={"csrf_token": _tok_su6}).status_code == 403)
 
+# =============================================== Phase 1 rédaction : types,
+# sources, commentaires éditoriaux, historique (voir PLAN_REDACTION.md)
+from models import ArticleSource, EditorialComment, ArticleRevision  # noqa: E402
+
+admin_r1 = app.test_client()
+tok = csrf(admin_r1, "/connexion")
+admin_r1.post("/connexion", data={"csrf_token": tok, "identifiant": "admin",
+                                  "password": "ChangeMoi123!"}, follow_redirects=True)
+with app.app_context():
+    _cat_id_r1 = Category.query.first().id
+
+# --- type de contenu ---
+tok = csrf(admin_r1, "/admin/articles/nouveau")
+admin_r1.post("/admin/articles/nouveau", data={
+    "csrf_token": tok, "title": "Un reportage sur le terrain",
+    "summary": "Un resume suffisant pour ce reportage de test.",
+    "content": "Un contenu suffisamment etoffe pour passer la validation du formulaire.",
+    "category_id": str(_cat_id_r1), "article_type": "reportage", "status": "publie",
+})
+with app.app_context():
+    art_r1 = Article.query.filter_by(title="Un reportage sur le terrain").first()
+    ok("Type de contenu : enregistre correctement", art_r1.article_type == "reportage")
+    _art_r1_id, _slug_r1 = art_r1.id, art_r1.slug
+
+lecteur_r1 = app.test_client()
+page_r1 = text(lecteur_r1.get("/article/" + _slug_r1))
+ok("Type de contenu : badge 'Reportage' visible publiquement", "Reportage" in page_r1)
+
+# --- article sans type explicite : reste 'article' par defaut ---
+tok = csrf(admin_r1, "/admin/articles/nouveau")
+admin_r1.post("/admin/articles/nouveau", data={
+    "csrf_token": tok, "title": "Article ordinaire sans type precise",
+    "summary": "Un resume suffisant pour cet article ordinaire.",
+    "content": "Un contenu suffisamment etoffe pour passer la validation du formulaire.",
+    "category_id": str(_cat_id_r1), "status": "publie",
+})
+with app.app_context():
+    art_defaut = Article.query.filter_by(title="Article ordinaire sans type precise").first()
+    ok("Type de contenu : 'article' par defaut si non precise",
+       art_defaut.article_type == "article")
+
+# --- type invalide refuse ---
+tok = csrf(admin_r1, "/admin/articles/nouveau")
+r = admin_r1.post("/admin/articles/nouveau", data={
+    "csrf_token": tok, "title": "Article avec type invalide",
+    "summary": "Un resume suffisant pour cet article de test.",
+    "content": "Un contenu suffisamment etoffe pour passer la validation du formulaire.",
+    "category_id": str(_cat_id_r1), "article_type": "n_importe_quoi",
+})
+ok("Type de contenu invalide : refuse", "invalide" in text(r).lower())
+
+# --- sources citées ---
+tok = csrf(admin_r1, f"/admin/articles/{_art_r1_id}/modifier")
+admin_r1.post(f"/admin/articles/{_art_r1_id}/sources", data={
+    "csrf_token": tok, "nom": "Ministère de la Santé", "url": "https://exemple.test",
+    "type_source": "site_officiel", "citation": "Une citation test suffisamment longue.",
+})
+with app.app_context():
+    src = ArticleSource.query.filter_by(article_id=_art_r1_id).first()
+    ok("Source citee : enregistree avec ses champs",
+       src is not None and src.nom == "Ministère de la Santé"
+       and src.type_source == "site_officiel")
+    _src_id = src.id
+
+page_edit_r1 = text(admin_r1.get(f"/admin/articles/{_art_r1_id}/modifier"))
+ok("Source citee : visible dans le formulaire d'edition", "Ministère de la Santé" in page_edit_r1)
+
+# --- source avec nom trop court refusee ---
+tok = csrf(admin_r1, f"/admin/articles/{_art_r1_id}/modifier")
+r = admin_r1.post(f"/admin/articles/{_art_r1_id}/sources",
+                  data={"csrf_token": tok, "nom": "X"}, follow_redirects=True)
+ok("Source citee : nom trop court refuse", "2 caractères" in text(r))
+
+# --- suppression d'une source ---
+tok = csrf(admin_r1, f"/admin/articles/{_art_r1_id}/modifier")
+admin_r1.post(f"/admin/articles/{_art_r1_id}/sources/{_src_id}/supprimer",
+             data={"csrf_token": tok})
+with app.app_context():
+    ok("Source citee : supprimee", db.session.get(ArticleSource, _src_id) is None)
+
+# --- commentaires éditoriaux internes ---
+tok = csrf(admin_r1, f"/admin/articles/{_art_r1_id}/modifier")
+admin_r1.post(f"/admin/articles/{_art_r1_id}/commentaires-editoriaux", data={
+    "csrf_token": tok, "content": "Verifier cette information avant publication.",
+})
+with app.app_context():
+    com = EditorialComment.query.filter_by(article_id=_art_r1_id).first()
+    ok("Commentaire editorial : enregistre, non resolu par defaut",
+       com is not None and com.resolved is False)
+    _com_id = com.id
+
+page_r1_public = text(lecteur_r1.get("/article/" + _slug_r1))
+ok("Commentaire editorial : jamais visible du lecteur public",
+   "Verifier cette information avant publication" not in page_r1_public)
+
+page_edit_r1b = text(admin_r1.get(f"/admin/articles/{_art_r1_id}/modifier"))
+ok("Commentaire editorial : visible dans l'edition admin",
+   "Verifier cette information avant publication" in page_edit_r1b)
+
+# --- résoudre / rouvrir un commentaire éditorial ---
+tok = csrf(admin_r1, f"/admin/articles/{_art_r1_id}/modifier")
+admin_r1.post(f"/admin/articles/{_art_r1_id}/commentaires-editoriaux/{_com_id}/resoudre",
+             data={"csrf_token": tok})
+with app.app_context():
+    ok("Commentaire editorial : marque resolu", db.session.get(EditorialComment, _com_id).resolved)
+
+tok = csrf(admin_r1, f"/admin/articles/{_art_r1_id}/modifier")
+admin_r1.post(f"/admin/articles/{_art_r1_id}/commentaires-editoriaux/{_com_id}/resoudre",
+             data={"csrf_token": tok})
+with app.app_context():
+    ok("Commentaire editorial : rouvert (bascule)",
+       not db.session.get(EditorialComment, _com_id).resolved)
+
+# --- historique des modifications ---
+with app.app_context():
+    _nb_revisions_avant = ArticleRevision.query.filter_by(article_id=_art_r1_id).count()
+
+tok = csrf(admin_r1, f"/admin/articles/{_art_r1_id}/modifier")
+admin_r1.post(f"/admin/articles/{_art_r1_id}/modifier", data={
+    "csrf_token": tok, "title": "Un reportage sur le terrain, modifie",
+    "summary": "Un resume suffisant pour ce reportage de test.",
+    "content": "Un contenu suffisamment etoffe pour passer la validation du formulaire.",
+    "category_id": str(_cat_id_r1), "article_type": "reportage", "status": "publie",
+})
+with app.app_context():
+    rev_titre = ArticleRevision.query.filter_by(
+        article_id=_art_r1_id, field_name="title"
+    ).order_by(ArticleRevision.created_at.desc()).first()
+    ok("Historique : revision de titre enregistree avec avant/apres corrects",
+       rev_titre is not None
+       and rev_titre.old_value == "Un reportage sur le terrain"
+       and rev_titre.new_value == "Un reportage sur le terrain, modifie")
+
+# Republier SANS rien changer : aucune nouvelle revision (pas de faux positif).
+with app.app_context():
+    _nb_revisions_stable = ArticleRevision.query.filter_by(article_id=_art_r1_id).count()
+tok = csrf(admin_r1, f"/admin/articles/{_art_r1_id}/modifier")
+admin_r1.post(f"/admin/articles/{_art_r1_id}/modifier", data={
+    "csrf_token": tok, "title": "Un reportage sur le terrain, modifie",
+    "summary": "Un resume suffisant pour ce reportage de test.",
+    "content": "Un contenu suffisamment etoffe pour passer la validation du formulaire.",
+    "category_id": str(_cat_id_r1), "article_type": "reportage", "status": "publie",
+})
+with app.app_context():
+    ok("Historique : aucune revision creee si rien n'a change",
+       ArticleRevision.query.filter_by(article_id=_art_r1_id).count() == _nb_revisions_stable)
+
+# Le champ "content" ne stocke jamais le texte complet, seulement sa taille.
+tok = csrf(admin_r1, f"/admin/articles/{_art_r1_id}/modifier")
+admin_r1.post(f"/admin/articles/{_art_r1_id}/modifier", data={
+    "csrf_token": tok, "title": "Un reportage sur le terrain, modifie",
+    "summary": "Un resume suffisant pour ce reportage de test.",
+    "content": "Un contenu completement different, suffisamment long pour la validation.",
+    "category_id": str(_cat_id_r1), "article_type": "reportage", "status": "publie",
+})
+with app.app_context():
+    rev_contenu = ArticleRevision.query.filter_by(
+        article_id=_art_r1_id, field_name="content"
+    ).order_by(ArticleRevision.created_at.desc()).first()
+    ok("Historique : le champ content ne stocke jamais le texte integral",
+       rev_contenu is not None and "caractères" in rev_contenu.new_value
+       and "Un contenu completement different" not in rev_contenu.new_value)
+
+page_edit_r1c = text(admin_r1.get(f"/admin/articles/{_art_r1_id}/modifier"))
+ok("Historique : visible dans l'ecran d'edition", "Historique des modifications" in page_edit_r1c)
+
+# --- permissions : un simple utilisateur ne peut rien faire de tout ça ---
+simple_user7 = app.test_client()
+tok = csrf(simple_user7, "/inscription")
+simple_user7.post("/inscription", data={
+    "csrf_token": tok, "username": "lecteur_redaction_test",
+    "email": "lecteur_redaction_test@example.com",
+    "password": "MotDePasse1", "password_confirm": "MotDePasse1"})
+_tok_su7 = csrf(simple_user7, "/compte")
+ok("Ajout de source bloque pour un simple utilisateur (403)",
+   simple_user7.post(f"/admin/articles/{_art_r1_id}/sources",
+                     data={"csrf_token": _tok_su7, "nom": "Tentative"}).status_code == 403)
+ok("Ajout de commentaire editorial bloque pour un simple utilisateur (403)",
+   simple_user7.post(f"/admin/articles/{_art_r1_id}/commentaires-editoriaux",
+                     data={"csrf_token": _tok_su7, "content": "Tentative"}).status_code == 403)
+
 os.close(_db_fd)
 os.unlink(_db_path)
 

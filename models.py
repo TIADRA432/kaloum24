@@ -87,6 +87,10 @@ class Article(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     slug = db.Column(db.String(220), nullable=False, unique=True, index=True)
+    # Taxonomie éditoriale — étiquette, ne change pas les champs disponibles
+    # dans le formulaire (voir PLAN_REDACTION.md, §B) : une extension future,
+    # pas construite tant que la simple étiquette n'a pas montré ses limites.
+    article_type = db.Column(db.String(20), nullable=False, default="article")
     summary = db.Column(db.String(400), nullable=False)
     content = db.Column(db.Text, nullable=False)            # HTML assaini
     image_url = db.Column(db.String(400))
@@ -454,3 +458,78 @@ class ScoringConfig(db.Model):
 
     def __repr__(self):
         return f"<ScoringConfig #{self.id}>"
+
+
+ARTICLE_TYPES = (
+    "article", "breve", "depeche", "reportage", "interview", "analyse",
+    "tribune", "chronique", "enquete", "portrait", "fact_checking",
+)
+
+TYPES_SOURCE_ARTICLE = ("site_officiel", "media", "reseau_social", "document", "interview")
+
+
+class ArticleSource(db.Model):
+    """Une source citée dans un article rédigé — distinct de
+    CollectedArticle, qui trace l'origine d'un article venu de l'agrégateur.
+    Ici, c'est le rédacteur qui déclare lui-même ses sources."""
+    __tablename__ = "article_sources"
+
+    id = db.Column(db.Integer, primary_key=True)
+    article_id = db.Column(db.Integer, db.ForeignKey("articles.id"), nullable=False)
+    nom = db.Column(db.String(200), nullable=False)
+    url = db.Column(db.String(500))
+    type_source = db.Column(db.String(30))
+    citation = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    article = db.relationship(
+        "Article", backref=db.backref("sources_citees", cascade="all, delete-orphan")
+    )
+
+    def __repr__(self):
+        return f"<ArticleSource {self.nom!r}>"
+
+
+class EditorialComment(db.Model):
+    """Commentaire interne entre relecteur et auteur — jamais visible du
+    lecteur public, à ne pas confondre avec le modèle Comment (lecteurs)."""
+    __tablename__ = "editorial_comments"
+
+    id = db.Column(db.Integer, primary_key=True)
+    article_id = db.Column(db.Integer, db.ForeignKey("articles.id"), nullable=False)
+    author_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    resolved = db.Column(db.Boolean, nullable=False, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    article = db.relationship(
+        "Article", backref=db.backref("commentaires_editoriaux", cascade="all, delete-orphan")
+    )
+    author = db.relationship("User")
+
+    def __repr__(self):
+        return f"<EditorialComment sur article#{self.article_id}>"
+
+
+class ArticleRevision(db.Model):
+    """Historique champ par champ — qui a changé quoi, quand. Le champ
+    "content" ne conserve pas le texte complet avant/après (volume), juste
+    le fait qu'il a changé et de combien de caractères — voir
+    blueprints/admin.py, _enregistrer_revisions()."""
+    __tablename__ = "article_revisions"
+
+    id = db.Column(db.Integer, primary_key=True)
+    article_id = db.Column(db.Integer, db.ForeignKey("articles.id"), nullable=False)
+    author_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    field_name = db.Column(db.String(50), nullable=False)
+    old_value = db.Column(db.Text)
+    new_value = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+    article = db.relationship(
+        "Article", backref=db.backref("revisions", cascade="all, delete-orphan")
+    )
+    author = db.relationship("User")
+
+    def __repr__(self):
+        return f"<ArticleRevision {self.field_name} sur article#{self.article_id}>"
