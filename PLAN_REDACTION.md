@@ -149,3 +149,29 @@ rédacteur ne pouvait pas insérer d'image dans son propre article. Corrigé.
 
 Phases B (tableaux, citation avec attribution, embed YouTube) et C (blocs
 éditoriaux ciblés) restent à faire, non commencées.
+
+---
+
+## L. Éditeur — Phase B (livrée en partie)
+
+- **Embed YouTube** — extension prudente et testée du sanitizer central
+  (`utils.sanitize_html`) : `<iframe>` reste interdit partout ailleurs,
+  autorisé uniquement avec un `src` strictement validé par regex vers
+  `youtube.com/embed/` ou `youtube-nocookie.com/embed/` — 12 cas d'attaque
+  testés (domaine déguisé, `javascript:`, `data:`, phishing en https
+  légitime, gestionnaires d'événements injectés, bypass de casse) en plus
+  des cas légitimes, tous vérifiés automatiquement. Le rendu visuel du
+  lecteur YouTube lui-même n'a pas pu être confirmé dans le navigateur
+  headless de test malgré un accès réseau réel confirmé et un balisage
+  strictement conforme au format officiel — même limite que le widget
+  Facebook plus tôt dans ce projet, probablement propre à l'environnement
+  de test, pas une anomalie du code.
+- **Citation avec attribution** — un vrai bug trouvé et corrigé en cours de
+  route : Quill reconstruit le HTML inséré à partir de son propre modèle
+  interne et ne conserve que les formats qu'il connaît nativement, pas les
+  classes CSS personnalisées. Corrigé en utilisant l'italique (format
+  natif) plutôt qu'une classe qui disparaissait silencieusement.
+
+**Tableaux : non commencés.** Nécessite un module tiers (Quill 1.3.7 n'a
+pas de support natif satisfaisant), donc une vraie dépendance
+supplémentaire à vendre et tester — reporté, pas fait à la légère.

@@ -2956,6 +2956,114 @@ ok("Formulaire article : bouton plein écran présent", 'id="btnPleinEcran"' in 
 ok("Formulaire article : compteur de mots présent", 'id="statsEditeur"' in page_form_pa)
 ok("Formulaire article : zone de dépôt d'image identifiée", 'id="editorWrap"' in page_form_pa)
 
+# =============================================== Phase B éditeur : embed
+# YouTube (validation stricte du sanitizer), citation avec attribution
+# (voir PLAN_REDACTION.md — le rendu visuel du lecteur YouTube lui-même n'a
+# pas pu être confirmé dans le navigateur headless de test, malgré un accès
+# réseau réel confirmé et un balisage strictement conforme au format
+# officiel — même limite déjà rencontrée avec le widget Facebook plus tôt
+# dans ce projet. Ce qui suit vérifie ce qui EST vérifiable : le sanitizer
+# serveur, qui est la vraie limite de sécurité.)
+from utils import sanitize_html  # noqa: E402
+
+_CAS_IFRAME = [
+    ("embed YouTube légitime",
+     '<iframe class="ql-video" frameborder="0" allowfullscreen="true" src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>',
+     ['src="https://www.youtube.com/embed/dQw4w9WgXcQ"'], []),
+    ("embed youtube-nocookie légitime",
+     '<iframe src="https://www.youtube-nocookie.com/embed/abc123"></iframe>',
+     ['src="https://www.youtube-nocookie.com/embed/abc123"'], []),
+    ("domaine arbitraire déguisé en YouTube",
+     '<iframe src="https://www.youtube.com.evil.com/embed/xxx"></iframe>', [], ['evil.com']),
+    ("javascript: dans le src",
+     '<iframe src="javascript:alert(1)"></iframe>', [], ['javascript:', 'alert']),
+    ("data: URI dans le src",
+     '<iframe src="data:text/html,<script>alert(1)</script>"></iframe>', [], ['data:', '<script>']),
+    ("site de phishing en https légitime",
+     '<iframe src="https://evil-phishing-site.com/embed/fake"></iframe>', [], ['evil-phishing-site']),
+    ("gestionnaire onload injecté",
+     '<iframe src="https://www.youtube.com/embed/abc" onload="alert(1)"></iframe>',
+     ['src="https://www.youtube.com/embed/abc"'], ['onload', 'alert']),
+    ("iframe sans src du tout",
+     '<iframe class="ql-video"></iframe>', [], ['src=']),
+    ("script classique (regression : doit rester bloqué comme avant)",
+     '<script>alert(1)</script><p>Texte normal</p>', ['Texte normal'], ['<script', 'alert']),
+    ("balise object (regression : doit rester bloquée comme avant)",
+     '<object data="evil.swf"></object><p>Texte</p>', ['Texte'], ['<object']),
+    ("presque-YouTube en majuscules (pas de bypass insensible a la casse)",
+     '<iframe src="HTTPS://WWW.YOUTUBE.COM/embed/xxx"></iframe>', [], ['YOUTUBE.COM']),
+    ("chemin YouTube watch normal, pas un embed",
+     '<iframe src="https://www.youtube.com/watch?v=dQw4w9WgXcQ"></iframe>', [], ['youtube.com/watch']),
+]
+
+with app.app_context():
+    for description, entree, doit_contenir, doit_pas_contenir in _CAS_IFRAME:
+        resultat = sanitize_html(entree)
+        reussi = (all(s in resultat for s in doit_contenir)
+                 and all(s not in resultat for s in doit_pas_contenir))
+        ok(f"sanitize_html iframe : {description}", reussi)
+
+# --- cycle complet réel : article avec embed + citation, via le vrai formulaire ---
+admin_pb = app.test_client()
+tok = csrf(admin_pb, "/connexion")
+admin_pb.post("/connexion", data={"csrf_token": tok, "identifiant": "admin",
+                                  "password": "ChangeMoi123!"}, follow_redirects=True)
+with app.app_context():
+    _cat_id_pb = Category.query.first().id
+
+contenu_pb = (
+    '<p>Avant la citation.</p>'
+    '<blockquote><p>Nous allons poursuivre cette réforme.</p></blockquote>'
+    '<p><em>— Le Ministre, lors d\'une conférence</em></p>'
+    '<iframe class="ql-video" frameborder="0" allowfullscreen="true" '
+    'src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
+    '<p>Après la vidéo.</p>'
+)
+tok = csrf(admin_pb, "/admin/articles/nouveau")
+admin_pb.post("/admin/articles/nouveau", data={
+    "csrf_token": tok, "title": "Article Phase B complet",
+    "summary": "Un resume suffisant pour cet article de test Phase B.",
+    "content": contenu_pb, "category_id": str(_cat_id_pb), "status": "publie",
+})
+with app.app_context():
+    art_pb = Article.query.filter_by(title="Article Phase B complet").first()
+    ok("Phase B (cycle reel) : article cree", art_pb is not None)
+    ok("Phase B (cycle reel) : blockquote conserve", "<blockquote>" in art_pb.content)
+    ok("Phase B (cycle reel) : attribution conservee",
+       "<em>" in art_pb.content and "Le Ministre" in art_pb.content)
+    ok("Phase B (cycle reel) : iframe YouTube conservee",
+       "youtube.com/embed/dQw4w9WgXcQ" in art_pb.content)
+    _slug_pb = art_pb.slug
+
+lecteur_pb = app.test_client()
+page_pb = text(lecteur_pb.get("/article/" + _slug_pb))
+ok("Phase B (cycle reel) : blockquote visible publiquement", "<blockquote>" in page_pb)
+ok("Phase B (cycle reel) : iframe YouTube visible publiquement",
+   "youtube.com/embed/dQw4w9WgXcQ" in page_pb)
+
+# --- une tentative d'injection dans le MÊME champ, via le vrai formulaire ---
+contenu_malicieux_pb = (
+    '<p>Texte normal suffisamment long pour passer la validation du formulaire.</p>'
+    '<iframe src="https://evil-site.test/embed/fake" onload="alert(1)"></iframe>'
+    '<script>alert(2)</script>'
+)
+tok = csrf(admin_pb, "/admin/articles/nouveau")
+admin_pb.post("/admin/articles/nouveau", data={
+    "csrf_token": tok, "title": "Article Phase B tentative injection",
+    "summary": "Un resume suffisant pour ce test de securite.",
+    "content": contenu_malicieux_pb, "category_id": str(_cat_id_pb), "status": "publie",
+})
+with app.app_context():
+    art_inj = Article.query.filter_by(title="Article Phase B tentative injection").first()
+    ok("Phase B (injection reelle via formulaire) : article cree quand meme (texte normal conserve)",
+       art_inj is not None and "Texte normal" in art_inj.content)
+    ok("Phase B (injection reelle via formulaire) : src malveillant absent",
+       "evil-site.test" not in art_inj.content)
+    ok("Phase B (injection reelle via formulaire) : onload absent",
+       "onload" not in art_inj.content)
+    ok("Phase B (injection reelle via formulaire) : script absent",
+       "<script" not in art_inj.content and "alert(2)" not in art_inj.content)
+
 os.close(_db_fd)
 os.unlink(_db_path)
 

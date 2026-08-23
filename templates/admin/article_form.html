@@ -54,7 +54,10 @@
   <div class="field">
     <label for="editor">Contenu</label>
     <div class="editor-toolbar-extra">
-      <button type="button" id="btnPleinEcran" class="btn btn--small btn--ghost">Plein écran</button>
+      <div class="editor-toolbar-extra__boutons">
+        <button type="button" id="btnPleinEcran" class="btn btn--small btn--ghost">Plein écran</button>
+        <button type="button" id="btnCitation" class="btn btn--small btn--ghost">Citation avec attribution</button>
+      </div>
       <span id="statsEditeur" class="editor-stats">0 mot · 0 min de lecture</span>
     </div>
     <div class="editor-wrap" id="editorWrap">
@@ -266,7 +269,7 @@
         container: [
           [{ header: [2, 3, false] }],
           ["bold", "italic", "underline"],
-          ["blockquote", "link", "image"],
+          ["blockquote", "link", "image", "video"],
           [{ list: "ordered" }, { list: "bullet" }],
           ["clean"]
         ],
@@ -293,6 +296,24 @@
                 .catch(function () { alert("Échec de l'envoi de l'image."); });
             };
             input.click();
+          },
+          // Seul YouTube est accepté — le serveur (utils.sanitize_html)
+          // applique exactement la même règle à l'enregistrement, jamais
+          // seulement côté client : ceci n'est qu'un confort immédiat pour
+          // éviter d'insérer quelque chose que le serveur retirerait de
+          // toute façon.
+          video: function () {
+            var url = prompt("Colle l'URL d'une vidéo YouTube (youtube.com/watch?v=… ou youtu.be/…) :");
+            if (!url) return;
+
+            var m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([A-Za-z0-9_-]{6,})/);
+            if (!m) {
+              alert("URL non reconnue comme une vidéo YouTube — seul YouTube est pris en charge pour l'instant.");
+              return;
+            }
+            var embedUrl = "https://www.youtube.com/embed/" + m[1];
+            var pos = quill.getSelection(true);
+            quill.insertEmbed(pos ? pos.index : quill.getLength(), "video", embedUrl, "user");
           }
         }
       }
@@ -440,6 +461,37 @@
     var shell = document.querySelector(".admin-shell");
     var pleinEcran = shell.classList.toggle("admin-shell--redaction");
     this.textContent = pleinEcran ? "Quitter le plein écran" : "Plein écran";
+  });
+
+  // ---------------------------------------------------------------------
+  // Citation avec attribution — un blockquote classique suivi d'une ligne
+  // d'attribution, plutôt qu'un format Quill sur mesure : plus simple et
+  // plus robuste que de se battre avec les internes de la barre d'outils
+  // pour une action qui n'est pas vraiment une bascule de mise en forme.
+  function echapperHTML(texte) {
+    var div = document.createElement("div");
+    div.textContent = texte;
+    return div.innerHTML;
+  }
+
+  document.getElementById("btnCitation").addEventListener("click", function () {
+    var citation = prompt("Texte de la citation :");
+    if (!citation) return;
+    var attribution = prompt("Attribution (ex. : Nom, Fonction — Source) :");
+
+    // Italique plutôt qu'une classe CSS : Quill reconstruit le HTML inséré
+    // à partir de son propre modèle interne (Delta) et ne conserve QUE les
+    // formats qu'il connaît nativement — une classe personnalisée non
+    // déclarée comme format Quill disparaît silencieusement à l'insertion
+    // (vérifié : c'est exactement ce qui se produisait avant ce correctif).
+    var html = "<blockquote><p>" + echapperHTML(citation) + "</p></blockquote>";
+    if (attribution) {
+      html += "<p><em>— " + echapperHTML(attribution) + "</em></p>";
+    }
+    var position = quill.getSelection(true);
+    quill.clipboard.dangerouslyPasteHTML(
+      position ? position.index : quill.getLength(), html, "user"
+    );
   });
 })();
 </script>

@@ -90,13 +90,34 @@ def unique_slug(text, model, field="slug", exclude_id=None):
 ALLOWED_TAGS = [
     "p", "br", "strong", "b", "em", "i", "u", "s", "blockquote",
     "h2", "h3", "h4", "ul", "ol", "li", "a", "img", "figure", "figcaption",
-    "hr", "pre", "code", "span", "sub", "sup",
+    "hr", "pre", "code", "span", "sub", "sup", "iframe",
 ]
+
+# Un <iframe> n'a droit qu'à un src YouTube strictement validé — jamais un
+# domaine arbitraire, jamais un simple "https://" générique. C'est le SEUL
+# embed autorisé dans le contenu des articles ; toute autre plateforme
+# suivrait le même principe que Facebook (voir social_embed.py) : un champ
+# séparé, rendu par le gabarit, jamais dans le HTML de l'éditeur.
+_YOUTUBE_EMBED_RE = re.compile(
+    r"^https://www\.youtube(-nocookie)?\.com/embed/[A-Za-z0-9_-]+(\?[\w=&-]*)?$"
+)
+
+
+def _iframe_attr_autorise(tag, name, value):
+    if name == "src":
+        return bool(_YOUTUBE_EMBED_RE.match(value))
+    # class/frameborder/allowfullscreen : cosmétiques, produits par Quill
+    # lui-même à l'insertion — aucun risque, jamais de valeur libre saisie
+    # par un utilisateur.
+    return name in ("class", "frameborder", "allowfullscreen")
+
+
 ALLOWED_ATTRS = {
     "a": ["href", "title", "target", "rel"],
     "img": ["src", "alt", "title", "width", "height"],
     "span": ["class"],
     "p": ["class"],
+    "iframe": _iframe_attr_autorise,
 }
 ALLOWED_PROTOCOLS = ["http", "https", "mailto"]
 
@@ -104,12 +125,15 @@ ALLOWED_PROTOCOLS = ["http", "https", "mailto"]
 # bleach retire la balise mais conserve son contenu textuel : pour <script> ou
 # <style>, ce résidu n'est pas exécutable mais pollue l'article. On supprime
 # donc ces blocs entièrement, contenu compris, avant de passer à bleach.
+# "iframe" n'y figure plus délibérément : bleach s'en charge maintenant, via
+# ALLOWED_TAGS + le validateur ci-dessus, pour pouvoir laisser passer un
+# embed YouTube légitime tout en rejetant tout le reste.
 _BLOCS_DANGEREUX = re.compile(
-    r"<\s*(script|style|iframe|object|embed|noscript)\b[^>]*>.*?<\s*/\s*\1\s*>",
+    r"<\s*(script|style|object|embed|noscript)\b[^>]*>.*?<\s*/\s*\1\s*>",
     re.IGNORECASE | re.DOTALL,
 )
 _BALISES_ORPHELINES = re.compile(
-    r"<\s*/?\s*(script|style|iframe|object|embed|noscript)\b[^>]*>",
+    r"<\s*/?\s*(script|style|object|embed|noscript)\b[^>]*>",
     re.IGNORECASE,
 )
 
