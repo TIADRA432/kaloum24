@@ -3064,6 +3064,88 @@ with app.app_context():
     ok("Phase B (injection reelle via formulaire) : script absent",
        "<script" not in art_inj.content and "alert(2)" not in art_inj.content)
 
+# =============================================== Phase B éditeur : tableaux
+# (option 2 — bloc atomique via Blot personnalisé, sans dépendance tierce,
+# voir PLAN_REDACTION.md). Le comportement du Blot lui-même (préservation
+# de la structure, ouverture/fermeture du modal) a été vérifié avec un vrai
+# navigateur Playwright pendant le développement — y compris la découverte
+# que Quill 1.3.7 sans module aplatit toute <table> brute en paragraphes,
+# ce qui a motivé cette conception. Ce qui suit vérifie le sanitizer
+# serveur, la vraie limite de sécurité.
+_CAS_TABLEAU = [
+    ("table normale",
+     '<table><tbody><tr><th>Nom</th><th>Fonction</th></tr><tr><td>Amadou</td><td>Ministre</td></tr></tbody></table>',
+     ['<table>', '<th>Nom</th>', '<td>Amadou</td>'], []),
+    ("script injecte dans une cellule",
+     '<table><tbody><tr><td><script>alert(1)</script>Texte</td></tr></tbody></table>',
+     ['<table>', 'Texte'], ['<script', 'alert(1)']),
+    ("colspan/style/onclick injectes : attributs retires, table intacte",
+     '<table><tbody><tr><td colspan="5" style="background:red" onclick="alert(1)">Cellule</td></tr></tbody></table>',
+     ['<table>', 'Cellule'], ['colspan', 'style=', 'onclick', 'alert']),
+    ("lien dans une cellule reste autorise, comme partout ailleurs",
+     '<table><tbody><tr><td><a href="https://exemple.test">lien</a></td></tr></tbody></table>',
+     ['<table>', 'href="https://exemple.test"'], []),
+]
+with app.app_context():
+    for description, entree, doit_contenir, doit_pas_contenir in _CAS_TABLEAU:
+        resultat = sanitize_html(entree)
+        reussi = (all(s in resultat for s in doit_contenir)
+                 and all(s not in resultat for s in doit_pas_contenir))
+        ok(f"sanitize_html tableau : {description}", reussi)
+
+# --- cycle complet réel : article avec tableau, via le vrai formulaire ---
+admin_tab = app.test_client()
+tok = csrf(admin_tab, "/connexion")
+admin_tab.post("/connexion", data={"csrf_token": tok, "identifiant": "admin",
+                                   "password": "ChangeMoi123!"}, follow_redirects=True)
+with app.app_context():
+    _cat_id_tab = Category.query.first().id
+
+contenu_tab = (
+    '<p>Voici un tableau.</p>'
+    '<table><tbody><tr><th>Nom</th><th>Fonction</th></tr>'
+    '<tr><td>Amadou</td><td>Ministre</td></tr></tbody></table>'
+    '<p>Après le tableau.</p>'
+)
+tok = csrf(admin_tab, "/admin/articles/nouveau")
+admin_tab.post("/admin/articles/nouveau", data={
+    "csrf_token": tok, "title": "Article avec tableau via formulaire",
+    "summary": "Un resume suffisant pour cet article de test.",
+    "content": contenu_tab, "category_id": str(_cat_id_tab), "status": "publie",
+})
+with app.app_context():
+    art_tab = Article.query.filter_by(title="Article avec tableau via formulaire").first()
+    ok("Tableau (cycle reel) : article cree", art_tab is not None)
+    ok("Tableau (cycle reel) : structure table conservee", "<table>" in art_tab.content)
+    ok("Tableau (cycle reel) : en-tete et donnees conserves",
+       "<th>Nom</th>" in art_tab.content and "<td>Amadou</td>" in art_tab.content)
+    _slug_tab = art_tab.slug
+
+lecteur_tab = app.test_client()
+page_tab = text(lecteur_tab.get("/article/" + _slug_tab))
+ok("Tableau (cycle reel) : visible publiquement", "<table>" in page_tab and "Amadou" in page_tab)
+
+# --- tentative d'injection via le vrai formulaire (pas juste sanitize_html direct) ---
+contenu_tab_malicieux = (
+    '<p>Texte normal suffisamment long pour passer la validation du formulaire.</p>'
+    '<table><tbody><tr><td colspan="99" onclick="alert(1)">'
+    '<script>alert(2)</script>Cellule</td></tr></tbody></table>'
+)
+tok = csrf(admin_tab, "/admin/articles/nouveau")
+admin_tab.post("/admin/articles/nouveau", data={
+    "csrf_token": tok, "title": "Article tableau tentative injection",
+    "summary": "Un resume suffisant pour ce test de securite.",
+    "content": contenu_tab_malicieux, "category_id": str(_cat_id_tab), "status": "publie",
+})
+with app.app_context():
+    art_tab_inj = Article.query.filter_by(title="Article tableau tentative injection").first()
+    ok("Tableau (injection reelle via formulaire) : article cree, table conservee",
+       art_tab_inj is not None and "<table>" in art_tab_inj.content)
+    ok("Tableau (injection reelle via formulaire) : colspan/onclick retires",
+       "colspan" not in art_tab_inj.content and "onclick" not in art_tab_inj.content)
+    ok("Tableau (injection reelle via formulaire) : script retire, texte conserve",
+       "<script" not in art_tab_inj.content and "Cellule" in art_tab_inj.content)
+
 os.close(_db_fd)
 os.unlink(_db_path)
 

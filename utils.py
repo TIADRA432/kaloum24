@@ -91,6 +91,7 @@ ALLOWED_TAGS = [
     "p", "br", "strong", "b", "em", "i", "u", "s", "blockquote",
     "h2", "h3", "h4", "ul", "ol", "li", "a", "img", "figure", "figcaption",
     "hr", "pre", "code", "span", "sub", "sup", "iframe",
+    "table", "thead", "tbody", "tr", "th", "td",
 ]
 
 # Un <iframe> n'a droit qu'à un src YouTube strictement validé — jamais un

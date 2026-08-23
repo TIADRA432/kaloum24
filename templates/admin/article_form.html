@@ -57,6 +57,7 @@
       <div class="editor-toolbar-extra__boutons">
         <button type="button" id="btnPleinEcran" class="btn btn--small btn--ghost">Plein écran</button>
         <button type="button" id="btnCitation" class="btn btn--small btn--ghost">Citation avec attribution</button>
+        <button type="button" id="btnTableau" class="btn btn--small btn--ghost">Tableau</button>
       </div>
       <span id="statsEditeur" class="editor-stats">0 mot · 0 min de lecture</span>
     </div>
@@ -66,6 +67,22 @@
     <textarea name="content" id="contentField" hidden></textarea>
     <p class="field-hint">Glisse une image ou colle-la directement (Ctrl+V) — elle s'envoie et s'insère
       automatiquement. Le collage depuis Word ou Google Docs est nettoyé du HTML parasite.</p>
+  </div>
+
+  <div id="modalTableau" class="modal-overlay" hidden>
+    <div class="modal-boite">
+      <h3>Insérer un tableau</h3>
+      <p class="field-hint">Une ligne du tableau par ligne de texte, cellules séparées par « | ».
+        La première ligne devient l'en-tête. Pas de mise en forme à l'intérieur des cellules
+        (texte brut uniquement) — pour l'instant, une version volontairement simple.</p>
+      <textarea id="tableauTexte" rows="6" placeholder="Nom | Fonction | Statut
+Amadou | Ministre | Actif
+Fatou | Directrice | Actif"></textarea>
+      <div class="row-actions" style="margin-top:0.75rem;">
+        <button type="button" id="btnInsererTableau" class="btn btn--small">Insérer</button>
+        <button type="button" id="btnAnnulerTableau" class="btn btn--small btn--ghost">Annuler</button>
+      </div>
+    </div>
   </div>
 
   <div class="field">
@@ -261,6 +278,28 @@
 <script src="{{ url_for('static', filename='vendor/quill/quill.min.js') }}"></script>
 <script>
 (function () {
+  // Tableau = un bloc atomique dans Quill, jamais édité cellule par cellule
+  // à l'intérieur de l'éditeur — voir PLAN_REDACTION.md, §Éditeur Phase B.
+  // Quill 1.3.7 sans module dédié aplatit toute <table> insérée en simples
+  // paragraphes (vérifié directement avant d'écrire ce code) ; un Blot
+  // personnalisé qui étend blots/block/embed contourne ça proprement, en
+  // s'appuyant sur le même mécanisme que les images ou vidéos de Quill
+  // lui-même plutôt que de se battre avec son modèle de document.
+  var BlockEmbed = Quill.import("blots/block/embed");
+  class TableBlot extends BlockEmbed {
+    static create(value) {
+      var node = super.create();
+      node.innerHTML = value;
+      return node;
+    }
+    static value(node) {
+      return node.innerHTML;
+    }
+  }
+  TableBlot.blotName = "kaloumtable";
+  TableBlot.tagName = "table";
+  Quill.register(TableBlot);
+
   var quill = new Quill("#editor", {
     theme: "snow",
     placeholder: "Rédige ton article…",
@@ -492,6 +531,54 @@
     quill.clipboard.dangerouslyPasteHTML(
       position ? position.index : quill.getLength(), html, "user"
     );
+  });
+
+  // ---------------------------------------------------------------------
+  // Tableau — un bloc atomique (voir le Blot enregistré plus haut), jamais
+  // édité cellule par cellule dans l'éditeur. Pour changer une valeur, on
+  // retire le tableau et on en réinsère un — volontairement simple.
+  var modalTableau = document.getElementById("modalTableau");
+  var positionInsertionTableau = null;
+
+  document.getElementById("btnTableau").addEventListener("click", function () {
+    positionInsertionTableau = quill.getSelection(true);
+    document.getElementById("tableauTexte").value = "";
+    modalTableau.hidden = false;
+    document.getElementById("tableauTexte").focus();
+  });
+
+  document.getElementById("btnAnnulerTableau").addEventListener("click", function () {
+    modalTableau.hidden = true;
+  });
+
+  function analyserTableau(texte) {
+    var lignes = texte.split("\n").map(function (l) { return l.trim(); }).filter(Boolean);
+    if (!lignes.length) return null;
+    return lignes.map(function (ligne) {
+      return ligne.split("|").map(function (c) { return c.trim(); });
+    });
+  }
+
+  document.getElementById("btnInsererTableau").addEventListener("click", function () {
+    var lignes = analyserTableau(document.getElementById("tableauTexte").value);
+    if (!lignes || lignes.length < 1) {
+      alert("Tape au moins une ligne, avec des cellules séparées par « | ».");
+      return;
+    }
+
+    var html = "<tbody>";
+    lignes.forEach(function (cellules, indexLigne) {
+      var balise = indexLigne === 0 ? "th" : "td";
+      html += "<tr>" + cellules.map(function (c) {
+        return "<" + balise + ">" + echapperHTML(c) + "</" + balise + ">";
+      }).join("") + "</tr>";
+    });
+    html += "</tbody>";
+
+    var index = positionInsertionTableau ? positionInsertionTableau.index : quill.getLength();
+    quill.insertEmbed(index, "kaloumtable", html, "user");
+    quill.setSelection(index + 1);
+    modalTableau.hidden = true;
   });
 })();
 </script>

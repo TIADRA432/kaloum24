@@ -175,3 +175,40 @@ Phases B (tableaux, citation avec attribution, embed YouTube) et C (blocs
 **Tableaux : non commencés.** Nécessite un module tiers (Quill 1.3.7 n'a
 pas de support natif satisfaisant), donc une vraie dépendance
 supplémentaire à vendre et tester — reporté, pas fait à la légère.
+
+---
+
+## M. Éditeur — Phase B (complète)
+
+**Tableaux — option 2 retenue.** Un vrai module tiers compatible Quill
+1.3.7 existe (`quill1.3.7-table-module`, audité : code propre, licence MIT,
+aucun appel réseau caché) mais n'est distribué qu'en module ES pur —
+l'intégrer aurait exigé une carte d'import et un pont JS, avec un nouveau
+risque qu'aucune autre fonctionnalité de ce projet n'a : si le module tiers
+échoue à charger, l'éditeur entier pourrait ne plus s'initialiser.
+
+Choix retenu à la place : un tableau est un **bloc atomique** dans Quill
+(même principe que ses images ou vidéos), construit via un petit modal
+séparé (une ligne de texte par ligne du tableau, cellules séparées par
+« | »), inséré via un Blot Quill personnalisé (`blots/block/embed`) —
+zéro dépendance tierce. Pas de fusion de cellules, pas de redimensionnement,
+pas d'édition cellule par cellule dans l'éditeur — pour changer une valeur,
+on retire le tableau et on en réinsère un.
+
+**Une découverte empirique qui a motivé ce choix** : Quill 1.3.7 sans
+module dédié aplatit silencieusement toute balise `<table>` insérée en
+simples paragraphes, perdant toute la structure — vérifié directement
+avant d'écrire le code, pas supposé.
+
+**Un vrai bug CSS trouvé et corrigé en cours de route** : la règle
+`.modal-overlay { display: flex }` avait une spécificité plus forte que
+l'attribut HTML `hidden`, donc le modal restait visuellement affiché et
+bloquait les clics même quand il aurait dû être caché.
+
+Sanitizer étendu pour `table`/`thead`/`tbody`/`tr`/`th`/`td`, sans aucun
+attribut autorisé — vérifié avec de vraies tentatives d'injection
+(`colspan`, `style`, `onclick`, `<script>` dans une cellule), toutes
+neutralisées sans casser la structure du tableau.
+
+**Phase B est maintenant complète** : embed YouTube, citation avec
+attribution, tableaux.
