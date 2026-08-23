@@ -98,14 +98,17 @@
     <label for="is_premium">Réservé aux abonnés</label>
   </div>
 
+  {% if current_user.is_moderator %}
   <div class="field-check">
     <input type="checkbox" id="is_featured" name="is_featured"
            {% if val and val.is_featured %}checked{% endif %}>
     <label for="is_featured">Mettre à la une (remplace l'article actuellement à la une)</label>
   </div>
+  {% endif %}
 
   <div class="field">
     <label for="status">Statut</label>
+    {% if current_user.is_moderator %}
     <select id="status" name="status">
       <option value="brouillon" {% if val and val.status == 'brouillon' %}selected{% endif %}>Brouillon</option>
       <option value="en_relecture" {% if val and val.status == 'en_relecture' %}selected{% endif %}>En relecture</option>
@@ -114,6 +117,18 @@
     </select>
     <p class="field-hint">« En relecture » signale qu'il est prêt pour un second regard, sans le
       publier. « Programmé » le publie tout seul à la date choisie ci-dessous.</p>
+    {% elif val and val.status in ('publie', 'programme', 'archive') %}
+    <p>Statut actuel : <strong>{{ {'publie':'Publié','programme':'Programmé','archive':'Archivé'}[val.status] }}</strong>
+      — seul un modérateur peut le changer.</p>
+    <input type="hidden" name="status" value="{{ val.status }}">
+    {% else %}
+    <select id="status" name="status">
+      <option value="brouillon" {% if val and val.status == 'brouillon' %}selected{% endif %}>Brouillon</option>
+      <option value="en_relecture" {% if val and val.status == 'en_relecture' %}selected{% endif %}>Soumettre pour relecture</option>
+    </select>
+    <p class="field-hint">« Soumettre pour relecture » l'envoie dans la file d'un modérateur — lui
+      seul peut ensuite le publier.</p>
+    {% endif %}
   </div>
 
   <div class="field" id="champProgrammation"

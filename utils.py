@@ -14,6 +14,20 @@ from PIL import Image, ImageOps
 
 # ---------------------------------------------------------------- rôles
 
+def redacteur_required(view_func):
+    """Rédacteur, modérateur ou admin — l'accès à l'espace de rédaction.
+    Ne garantit PAS la modification de n'importe quel article : la
+    restriction "ses propres articles seulement" pour un simple rédacteur
+    se vérifie à l'intérieur de la route elle-même (author_id), pas ici."""
+    @wraps(view_func)
+    def wrapped(*args, **kwargs):
+        if not current_user.is_authenticated or not current_user.is_redacteur_or_above:
+            abort(403)
+        return view_func(*args, **kwargs)
+
+    return wrapped
+
+
 def moderator_required(view_func):
     @wraps(view_func)
     def wrapped(*args, **kwargs):

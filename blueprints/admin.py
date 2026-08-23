@@ -2,7 +2,7 @@ import html as html_module
 from datetime import datetime, timedelta
 
 from flask import (
-    Blueprint, render_template, request, redirect, url_for, flash, jsonify,
+    Blueprint, render_template, request, redirect, url_for, flash, jsonify, abort,
 )
 from flask_login import login_required, current_user
 
@@ -13,7 +13,7 @@ from models import (
     ArticleSource, EditorialComment, ArticleRevision, ARTICLE_TYPES, TYPES_SOURCE_ARTICLE,
 )
 from utils import (
-    moderator_required, admin_required, unique_slug,
+    moderator_required, admin_required, redacteur_required, unique_slug,
     sanitize_html, strip_html, save_uploaded_image, normalize_phone,
 )
 import collector
@@ -139,6 +139,27 @@ def _valider(donnees):
     return erreurs
 
 
+def _valider_permissions_redacteur(donnees, article=None):
+    """Restrictions supplémentaires pour un simple rédacteur (jamais pour
+    modérateur/admin) — voir PLAN_REDACTION.md, §D.
+
+    Le statut ACTUEL de l'article (s'il en a déjà un) reste toléré même
+    s'il n'est plus dans la liste normalement permise à un rédacteur : sans
+    ça, un rédacteur qui corrige une simple faute de frappe sur un article
+    déjà publié par un modérateur se ferait bloquer, ou pire, le
+    repasserait accidentellement en brouillon.
+    """
+    if current_user.is_moderator:
+        return []
+    erreurs = []
+    statut_actuel = article.status if article else None
+    if donnees["status"] not in ("brouillon", "en_relecture") and donnees["status"] != statut_actuel:
+        erreurs.append("Seul un modérateur peut publier, programmer ou archiver un article.")
+    if donnees["is_featured"]:
+        erreurs.append("Seul un modérateur peut mettre un article à la Une.")
+    return erreurs
+
+
 def _traiter_image(donnees):
     """Une image envoyée depuis le formulaire remplace l'URL saisie."""
     fichier = request.files.get("image_file")
@@ -183,12 +204,16 @@ def _enregistrer_revisions(article, donnees):
 
 @admin_bp.route("/articles")
 @login_required
-@moderator_required
+@redacteur_required
 def articles():
     statut = request.args.get("statut", "")
     query = Article.query
     if statut in ("publie", "brouillon", "en_relecture", "programme", "archive"):
         query = query.filter_by(status=statut)
+    # Un simple rédacteur ne voit que ses propres articles — un modérateur
+    # ou admin voit tout, comme avant (voir PLAN_REDACTION.md, §D).
+    if not current_user.is_moderator:
+        query = query.filter_by(author_id=current_user.id)
     liste = query.order_by(Article.created_at.desc()).all()
     return render_template("admin/articles.html", articles=liste, statut=statut)
 
@@ -222,13 +247,13 @@ def publish_scheduled_now():
 
 @admin_bp.route("/articles/nouveau", methods=["GET", "POST"])
 @login_required
-@moderator_required
+@redacteur_required
 def new_article():
     categories = Category.query.order_by(Category.name).all()
 
     if request.method == "POST":
         donnees = _lire_formulaire_article()
-        erreurs = _valider(donnees)
+        erreurs = _valider(donnees) + _valider_permissions_redacteur(donnees)
         erreur_image = _traiter_image(donnees)
         if erreur_image:
             erreurs.append(erreur_image)
@@ -274,14 +299,18 @@ def new_article():
 
 @admin_bp.route("/articles/<int:article_id>/modifier", methods=["GET", "POST"])
 @login_required
-@moderator_required
+@redacteur_required
 def edit_article(article_id):
     article = Article.query.get_or_404(article_id)
+    # Un simple rédacteur ne modifie jamais l'article de quelqu'un d'autre —
+    # un modérateur/admin peut modifier n'importe lequel, comme avant.
+    if not current_user.is_moderator and article.author_id != current_user.id:
+        abort(403)
     categories = Category.query.order_by(Category.name).all()
 
     if request.method == "POST":
         donnees = _lire_formulaire_article()
-        erreurs = _valider(donnees)
+        erreurs = _valider(donnees) + _valider_permissions_redacteur(donnees, article)
         erreur_image = _traiter_image(donnees)
         if erreur_image:
             erreurs.append(erreur_image)
@@ -338,11 +367,21 @@ def edit_article(article_id):
 # --------------------------------------------------- sources et commentaires
 # éditoriaux d'un article (Phase 1 du plan rédaction, voir PLAN_REDACTION.md)
 
+def _peut_gerer_article(article):
+    """Modérateur/admin : toujours. Rédacteur : seulement son propre
+    article. Centralise cette règle pour les sources, commentaires
+    éditoriaux et l'édition elle-même — jamais réimplémentée à la main
+    à chaque route, au risque d'un oubli."""
+    return current_user.is_moderator or article.author_id == current_user.id
+
+
 @admin_bp.route("/articles/<int:article_id>/sources", methods=["POST"])
 @login_required
-@moderator_required
+@redacteur_required
 def add_article_source(article_id):
     article = Article.query.get_or_404(article_id)
+    if not _peut_gerer_article(article):
+        abort(403)
     nom = request.form.get("nom", "").strip()
     if len(nom) < 2:
         flash("Le nom de la source doit faire au moins 2 caractères.", "error")
@@ -362,8 +401,11 @@ def add_article_source(article_id):
 
 @admin_bp.route("/articles/<int:article_id>/sources/<int:source_id>/supprimer", methods=["POST"])
 @login_required
-@moderator_required
+@redacteur_required
 def delete_article_source(article_id, source_id):
+    article = Article.query.get_or_404(article_id)
+    if not _peut_gerer_article(article):
+        abort(403)
     source = ArticleSource.query.filter_by(id=source_id, article_id=article_id).first_or_404()
     db.session.delete(source)
     db.session.commit()
@@ -373,9 +415,11 @@ def delete_article_source(article_id, source_id):
 
 @admin_bp.route("/articles/<int:article_id>/commentaires-editoriaux", methods=["POST"])
 @login_required
-@moderator_required
+@redacteur_required
 def add_editorial_comment(article_id):
     article = Article.query.get_or_404(article_id)
+    if not _peut_gerer_article(article):
+        abort(403)
     contenu = request.form.get("content", "").strip()
     if len(contenu) < 2:
         flash("Le commentaire ne peut pas être vide.", "error")
@@ -392,14 +436,42 @@ def add_editorial_comment(article_id):
 @admin_bp.route("/articles/<int:article_id>/commentaires-editoriaux/<int:comment_id>/resoudre",
                 methods=["POST"])
 @login_required
-@moderator_required
+@redacteur_required
 def toggle_editorial_comment(article_id, comment_id):
+    article = Article.query.get_or_404(article_id)
+    if not _peut_gerer_article(article):
+        abort(403)
     commentaire = EditorialComment.query.filter_by(
         id=comment_id, article_id=article_id
     ).first_or_404()
     commentaire.resolved = not commentaire.resolved
     db.session.commit()
     return redirect(url_for("admin.edit_article", article_id=article_id))
+
+
+@admin_bp.route("/articles/<int:article_id>/demander-correction", methods=["POST"])
+@login_required
+@moderator_required
+def request_correction(article_id):
+    """Renvoie l'article en brouillon et journalise pourquoi — jamais un
+    simple changement de statut muet : sans la raison, le rédacteur n'a
+    aucune idée de ce qu'il faut corriger (voir PLAN_REDACTION.md, §Workflow
+    éditorial). Réutilise EditorialComment plutôt que d'inventer un
+    mécanisme de notification séparé."""
+    article = Article.query.get_or_404(article_id)
+    contenu = request.form.get("content", "").strip()
+    if len(contenu) < 5:
+        flash("Explique ce qui doit être corrigé (5 caractères minimum).", "error")
+        return redirect(url_for("admin.edit_article", article_id=article.id))
+
+    article.status = "brouillon"
+    db.session.add(EditorialComment(
+        article_id=article.id, author_id=current_user.id,
+        content=f"Correction demandée : {contenu}",
+    ))
+    db.session.commit()
+    flash("Correction demandée — l'article est repassé en brouillon.", "info")
+    return redirect(url_for("admin.articles", statut="en_relecture"))
 
 
 @admin_bp.route("/articles/<int:article_id>/supprimer", methods=["POST"])
@@ -505,7 +577,7 @@ def change_role(user_id):
 
     if user.id == current_user.id and nouveau != "admin":
         flash("Tu ne peux pas retirer ton propre rôle d'administrateur.", "error")
-    elif nouveau in ("user", "moderateur", "admin"):
+    elif nouveau in ("user", "redacteur", "moderateur", "admin"):
         user.role = nouveau
         db.session.commit()
         flash(f"Rôle de {user.username} : {nouveau}.", "success")

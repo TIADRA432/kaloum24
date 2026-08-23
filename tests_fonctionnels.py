@@ -2704,6 +2704,209 @@ ok("Ajout de commentaire editorial bloque pour un simple utilisateur (403)",
    simple_user7.post(f"/admin/articles/{_art_r1_id}/commentaires-editoriaux",
                      data={"csrf_token": _tok_su7, "content": "Tentative"}).status_code == 403)
 
+# =============================================== Phase 2 rédaction : rôle
+# rédacteur, permissions encadrées, demande de correction (voir
+# PLAN_REDACTION.md, §D-E)
+admin_p2 = app.test_client()
+tok = csrf(admin_p2, "/connexion")
+admin_p2.post("/connexion", data={"csrf_token": tok, "identifiant": "admin",
+                                  "password": "ChangeMoi123!"}, follow_redirects=True)
+with app.app_context():
+    _cat_id_p2 = Category.query.first().id
+
+# --- créer et promouvoir un compte rédacteur ---
+redacteur1 = app.test_client()
+tok = csrf(redacteur1, "/inscription")
+redacteur1.post("/inscription", data={
+    "csrf_token": tok, "username": "redacteur_un", "email": "redacteur_un@example.com",
+    "password": "MotDePasse1", "password_confirm": "MotDePasse1"})
+with app.app_context():
+    u1 = User.query.filter_by(username="redacteur_un").first()
+    u1_id = u1.id
+    ok("Compte rédacteur : role='user' avant promotion", u1.role == "user")
+
+tok = csrf(admin_p2, "/admin/utilisateurs")
+admin_p2.post(f"/admin/utilisateurs/{u1_id}/role", data={"csrf_token": tok, "role": "redacteur"})
+with app.app_context():
+    ok("Compte rédacteur : promotion en 'redacteur' effective",
+       db.session.get(User, u1_id).role == "redacteur")
+
+# Se reconnecter pour que la session reflète le nouveau rôle.
+redacteur1 = app.test_client()
+tok = csrf(redacteur1, "/connexion")
+redacteur1.post("/connexion", data={"csrf_token": tok, "identifiant": "redacteur_un",
+                                    "password": "MotDePasse1"}, follow_redirects=True)
+
+# --- un rédacteur accède à l'espace de rédaction (pas un simple user) ---
+ok("Rédacteur : accède à /admin/articles/nouveau",
+   redacteur1.get("/admin/articles/nouveau").status_code == 200)
+
+simple_user8 = app.test_client()
+tok = csrf(simple_user8, "/inscription")
+simple_user8.post("/inscription", data={
+    "csrf_token": tok, "username": "simple_user_p2", "email": "simple_user_p2@example.com",
+    "password": "MotDePasse1", "password_confirm": "MotDePasse1"})
+ok("Simple utilisateur (pas rédacteur) : bloqué (403) sur l'espace de rédaction",
+   simple_user8.get("/admin/articles/nouveau").status_code == 403)
+
+# --- un rédacteur crée un article : statut restreint ---
+tok = csrf(redacteur1, "/admin/articles/nouveau")
+r = redacteur1.post("/admin/articles/nouveau", data={
+    "csrf_token": tok, "title": "Article ecrit par un redacteur",
+    "summary": "Un resume suffisant pour cet article de test.",
+    "content": "Un contenu suffisamment etoffe pour passer la validation du formulaire.",
+    "category_id": str(_cat_id_p2), "status": "en_relecture",
+})
+with app.app_context():
+    art_red = Article.query.filter_by(title="Article ecrit par un redacteur").first()
+    ok("Rédacteur : peut créer un article en 'en_relecture'",
+       art_red is not None and art_red.status == "en_relecture")
+    ok("Rédacteur : author_id correctement enregistré", art_red.author_id == u1_id)
+    _art_red_id = art_red.id
+
+# --- un rédacteur ne peut pas se publier lui-même ---
+tok = csrf(redacteur1, "/admin/articles/nouveau")
+r = redacteur1.post("/admin/articles/nouveau", data={
+    "csrf_token": tok, "title": "Tentative de publication directe",
+    "summary": "Un resume suffisant pour cette tentative de test.",
+    "content": "Un contenu suffisamment etoffe pour passer la validation du formulaire.",
+    "category_id": str(_cat_id_p2), "status": "publie",
+})
+ok("Rédacteur : tentative de statut 'publie' refusee avec message explicite",
+   "modérateur" in text(r).lower())
+with app.app_context():
+    ok("Rédacteur : aucun article cree suite au refus",
+       Article.query.filter_by(title="Tentative de publication directe").first() is None)
+
+# --- un rédacteur ne peut pas se mettre à la Une ---
+tok = csrf(redacteur1, "/admin/articles/nouveau")
+r = redacteur1.post("/admin/articles/nouveau", data={
+    "csrf_token": tok, "title": "Tentative de mise a la une",
+    "summary": "Un resume suffisant pour cette tentative de test.",
+    "content": "Un contenu suffisamment etoffe pour passer la validation du formulaire.",
+    "category_id": str(_cat_id_p2), "status": "brouillon", "is_featured": "on",
+})
+ok("Rédacteur : tentative de mise a la Une refusee", "Une" in text(r))
+
+# --- un rédacteur modifie SON PROPRE article ---
+tok = csrf(redacteur1, f"/admin/articles/{_art_red_id}/modifier")
+r = redacteur1.post(f"/admin/articles/{_art_red_id}/modifier", data={
+    "csrf_token": tok, "title": "Article ecrit par un redacteur, corrige",
+    "summary": "Un resume suffisant pour cet article de test.",
+    "content": "Un contenu suffisamment etoffe pour passer la validation du formulaire.",
+    "category_id": str(_cat_id_p2), "status": "en_relecture",
+})
+with app.app_context():
+    ok("Rédacteur : peut modifier son propre article",
+       db.session.get(Article, _art_red_id).title == "Article ecrit par un redacteur, corrige")
+
+# --- un rédacteur NE PEUT PAS modifier l'article d'un autre ---
+with app.app_context():
+    autre_article = Article.query.filter(Article.author_id != u1_id).first()
+    autre_id = autre_article.id
+r = redacteur1.get(f"/admin/articles/{autre_id}/modifier")
+ok("Rédacteur : bloqué (403) sur l'article de quelqu'un d'autre", r.status_code == 403)
+
+# --- un rédacteur ne voit que ses propres articles dans la liste ---
+page_liste_red = text(redacteur1.get("/admin/articles"))
+ok("Rédacteur : voit son propre article dans /admin/articles",
+   "Article ecrit par un redacteur, corrige" in page_liste_red)
+with app.app_context():
+    titre_autre = autre_article.title
+ok("Rédacteur : NE voit PAS l'article de quelqu'un d'autre dans la liste",
+   titre_autre not in page_liste_red)
+
+# --- un modérateur, lui, voit tout ---
+page_liste_mod = text(admin_p2.get("/admin/articles"))
+ok("Modérateur : voit l'article du rédacteur ET les autres",
+   "Article ecrit par un redacteur, corrige" in page_liste_mod and titre_autre in page_liste_mod)
+
+# --- sources citées : un rédacteur peut agir sur son propre article ---
+tok = csrf(redacteur1, f"/admin/articles/{_art_red_id}/modifier")
+redacteur1.post(f"/admin/articles/{_art_red_id}/sources", data={
+    "csrf_token": tok, "nom": "Source ajoutee par le redacteur",
+})
+with app.app_context():
+    ok("Rédacteur : peut ajouter une source sur son propre article",
+       ArticleSource.query.filter_by(article_id=_art_red_id).first() is not None)
+
+# --- mais pas sur l'article de quelqu'un d'autre ---
+tok_pour_403 = csrf(redacteur1, "/compte")
+r = redacteur1.post(f"/admin/articles/{autre_id}/sources",
+                    data={"csrf_token": tok_pour_403, "nom": "Tentative"})
+ok("Rédacteur : bloqué (403) pour ajouter une source sur l'article d'un autre",
+   r.status_code == 403)
+
+# --- commentaires éditoriaux : même règle ---
+tok = csrf(redacteur1, f"/admin/articles/{_art_red_id}/modifier")
+redacteur1.post(f"/admin/articles/{_art_red_id}/commentaires-editoriaux", data={
+    "csrf_token": tok, "content": "Commentaire du redacteur sur son propre article.",
+})
+with app.app_context():
+    ok("Rédacteur : peut commenter son propre article",
+       EditorialComment.query.filter_by(article_id=_art_red_id).first() is not None)
+
+r = redacteur1.post(f"/admin/articles/{autre_id}/commentaires-editoriaux",
+                    data={"csrf_token": tok_pour_403, "content": "Tentative"})
+ok("Rédacteur : bloqué (403) pour commenter l'article d'un autre", r.status_code == 403)
+
+# --- archiver et supprimer restent hors de portée d'un rédacteur ---
+r = redacteur1.post(f"/admin/articles/{_art_red_id}/archiver", data={"csrf_token": tok_pour_403})
+ok("Rédacteur : bloqué (403) pour archiver, même son propre article", r.status_code == 403)
+r = redacteur1.post(f"/admin/articles/{_art_red_id}/supprimer", data={"csrf_token": tok_pour_403})
+ok("Rédacteur : bloqué (403) pour supprimer, même son propre article", r.status_code == 403)
+
+# --- demander une correction (modérateur uniquement) ---
+tok = csrf(admin_p2, "/admin/articles")
+admin_p2.post(f"/admin/articles/{_art_red_id}/demander-correction", data={
+    "csrf_token": tok, "content": "Ajoute la source manquante avant de resoumettre.",
+})
+with app.app_context():
+    art_apres_correction = db.session.get(Article, _art_red_id)
+    ok("Demande de correction : statut repasse en brouillon",
+       art_apres_correction.status == "brouillon")
+    commentaire_correction = EditorialComment.query.filter_by(
+        article_id=_art_red_id
+    ).order_by(EditorialComment.created_at.desc()).first()
+    ok("Demande de correction : la raison est journalisee comme commentaire editorial",
+       "Correction demandée" in commentaire_correction.content
+       and "source manquante" in commentaire_correction.content)
+
+# Le rédacteur ne peut pas demander lui-même une correction.
+r = redacteur1.post(f"/admin/articles/{_art_red_id}/demander-correction",
+                    data={"csrf_token": tok_pour_403, "content": "Tentative"})
+ok("Rédacteur : bloqué (403) pour demander une correction", r.status_code == 403)
+
+# --- cas limite : un article déjà publié par un modérateur reste figé pour
+# le rédacteur qui le modifie (jamais rétrogradé accidentellement) ---
+with app.app_context():
+    art_pub_red = Article(
+        title="Article du redacteur deja publie", slug="article-redacteur-deja-publie",
+        summary="Un resume suffisant pour ce test de statut fige.",
+        content="Un contenu suffisamment etoffe pour ce test.",
+        category_id=_cat_id_p2, author_id=u1_id, status="publie",
+    )
+    db.session.add(art_pub_red)
+    db.session.commit()
+    art_pub_red_id = art_pub_red.id
+
+page_edit_fige = text(redacteur1.get(f"/admin/articles/{art_pub_red_id}/modifier"))
+ok("Rédacteur : statut 'Publié' affiché en lecture seule, pas modifiable",
+   "seul un modérateur peut le changer" in page_edit_fige.lower())
+
+tok = csrf(redacteur1, f"/admin/articles/{art_pub_red_id}/modifier")
+redacteur1.post(f"/admin/articles/{art_pub_red_id}/modifier", data={
+    "csrf_token": tok, "title": "Article du redacteur deja publie, faute corrigee",
+    "summary": "Un resume suffisant pour ce test de statut fige.",
+    "content": "Un contenu suffisamment etoffe pour ce test.",
+    "category_id": str(_cat_id_p2), "status": "publie",  # champ cache, valeur inchangee
+})
+with app.app_context():
+    art_verif = db.session.get(Article, art_pub_red_id)
+    ok("Rédacteur : correction de contenu appliquee sans toucher au statut",
+       art_verif.title == "Article du redacteur deja publie, faute corrigee"
+       and art_verif.status == "publie")
+
 os.close(_db_fd)
 os.unlink(_db_path)
 

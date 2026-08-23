@@ -25,7 +25,7 @@
 
 <div class="table-scroll">
 <table class="admin-table">
-  <thead><tr><th>Titre</th><th>Rubrique</th><th>Statut</th><th>Vues</th><th>Date</th><th>Actions</th></tr></thead>
+  <thead><tr><th>Titre</th>{% if current_user.is_moderator %}<th>Auteur</th>{% endif %}<th>Rubrique</th><th>Statut</th><th>Vues</th><th>Date</th><th>Actions</th></tr></thead>
   <tbody>
     {% for a in articles %}
     <tr>
@@ -35,6 +35,7 @@
         {% if a.is_featured %} <span class="pill pill--approuve">Une</span>{% endif %}
         {% if a.source == 'whatsapp' %} <span class="pill pill--signale" style="background:var(--wire);">WhatsApp</span>{% endif %}
       </td>
+      {% if current_user.is_moderator %}<td>{{ a.author.username }}</td>{% endif %}
       <td>{{ a.category.name }}</td>
       <td>
         <span class="pill pill--{{ a.status }}">{{
@@ -49,21 +50,32 @@
       <td class="row-actions">
         <a class="link-btn" href="{{ url_for('main.article_detail', slug=a.slug) }}">Voir</a>
         <a class="link-btn" href="{{ url_for('admin.edit_article', article_id=a.id) }}">Modifier</a>
-        {% if a.status == 'publie' %}
+        {% if a.status == 'publie' and current_user.is_moderator %}
         <form method="post" action="{{ url_for('admin.archive_article', article_id=a.id) }}" style="display:inline;">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button type="submit" class="link-btn">Archiver</button>
         </form>
         {% endif %}
+        {% if a.status == 'en_relecture' and current_user.is_moderator %}
+        <form method="post" action="{{ url_for('admin.request_correction', article_id=a.id) }}"
+              style="display:inline-flex; gap:0.3rem; align-items:center;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="text" name="content" placeholder="Raison de la correction…" required minlength="5"
+                 style="width:150px; font-size:0.85rem;">
+          <button type="submit" class="link-btn">Demander correction</button>
+        </form>
+        {% endif %}
+        {% if current_user.is_moderator %}
         <form method="post" action="{{ url_for('admin.delete_article', article_id=a.id) }}"
               onsubmit="return confirm('Supprimer définitivement cet article ?');">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button type="submit" class="link-btn link-btn--danger">Supprimer</button>
         </form>
+        {% endif %}
       </td>
     </tr>
     {% else %}
-    <tr><td colspan="6" class="empty-state">Aucun article dans cette sélection.</td></tr>
+    <tr><td colspan="7" class="empty-state">Aucun article dans cette sélection.</td></tr>
     {% endfor %}
   </tbody>
 </table>

@@ -43,6 +43,14 @@ class User(UserMixin, db.Model):
     def is_moderator(self):
         return self.role in ("admin", "moderateur")
 
+    @property
+    def is_redacteur_or_above(self):
+        """Peut accéder à l'espace de rédaction (créer/modifier SES
+        propres articles) — mais pas forcément publier ou modifier ceux
+        des autres, contrairement à is_moderator. Voir PLAN_REDACTION.md,
+        §D, et blueprints/admin.py pour l'application de cette restriction."""
+        return self.role in ("admin", "moderateur", "redacteur")
+
     # --- Réinitialisation de mot de passe (jeton signé, sans stockage en base) ---
 
     def reset_token(self):
