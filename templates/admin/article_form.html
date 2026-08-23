@@ -53,11 +53,16 @@
 
   <div class="field">
     <label for="editor">Contenu</label>
-    <div class="editor-wrap">
+    <div class="editor-toolbar-extra">
+      <button type="button" id="btnPleinEcran" class="btn btn--small btn--ghost">Plein écran</button>
+      <span id="statsEditeur" class="editor-stats">0 mot · 0 min de lecture</span>
+    </div>
+    <div class="editor-wrap" id="editorWrap">
       <div id="editor">{{ (article.content if article else (form.content_html if form else '')) | safe }}</div>
     </div>
     <textarea name="content" id="contentField" hidden></textarea>
-    <p class="field-hint">Le bouton image de la barre d'outils envoie le fichier sur le serveur et l'insère dans le texte.</p>
+    <p class="field-hint">Glisse une image ou colle-la directement (Ctrl+V) — elle s'envoie et s'insère
+      automatiquement. Le collage depuis Word ou Google Docs est nettoyé du HTML parasite.</p>
   </div>
 
   <div class="field">
@@ -307,6 +312,134 @@
     if (!f) return;
     apercu.src = URL.createObjectURL(f);
     apercu.hidden = false;
+  });
+
+  // ---------------------------------------------------------------------
+  // Nettoyage du collage (Word, Google Docs, sites web)
+  //
+  // Ceci concerne l'EXPÉRIENCE dans l'éditeur, pas la sécurité — le
+  // contenu repasse de toute façon par sanitize_html() côté serveur à
+  // l'enregistrement (voir blueprints/admin.py, _lire_formulaire_article),
+  // qui reste la vraie limite de confiance. Ici, l'objectif est seulement
+  // d'éviter que le HTML de Word (styles "mso-*", balises <o:p>,
+  // paragraphes vides) n'encombre visuellement l'article avant même
+  // d'être enregistré, et de ne garder que ce que la barre d'outils de
+  // Kaloum24 sait déjà représenter (gras, italique, titres, listes, liens,
+  // citation, image) — un style ou une police collée n'a de toute façon
+  // aucun sens dans cet éditeur.
+  function nettoyerHTMLColle(html) {
+    var conteneur = document.createElement("div");
+    conteneur.innerHTML = html;
+
+    // Balises jamais utiles ici, quel que soit leur contenu.
+    conteneur.querySelectorAll("script, style, meta, link, o\\:p, xml").forEach(function (n) {
+      n.remove();
+    });
+
+    var tousLesNoeuds = conteneur.querySelectorAll("*");
+    tousLesNoeuds.forEach(function (n) {
+      // Attributs de mise en forme propres à Word/Docs/sites — jamais
+      // utiles dans un éditeur qui n'affiche que ses propres styles.
+      n.removeAttribute("style");
+      n.removeAttribute("class");
+      n.removeAttribute("lang");
+      // Gestionnaires d'événements éventuellement collés depuis une page
+      // web — défense en profondeur, même si sanitize_html() les
+      // supprimerait de toute façon à l'enregistrement.
+      Array.prototype.slice.call(n.attributes).forEach(function (attr) {
+        if (/^on/i.test(attr.name)) n.removeAttribute(attr.name);
+      });
+    });
+
+    // Paragraphes devenus vides après nettoyage (juste un espace
+    // insécable Word) — inutile de les garder.
+    conteneur.querySelectorAll("p").forEach(function (p) {
+      if (!p.textContent.replace(/\u00A0/g, "").trim() && !p.querySelector("img")) {
+        p.remove();
+      }
+    });
+
+    return conteneur.innerHTML;
+  }
+
+  var editorEl = document.getElementById("editor");
+
+  // Un seul gestionnaire de collage : l'image est prioritaire quand les
+  // deux sont présents (Word colle parfois du HTML ET l'image séparément
+  // pour la même opération — les traiter tous les deux insérerait l'image
+  // en double).
+  editorEl.addEventListener("paste", function (e) {
+    if (!e.clipboardData) return;                  // navigateur trop ancien : laisser Quill gérer
+
+    if (e.clipboardData.items) {
+      for (var i = 0; i < e.clipboardData.items.length; i++) {
+        var item = e.clipboardData.items[i];
+        if (item.type.indexOf("image/") === 0) {
+          e.preventDefault();
+          televerserEtInserer(item.getAsFile());
+          return;
+        }
+      }
+    }
+
+    var html = e.clipboardData.getData("text/html");
+    if (!html) return;                              // texte brut : laisser Quill gérer normalement
+    e.preventDefault();
+    var propre = nettoyerHTMLColle(html);
+    var position = quill.getSelection(true);
+    quill.clipboard.dangerouslyPasteHTML(position ? position.index : quill.getLength(), propre, "user");
+  });
+
+  // ---------------------------------------------------------------------
+  // Upload d'image par glisser-déposer et par collage — réutilise le même
+  // point d'entrée que le bouton image de la barre d'outils.
+  function televerserEtInserer(fichier) {
+    if (!fichier || fichier.type.indexOf("image/") !== 0) return;
+    var data = new FormData();
+    data.append("file", fichier);
+    data.append("csrf_token", "{{ csrf_token() }}");
+    var position = quill.getSelection(true) || { index: quill.getLength() };
+
+    fetch("{{ url_for('admin.upload_image') }}", { method: "POST", body: data })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+      .then(function (res) {
+        if (!res.ok) { alert(res.j.erreur || "Échec de l'envoi."); return; }
+        quill.insertEmbed(position.index, "image", res.j.url, "user");
+        quill.setSelection(position.index + 1);
+      })
+      .catch(function () { alert("Échec de l'envoi de l'image."); });
+  }
+
+  var editorWrap = document.getElementById("editorWrap");
+  editorWrap.addEventListener("dragover", function (e) { e.preventDefault(); editorWrap.classList.add("editor-wrap--survol"); });
+  editorWrap.addEventListener("dragleave", function () { editorWrap.classList.remove("editor-wrap--survol"); });
+  editorWrap.addEventListener("drop", function (e) {
+    e.preventDefault();
+    editorWrap.classList.remove("editor-wrap--survol");
+    var fichiers = e.dataTransfer.files;
+    if (fichiers && fichiers.length) televerserEtInserer(fichiers[0]);
+  });
+
+  // ---------------------------------------------------------------------
+  // Compteur de mots et temps de lecture — recalculé à chaque frappe.
+  // 200 mots/minute : estimation standard pour du français courant.
+  function majStatistiques() {
+    var texte = quill.getText().trim();
+    var mots = texte ? texte.split(/\s+/).length : 0;
+    var minutes = Math.max(1, Math.round(mots / 200));
+    document.getElementById("statsEditeur").textContent =
+      mots + (mots > 1 ? " mots · " : " mot · ") + minutes + " min de lecture";
+  }
+  quill.on("text-change", majStatistiques);
+  majStatistiques();
+
+  // ---------------------------------------------------------------------
+  // Mode plein écran — masque la navigation admin pour se concentrer sur
+  // la rédaction, rien de plus qu'une classe CSS sur le conteneur général.
+  document.getElementById("btnPleinEcran").addEventListener("click", function () {
+    var shell = document.querySelector(".admin-shell");
+    var pleinEcran = shell.classList.toggle("admin-shell--redaction");
+    this.textContent = pleinEcran ? "Quitter le plein écran" : "Plein écran";
   });
 })();
 </script>

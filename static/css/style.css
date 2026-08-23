@@ -486,11 +486,23 @@ table.admin-table th { font-family: var(--font-mono); font-size: 0.7rem;
   text-decoration: underline; cursor: pointer; color: var(--wire); padding: 0; }
 .link-btn--danger { color: var(--signal); }
 
-.editor-wrap { border: 1px solid var(--line); border-radius: 2px; background: var(--field-bg); }
+.editor-wrap { border: 1px solid var(--line); border-radius: 2px; background: var(--field-bg);
+  transition: border-color 0.15s, background 0.15s; }
+.editor-wrap--survol { border-color: var(--wire); background: var(--paper-raised); }
 .editor-wrap .ql-toolbar { border: none; border-bottom: 1px solid var(--line); }
 .editor-wrap .ql-container { border: none; min-height: 320px; font-family: var(--font-body);
   font-size: 1rem; }
 .editor-wrap .ql-editor { min-height: 320px; }
+
+.editor-toolbar-extra { display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 0.4rem; }
+.editor-stats { font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-muted); }
+
+/* Mode plein écran de rédaction : masque la navigation admin, laisse le
+   formulaire prendre toute la largeur — rien de plus qu'une classe sur le
+   conteneur général, pas de changement de structure DOM. */
+.admin-shell--redaction .admin-nav { display: none; }
+.admin-shell--redaction { grid-template-columns: 1fr !important; }
 .image-preview { margin-top: 0.6rem; max-width: 260px; border: 1px solid var(--line);
   border-radius: 2px; }
 .image-preview[hidden] { display: none; }

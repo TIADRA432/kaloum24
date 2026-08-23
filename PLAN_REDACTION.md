@@ -125,3 +125,27 @@ tourne déjà en production), et donne une vraie valeur immédiate : types de
 contenu, sources citables, commentaires internes, historique.
 
 Dis-moi si je commence, ou si tu veux réordonner les phases.
+
+---
+
+## K. Éditeur — Phase A (livrée)
+
+Suite à la demande d'un éditeur de type Word/Notion pour Calum24 : plutôt
+que de remplacer Quill par Lexical/Tiptap/ProseMirror (chacun un projet à
+part entière), la Phase A étend l'éditeur existant. Vérifiée avec un vrai
+navigateur (Playwright), pas seulement en théorie :
+
+- **Nettoyage du collage Word/Google Docs** — les styles `mso-*`, classes
+  `MsoNormal` et paragraphes vides disparaissent, le texte utile et sa mise
+  en forme de base (gras, italique) sont conservés
+- **Upload d'image par glisser-déposer et par collage (Ctrl+V)** — réutilise
+  le point d'entrée déjà existant du bouton image de la barre d'outils
+- **Compteur de mots et temps de lecture**, recalculé en direct
+- **Mode plein écran** de rédaction
+
+Un vrai trou de permission trouvé en cours de route : la route d'upload
+d'image était encore réservée aux modérateurs depuis la Phase 2 — un
+rédacteur ne pouvait pas insérer d'image dans son propre article. Corrigé.
+
+Phases B (tableaux, citation avec attribution, embed YouTube) et C (blocs
+éditoriaux ciblés) restent à faire, non commencées.

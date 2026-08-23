@@ -2907,6 +2907,55 @@ with app.app_context():
        art_verif.title == "Article du redacteur deja publie, faute corrigee"
        and art_verif.status == "publie")
 
+# =============================================== Phase A éditeur : nettoyage
+# du collage, upload par glisser-déposer/collage, compteur, plein écran
+# (voir PLAN_REDACTION.md — le comportement JS lui-même a été vérifié avec
+# un vrai navigateur Playwright pendant le développement ; ici, seule la
+# partie serveur — accessible via ce fichier de tests — est automatisée :
+# permissions sur /admin/upload-image, et présence des éléments dans la page.)
+
+# --- upload-image maintenant accessible à un rédacteur, pas seulement modérateur/admin ---
+redacteur_pa = app.test_client()
+tok = csrf(redacteur_pa, "/inscription")
+redacteur_pa.post("/inscription", data={
+    "csrf_token": tok, "username": "redacteur_phase_a", "email": "redacteur_phase_a@example.com",
+    "password": "MotDePasse1", "password_confirm": "MotDePasse1"})
+with app.app_context():
+    u_pa = User.query.filter_by(username="redacteur_phase_a").first()
+    u_pa.role = "redacteur"
+    db.session.commit()
+
+redacteur_pa = app.test_client()
+tok = csrf(redacteur_pa, "/connexion")
+redacteur_pa.post("/connexion", data={"csrf_token": tok, "identifiant": "redacteur_phase_a",
+                                      "password": "MotDePasse1"}, follow_redirects=True)
+
+tok = csrf(redacteur_pa, "/admin/articles/nouveau")
+r = redacteur_pa.post("/admin/upload-image", data={
+    "csrf_token": tok, "file": image_test("editeur.png"),
+}, content_type="multipart/form-data")
+with app.app_context():
+    ok("Upload-image : accessible à un rédacteur (plus seulement modérateur/admin)",
+       r.status_code == 200 and "url" in r.get_json())
+
+# --- toujours bloqué pour un simple utilisateur ---
+simple_user9 = app.test_client()
+tok = csrf(simple_user9, "/inscription")
+simple_user9.post("/inscription", data={
+    "csrf_token": tok, "username": "simple_user_editeur", "email": "simple_user_editeur@example.com",
+    "password": "MotDePasse1", "password_confirm": "MotDePasse1"})
+tok = csrf(simple_user9, "/compte")
+r = simple_user9.post("/admin/upload-image", data={
+    "csrf_token": tok, "file": (image_test("interdit.png"), "interdit.png"),
+}, content_type="multipart/form-data")
+ok("Upload-image : toujours bloqué (403) pour un simple utilisateur", r.status_code == 403)
+
+# --- les éléments de la Phase A sont bien présents dans le formulaire ---
+page_form_pa = text(redacteur_pa.get("/admin/articles/nouveau"))
+ok("Formulaire article : bouton plein écran présent", 'id="btnPleinEcran"' in page_form_pa)
+ok("Formulaire article : compteur de mots présent", 'id="statsEditeur"' in page_form_pa)
+ok("Formulaire article : zone de dépôt d'image identifiée", 'id="editorWrap"' in page_form_pa)
+
 os.close(_db_fd)
 os.unlink(_db_path)
 

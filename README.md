@@ -611,7 +611,7 @@ kaloum24/
 ├── social_embed.py         # validation des URL de reseaux sociaux (Facebook)
 ├── seed_sources.py         # configuration des 15 sources d'agrégation vérifiées
 ├── seed.py                 # contenu de démonstration
-├── tests_fonctionnels.py   # 398 tests de bout en bout
+├── tests_fonctionnels.py   # 403 tests de bout en bout
 ├── mesure_poids.py         # mesure du poids des pages
 ├── blueprints/
 │   ├── main.py             # accueil, rubriques, article, commentaires, RSS, météo
@@ -643,7 +643,7 @@ kaloum24/
 python tests_fonctionnels.py
 ```
 
-398 tests couvrant : pages publiques, paywall, cycle de vie des commentaires,
+403 tests couvrant : pages publiques, paywall, cycle de vie des commentaires,
 rôles et permissions, protection CSRF, **assainissement XSS**, upload d'images
 (y compris le rejet des fichiers non-images), réinitialisation de mot de passe,
 flux RSS et sitemap, balises Open Graph, redirection ouverte, validation des

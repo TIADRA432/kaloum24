@@ -487,7 +487,7 @@ def delete_article(article_id):
 
 @admin_bp.route("/upload-image", methods=["POST"])
 @login_required
-@moderator_required
+@redacteur_required
 def upload_image():
     """Point d'entrée utilisé par l'éditeur pour insérer une image dans le texte."""
     url, erreur = save_uploaded_image(request.files.get("file"))
