@@ -1,0 +1,50 @@
+{% extends "admin/_base.html" %}
+{% block admin_title %}Propositions Pulaar{% endblock %}
+{% block admin_content %}
+
+<div class="section-head"><h2>{{ propositions|length }} proposition(s)</h2></div>
+
+<div style="margin-bottom:1rem;">
+  <a class="btn btn--small {{ 'btn--ghost' if statut != 'en_attente' }}" href="{{ url_for('admin.pulaar_proposals', statut='en_attente') }}">En attente</a>
+  <a class="btn btn--small {{ 'btn--ghost' if statut != 'valide' }}" href="{{ url_for('admin.pulaar_proposals', statut='valide') }}">Acceptées</a>
+  <a class="btn btn--small {{ 'btn--ghost' if statut != 'rejete' }}" href="{{ url_for('admin.pulaar_proposals', statut='rejete') }}">Rejetées</a>
+</div>
+
+<div class="table-scroll">
+<table class="admin-table">
+  <thead><tr><th>Mot</th><th>Définition</th><th>Domaine</th><th>Proposé par</th><th>Actions</th></tr></thead>
+  <tbody>
+    {% for p in propositions %}
+    <tr>
+      <td>{{ p.term_lemma }}</td>
+      <td style="max-width:280px;">
+        {{ p.definition_fr }}
+        {% if p.justification %}<br><small style="color:var(--text-muted);">{{ p.justification }}</small>{% endif %}
+      </td>
+      <td>{{ p.domain.name if p.domain else '—' }}</td>
+      <td>{{ p.proposed_by.username if p.proposed_by else '—' }}</td>
+      <td class="row-actions">
+        {% if p.status == 'en_attente' %}
+        <form method="post" action="{{ url_for('admin.accept_pulaar_proposal', proposal_id=p.id) }}" style="display:inline;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="link-btn">Accepter</button>
+        </form>
+        <form method="post" action="{{ url_for('admin.reject_pulaar_proposal', proposal_id=p.id) }}" style="display:inline;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="link-btn link-btn--danger">Rejeter</button>
+        </form>
+        {% else %}
+        <span class="pill pill--{{ 'approuve' if p.status == 'valide' else 'brouillon' }}">
+          {{ 'Acceptée' if p.status == 'valide' else 'Rejetée' }}
+        </span>
+        {% endif %}
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5" class="empty-state">Aucune proposition dans cette sélection.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+
+{% endblock %}

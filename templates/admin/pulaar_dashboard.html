@@ -1,0 +1,33 @@
+{% extends "admin/_base.html" %}
+{% block admin_title %}Pulaar{% endblock %}
+{% block admin_content %}
+
+<div class="section-head"><h2>Module Pulaar — Phase 1</h2></div>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:1rem; max-width:760px; margin-bottom:2rem;">
+  <div class="tc-stat-card" style="border:1px solid var(--line); padding:1rem; border-radius:4px;">
+    <div style="font-size:1.8rem; font-weight:700;">{{ nb_termes }}</div>
+    <div style="color:var(--text-muted); font-size:0.85rem;">Termes au total</div>
+  </div>
+  <div style="border:1px solid var(--line); padding:1rem; border-radius:4px;">
+    <div style="font-size:1.8rem; font-weight:700;">{{ nb_valides }}</div>
+    <div style="color:var(--text-muted); font-size:0.85rem;">Termes validés</div>
+  </div>
+  <div style="border:1px solid var(--line); padding:1rem; border-radius:4px;">
+    <div style="font-size:1.8rem; font-weight:700;">{{ nb_propositions }}</div>
+    <div style="color:var(--text-muted); font-size:0.85rem;">Propositions en attente</div>
+  </div>
+  <div style="border:1px solid var(--line); padding:1rem; border-radius:4px;">
+    <div style="font-size:1.8rem; font-weight:700;">{{ nb_domaines }}</div>
+    <div style="color:var(--text-muted); font-size:0.85rem;">Domaines</div>
+  </div>
+</div>
+
+<p>
+  <a class="btn" href="{{ url_for('admin.pulaar_terms') }}">Gérer les termes</a>
+  <a class="btn btn--ghost" href="{{ url_for('admin.pulaar_proposals') }}">File de propositions</a>
+  <a class="btn btn--ghost" href="{{ url_for('admin.pulaar_domains') }}">Domaines</a>
+  <a class="btn btn--ghost" href="{{ url_for('pulaar.accueil') }}" target="_blank" rel="noopener noreferrer">Voir la section publique →</a>
+</p>
+
+{% endblock %}

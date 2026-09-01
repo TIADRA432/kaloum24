@@ -59,12 +59,14 @@ def create_app(config_class=Config):
     from blueprints.admin import admin_bp
     from blueprints.payments import payments_bp
     from blueprints.whatsapp import whatsapp_bp
+    from blueprints.pulaar import pulaar_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(payments_bp)
     app.register_blueprint(whatsapp_bp)
+    app.register_blueprint(pulaar_bp)
 
     # Le webhook Stripe et le webhook WhatsApp sont tous deux signés par leur
     # fournisseur respectif, sans session : pas de jeton CSRF possible.
@@ -203,6 +205,15 @@ def create_app(config_class=Config):
         """
         from seed_sources import run_seed_sources
         run_seed_sources()
+
+    @app.cli.command("seed-pulaar")
+    def seed_pulaar():
+        """Amorce le dictionnaire Pulaar avec un extrait vérifié de
+        Wiktionary — voir PLAN_PULAAR.md, §A. Idempotent : peut être relancé
+        sans créer de doublons.
+        """
+        from seed_pulaar import run_seed_pulaar
+        run_seed_pulaar()
 
     @app.cli.command("collect-sources")
     @click.option("--force", is_flag=True,

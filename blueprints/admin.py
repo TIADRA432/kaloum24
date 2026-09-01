@@ -11,6 +11,8 @@ from models import (
     Article, Category, Comment, User, Correspondent, Source,
     CollectedArticle, ScoringConfig, Topic, COLLECTED_STATUSES, ModerationLog,
     ArticleSource, EditorialComment, ArticleRevision, ARTICLE_TYPES, TYPES_SOURCE_ARTICLE,
+    PulaarTerm, PulaarDefinition, PulaarDomain, PulaarSource, PulaarProposal,
+    PULAAR_TERM_STATUTS, PULAAR_PROPOSAL_STATUTS,
 )
 from utils import (
     moderator_required, admin_required, redacteur_required, unique_slug,
@@ -1152,3 +1154,184 @@ def moderation_log():
         .limit(200).all()
     )
     return render_template("admin/journal.html", entrees=entrees)
+
+
+# --------------------------------------------------------------- pulaar
+
+@admin_bp.route("/pulaar")
+@login_required
+@moderator_required
+def pulaar_dashboard():
+    return render_template(
+        "admin/pulaar_dashboard.html",
+        nb_termes=PulaarTerm.query.count(),
+        nb_valides=PulaarTerm.query.filter_by(status="validated").count(),
+        nb_propositions=PulaarProposal.query.filter_by(status="en_attente").count(),
+        nb_domaines=PulaarDomain.query.count(),
+    )
+
+
+@admin_bp.route("/pulaar/domaines", methods=["GET", "POST"])
+@login_required
+@moderator_required
+def pulaar_domains():
+    if request.method == "POST":
+        nom = request.form.get("name", "").strip()
+        if len(nom) < 2:
+            flash("Le nom du domaine doit faire au moins 2 caractères.", "error")
+        elif PulaarDomain.query.filter_by(name=nom).first():
+            flash("Ce domaine existe déjà.", "error")
+        else:
+            db.session.add(PulaarDomain(name=nom, slug=unique_slug(nom, PulaarDomain)))
+            db.session.commit()
+            flash(f"Domaine « {nom} » créé.", "success")
+        return redirect(url_for("admin.pulaar_domains"))
+
+    domaines = PulaarDomain.query.order_by(PulaarDomain.name).all()
+    return render_template("admin/pulaar_domains.html", domaines=domaines)
+
+
+@admin_bp.route("/pulaar/termes")
+@login_required
+@moderator_required
+def pulaar_terms():
+    statut = request.args.get("statut", "")
+    query = PulaarTerm.query
+    if statut in PULAAR_TERM_STATUTS:
+        query = query.filter_by(status=statut)
+    termes = query.order_by(PulaarTerm.lemma).all()
+    return render_template("admin/pulaar_terms.html", termes=termes, statut=statut)
+
+
+@admin_bp.route("/pulaar/termes/nouveau", methods=["GET", "POST"])
+@login_required
+@moderator_required
+def new_pulaar_term():
+    domaines = PulaarDomain.query.order_by(PulaarDomain.name).all()
+    sources = PulaarSource.query.order_by(PulaarSource.name).all()
+
+    if request.method == "POST":
+        lemme = request.form.get("lemma", "").strip()
+        def_fr = request.form.get("definition_fr", "").strip()
+        source_id = request.form.get("source_id", type=int)
+        erreurs = []
+        if len(lemme) < 1:
+            erreurs.append("Le terme ne peut pas être vide.")
+        if len(def_fr) < 3:
+            erreurs.append("La définition en français doit faire au moins 3 caractères.")
+        if not source_id or not db.session.get(PulaarSource, source_id):
+            erreurs.append("Choisis une source valide — un terme n'existe jamais sans provenance.")
+
+        if erreurs:
+            for e in erreurs:
+                flash(e, "error")
+            return render_template("admin/pulaar_term_form.html", domaines=domaines,
+                                   sources=sources, terme=None)
+
+        domain_id = request.form.get("domain_id", type=int)
+        t = PulaarTerm(
+            lemma=lemme, slug=unique_slug(lemme, PulaarTerm),
+            part_of_speech=request.form.get("part_of_speech", "").strip() or None,
+            domain_id=domain_id if domain_id else None,
+            source_id=source_id,
+        )
+        db.session.add(t)
+        db.session.flush()  # pour obtenir t.id avant la définition liée
+        db.session.add(PulaarDefinition(term_id=t.id, lang="fr", text=def_fr))
+        def_en = request.form.get("definition_en", "").strip()
+        if def_en:
+            db.session.add(PulaarDefinition(term_id=t.id, lang="en", text=def_en))
+        db.session.commit()
+        flash(f"Terme « {lemme} » créé.", "success")
+        return redirect(url_for("admin.pulaar_terms"))
+
+    return render_template("admin/pulaar_term_form.html", domaines=domaines,
+                           sources=sources, terme=None)
+
+
+@admin_bp.route("/pulaar/termes/<int:term_id>/valider", methods=["POST"])
+@login_required
+@moderator_required
+def validate_pulaar_term(term_id):
+    """Bascule entre "documented" et "validated" — jamais l'inverse par
+    défaut : un terme reste "documented" tant qu'un humain n'a pas
+    explicitement confirmé sa justesse linguistique."""
+    t = PulaarTerm.query.get_or_404(term_id)
+    t.status = "validated" if t.status != "validated" else "documented"
+    db.session.commit()
+    return redirect(url_for("admin.pulaar_terms"))
+
+
+@admin_bp.route("/pulaar/termes/<int:term_id>/supprimer", methods=["POST"])
+@login_required
+@moderator_required
+def delete_pulaar_term(term_id):
+    t = PulaarTerm.query.get_or_404(term_id)
+    db.session.delete(t)
+    db.session.commit()
+    flash("Terme supprimé.", "info")
+    return redirect(url_for("admin.pulaar_terms"))
+
+
+@admin_bp.route("/pulaar/propositions")
+@login_required
+@moderator_required
+def pulaar_proposals():
+    statut = request.args.get("statut", "en_attente")
+    query = PulaarProposal.query
+    if statut in PULAAR_PROPOSAL_STATUTS:
+        query = query.filter_by(status=statut)
+    propositions = query.order_by(PulaarProposal.created_at.desc()).all()
+    return render_template("admin/pulaar_proposals.html", propositions=propositions, statut=statut)
+
+
+def _source_contribution_communautaire():
+    """Une seule ligne PulaarSource réutilisée pour toute proposition
+    acceptée — plutôt qu'une ligne par acceptation, qui bruiterait la
+    liste des sources sans rien apporter de plus."""
+    source = PulaarSource.query.filter_by(method="contribution").first()
+    if not source:
+        source = PulaarSource(
+            name="Contribution communautaire", method="contribution",
+            license="Kaloum24 — vérifié par la modération avant publication",
+        )
+        db.session.add(source)
+        db.session.flush()
+    return source
+
+
+@admin_bp.route("/pulaar/propositions/<int:proposal_id>/accepter", methods=["POST"])
+@login_required
+@moderator_required
+def accept_pulaar_proposal(proposal_id):
+    p = PulaarProposal.query.get_or_404(proposal_id)
+    if p.status != "en_attente":
+        flash("Cette proposition a déjà été traitée.", "error")
+        return redirect(url_for("admin.pulaar_proposals"))
+
+    source = _source_contribution_communautaire()
+    t = PulaarTerm(
+        lemma=p.term_lemma, slug=unique_slug(p.term_lemma, PulaarTerm),
+        domain_id=p.domain_id, source_id=source.id, status="documented",
+    )
+    db.session.add(t)
+    db.session.flush()
+    db.session.add(PulaarDefinition(term_id=t.id, lang="fr", text=p.definition_fr))
+    p.status = "valide"
+    db.session.commit()
+    flash(f"Proposition acceptée — « {p.term_lemma} » ajouté au dictionnaire.", "success")
+    return redirect(url_for("admin.pulaar_proposals"))
+
+
+@admin_bp.route("/pulaar/propositions/<int:proposal_id>/rejeter", methods=["POST"])
+@login_required
+@moderator_required
+def reject_pulaar_proposal(proposal_id):
+    p = PulaarProposal.query.get_or_404(proposal_id)
+    if p.status != "en_attente":
+        flash("Cette proposition a déjà été traitée.", "error")
+        return redirect(url_for("admin.pulaar_proposals"))
+    p.status = "rejete"
+    db.session.commit()
+    flash("Proposition rejetée.", "info")
+    return redirect(url_for("admin.pulaar_proposals"))

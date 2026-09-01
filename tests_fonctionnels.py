@@ -3172,6 +3172,213 @@ with app.app_context():
         ok(f"Cascade DB : {table}.{colonne} -> articles a bien ondelete={attendu}",
            trouve == attendu)
 
+# =============================================== Module Pulaar, Phase 1
+# (voir PLAN_PULAAR.md). Le rendu de l'identité Tiadra Consortium lui-même
+# a été vérifié avec un vrai navigateur Playwright pendant le développement
+# — ce qui suit vérifie les routes, permissions et le cycle de données.
+from models import PulaarDomain, PulaarSource, PulaarTerm, PulaarDefinition, PulaarProposal  # noqa: E402
+from seed_pulaar import run_seed_pulaar  # noqa: E402
+
+with app.app_context():
+    run_seed_pulaar()
+    _nb_termes_seed = PulaarTerm.query.count()
+
+ok("Pulaar seed : 22 termes amorces depuis Wiktionary", _nb_termes_seed == 22)
+with app.app_context():
+    src_wiktionary = PulaarSource.query.filter_by(method="wiktionary").first()
+    ok("Pulaar seed : source Wiktionary avec licence CC BY-SA enregistree",
+       src_wiktionary is not None and "CC BY-SA" in src_wiktionary.license)
+
+# --- rerun : idempotence reelle, pas juste supposee ---
+with app.app_context():
+    run_seed_pulaar()
+    ok("Pulaar seed : relance idempotente (toujours 22 termes, pas de doublon)",
+       PulaarTerm.query.count() == 22)
+
+# --- routes publiques ---
+lecteur_pl = app.test_client()
+r = lecteur_pl.get("/pulaar")
+ok("Pulaar public : accueil accessible sans connexion", r.status_code == 200)
+ok("Pulaar public : compte de termes affiche", "22" in text(r))
+
+r = lecteur_pl.get("/pulaar?q=semer")
+page_recherche = text(r)
+ok("Pulaar public : recherche trouve un terme reel (aawgo)", "aawgo" in page_recherche)
+ok("Pulaar public : recherche trouve un second terme (aawugol)", "aawugol" in page_recherche)
+
+r = lecteur_pl.get("/pulaar?q=zzzzznexistepas")
+ok("Pulaar public : recherche sans resultat affiche un etat vide, pas une erreur",
+   r.status_code == 200 and "Aucun r" in text(r))
+
+r = lecteur_pl.get("/pulaar/terme/aada")
+page_terme = text(r)
+ok("Pulaar public : fiche terme accessible", r.status_code == 200)
+ok("Pulaar public : definition francaise affichee", "coutume" in page_terme)
+ok("Pulaar public : provenance affichee (source + licence)",
+   "Wiktionary" in page_terme and "CC BY-SA" in page_terme)
+
+r = lecteur_pl.get("/pulaar/terme/ce-slug-nexiste-pas")
+ok("Pulaar public : terme inconnu renvoie 404", r.status_code == 404)
+
+# --- proposition : necessite une connexion ---
+r = lecteur_pl.get("/pulaar/proposer")
+ok("Pulaar public : proposer un mot redirige vers la connexion si anonyme",
+   r.status_code in (301, 302) and "connexion" in r.headers.get("Location", ""))
+
+contributeur_pl = app.test_client()
+tok = csrf(contributeur_pl, "/inscription")
+contributeur_pl.post("/inscription", data={
+    "csrf_token": tok, "username": "contributeur_pulaar", "email": "contributeur_pulaar@example.com",
+    "password": "MotDePasse1", "password_confirm": "MotDePasse1"})
+
+tok = csrf(contributeur_pl, "/pulaar/proposer")
+r = contributeur_pl.post("/pulaar/proposer", data={
+    "csrf_token": tok, "term_lemma": "jokkere", "definition_fr": "lien, connexion",
+    "justification": "Mot vu dans un article de test.",
+})
+with app.app_context():
+    prop = PulaarProposal.query.filter_by(term_lemma="jokkere").first()
+    ok("Pulaar proposition : enregistree en base", prop is not None)
+    ok("Pulaar proposition : statut initial en_attente, jamais publie directement",
+       prop is not None and prop.status == "en_attente")
+    ok("Pulaar proposition : proposed_by correctement rattache",
+       prop is not None and prop.proposed_by.username == "contributeur_pulaar")
+    _proposal_id = prop.id if prop else None
+
+ok("Pulaar proposition : n'apparait PAS comme terme publie tant que non acceptee",
+   "jokkere" not in text(lecteur_pl.get("/pulaar")))
+
+# --- validation du formulaire de proposition ---
+tok = csrf(contributeur_pl, "/pulaar/proposer")
+r = contributeur_pl.post("/pulaar/proposer", data={
+    "csrf_token": tok, "term_lemma": "test", "definition_fr": "x",  # trop courte
+})
+ok("Pulaar proposition : definition trop courte refusee",
+   "5 caract" in text(r) or "5 caractères" in text(r))
+
+# --- permissions admin ---
+r = contributeur_pl.get("/admin/pulaar")
+ok("Pulaar admin : simple utilisateur bloque (403)", r.status_code == 403)
+
+admin_pl = app.test_client()
+tok = csrf(admin_pl, "/connexion")
+admin_pl.post("/connexion", data={"csrf_token": tok, "identifiant": "admin",
+                                  "password": "ChangeMoi123!"}, follow_redirects=True)
+
+r = admin_pl.get("/admin/pulaar")
+ok("Pulaar admin : tableau de bord accessible au modérateur/admin", r.status_code == 200)
+ok("Pulaar admin : compte de propositions en attente correct", "1" in text(r))
+
+# --- creation d'un domaine ---
+tok = csrf(admin_pl, "/admin/pulaar/domaines")
+admin_pl.post("/admin/pulaar/domaines", data={"csrf_token": tok, "name": "Technologie"})
+with app.app_context():
+    dom = PulaarDomain.query.filter_by(name="Technologie").first()
+    ok("Pulaar admin : domaine cree", dom is not None)
+    _domain_id = dom.id if dom else None
+
+# --- creation d'un terme SANS source : refuse ---
+tok = csrf(admin_pl, "/admin/pulaar/termes/nouveau")
+r = admin_pl.post("/admin/pulaar/termes/nouveau", data={
+    "csrf_token": tok, "lemma": "testsanssource", "definition_fr": "definition de test",
+})
+ok("Pulaar admin : creation sans source refusee (jamais de terme sans provenance)",
+   "provenance" in text(r).lower())
+with app.app_context():
+    ok("Pulaar admin : aucun terme cree suite au refus",
+       PulaarTerm.query.filter_by(lemma="testsanssource").first() is None)
+
+# --- creation d'un terme avec source : reussit ---
+tok = csrf(admin_pl, "/admin/pulaar/termes/nouveau")
+admin_pl.post("/admin/pulaar/termes/nouveau", data={
+    "csrf_token": tok, "lemma": "ordinateur-test", "part_of_speech": "nom",
+    "definition_fr": "machine electronique de calcul", "definition_en": "electronic calculating machine",
+    "domain_id": str(_domain_id), "source_id": str(src_wiktionary.id),
+})
+with app.app_context():
+    t_manuel = PulaarTerm.query.filter_by(lemma="ordinateur-test").first()
+    ok("Pulaar admin : terme cree manuellement avec source", t_manuel is not None)
+    ok("Pulaar admin : deux definitions (fr+en) rattachees",
+       t_manuel is not None and len(t_manuel.definitions) == 2)
+    ok("Pulaar admin : statut par defaut = documented, jamais valide automatiquement",
+       t_manuel is not None and t_manuel.status == "documented")
+    _terme_manuel_id = t_manuel.id if t_manuel else None
+
+# --- basculer en validated, puis revenir ---
+tok = csrf(admin_pl, "/admin/pulaar/termes")
+admin_pl.post(f"/admin/pulaar/termes/{_terme_manuel_id}/valider", data={"csrf_token": tok})
+with app.app_context():
+    ok("Pulaar admin : terme bascule en validated",
+       db.session.get(PulaarTerm, _terme_manuel_id).status == "validated")
+tok = csrf(admin_pl, "/admin/pulaar/termes")
+admin_pl.post(f"/admin/pulaar/termes/{_terme_manuel_id}/valider", data={"csrf_token": tok})
+with app.app_context():
+    ok("Pulaar admin : rebascule en documented (bascule, pas a sens unique)",
+       db.session.get(PulaarTerm, _terme_manuel_id).status == "documented")
+
+# --- accepter une proposition : cree un vrai terme ---
+tok = csrf(admin_pl, "/admin/pulaar/propositions")
+admin_pl.post(f"/admin/pulaar/propositions/{_proposal_id}/accepter", data={"csrf_token": tok})
+with app.app_context():
+    prop_apres = db.session.get(PulaarProposal, _proposal_id)
+    ok("Pulaar proposition acceptee : statut devient valide", prop_apres.status == "valide")
+    terme_cree = PulaarTerm.query.filter_by(lemma="jokkere").first()
+    ok("Pulaar proposition acceptee : un vrai terme est cree", terme_cree is not None)
+    ok("Pulaar proposition acceptee : statut documented (jamais valide automatiquement)",
+       terme_cree is not None and terme_cree.status == "documented")
+    ok("Pulaar proposition acceptee : source = contribution communautaire",
+       terme_cree is not None and terme_cree.source.method == "contribution")
+
+ok("Pulaar proposition acceptee : visible publiquement maintenant",
+   "jokkere" in text(lecteur_pl.get("/pulaar/terme/" + terme_cree.slug)))
+
+# --- tentative de traiter deux fois la meme proposition ---
+tok = csrf(admin_pl, "/admin/pulaar/propositions")
+tok = csrf(admin_pl, "/compte")
+r = admin_pl.post(f"/admin/pulaar/propositions/{_proposal_id}/accepter", data={"csrf_token": tok},
+                  follow_redirects=True)
+ok("Pulaar proposition : refus de retraiter une proposition deja acceptee",
+   "déjà" in text(r) or "deja" in text(r).lower())
+with app.app_context():
+    ok("Pulaar proposition : aucun second terme jokkere cree par le double traitement",
+       PulaarTerm.query.filter_by(lemma="jokkere").count() == 1)
+
+# --- rejeter une proposition ---
+tok = csrf(contributeur_pl, "/pulaar/proposer")
+contributeur_pl.post("/pulaar/proposer", data={
+    "csrf_token": tok, "term_lemma": "arawtude", "definition_fr": "mot invente pour ce test",
+})
+with app.app_context():
+    prop2 = PulaarProposal.query.filter_by(term_lemma="arawtude").first()
+    _proposal2_id = prop2.id
+
+tok = csrf(admin_pl, "/admin/pulaar/propositions")
+admin_pl.post(f"/admin/pulaar/propositions/{_proposal2_id}/rejeter", data={"csrf_token": tok})
+with app.app_context():
+    ok("Pulaar proposition rejetee : statut correct",
+       db.session.get(PulaarProposal, _proposal2_id).status == "rejete")
+    ok("Pulaar proposition rejetee : aucun terme cree",
+       PulaarTerm.query.filter_by(lemma="arawtude").first() is None)
+
+# --- domaine : affiche bien ses termes ---
+tok = csrf(admin_pl, "/admin/pulaar/termes")
+admin_pl.post(f"/admin/pulaar/termes/{_terme_manuel_id}/valider", data={"csrf_token": tok})  # remet a documented -> validated
+page_domaine = text(lecteur_pl.get(f"/pulaar/domaine/technologie"))
+ok("Pulaar public : page domaine liste bien le terme qui lui est rattache",
+   "ordinateur-test" in page_domaine)
+
+# --- suppression d'un terme : cascade sur ses definitions ---
+with app.app_context():
+    nb_defs_avant = PulaarDefinition.query.filter_by(term_id=_terme_manuel_id).count()
+    ok("Pulaar cascade : le terme a bien des definitions avant suppression", nb_defs_avant == 2)
+
+tok = csrf(admin_pl, "/admin/pulaar/termes")
+admin_pl.post(f"/admin/pulaar/termes/{_terme_manuel_id}/supprimer", data={"csrf_token": tok})
+with app.app_context():
+    ok("Pulaar cascade : terme supprime", db.session.get(PulaarTerm, _terme_manuel_id) is None)
+    ok("Pulaar cascade : ses definitions supprimees avec lui (ORM cascade)",
+       PulaarDefinition.query.filter_by(term_id=_terme_manuel_id).count() == 0)
+
 os.close(_db_fd)
 os.unlink(_db_path)
 

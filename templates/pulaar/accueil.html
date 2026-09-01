@@ -1,0 +1,42 @@
+{% extends "pulaar/_base.html" %}
+{% block titre %}Dictionnaire Pulaar{% endblock %}
+
+{% block entete %}
+  <h1>Dictionnaire Pulaar</h1>
+  <p>Un dictionnaire pulaar-français en construction, avec provenance vérifiée pour
+    chaque terme — {{ total_termes }} terme{{ 's' if total_termes != 1 }} documenté{{ 's' if total_termes != 1 }} pour l'instant.</p>
+  <form class="tc-recherche" method="get" action="{{ url_for('pulaar.accueil') }}">
+    <input type="text" name="q" value="{{ q }}" placeholder="Chercher un mot en pulaar ou en français…">
+    <button type="submit">Chercher</button>
+  </form>
+{% endblock %}
+
+{% block contenu %}
+{% if q %}
+  <h2>Résultats pour « {{ q }} »</h2>
+  {% for t in resultats %}
+  <div class="tc-carte">
+    <div class="tc-carte__meta">
+      {{ t.part_of_speech or '' }}
+      {% if t.status == 'validated' %}<span class="tc-pastille tc-pastille--validee">Validé</span>{% else %}<span class="tc-pastille">Documenté</span>{% endif %}
+    </div>
+    <h3><a href="{{ url_for('pulaar.terme', slug=t.slug) }}">{{ t.lemma }}</a></h3>
+    {% for d in t.definitions if d.lang == 'fr' %}<p>{{ d.text }}</p>{% endfor %}
+  </div>
+  {% else %}
+  <p class="tc-vide">Aucun résultat pour « {{ q }} ». <a href="{{ url_for('pulaar.proposer') }}">Propose ce mot</a> si tu connais sa définition.</p>
+  {% endfor %}
+{% else %}
+  <h2>Domaines</h2>
+  <div class="tc-domaines">
+    {% for d in domaines %}
+    <a href="{{ url_for('pulaar.domaine', slug=d.slug) }}">{{ d.name }}</a>
+    {% else %}
+    <p class="tc-vide">Aucun domaine créé pour l'instant.</p>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<hr class="tc-separateur--fin">
+<p><a href="{{ url_for('pulaar.proposer') }}" class="tc-bouton tc-bouton--secondaire">Proposer un mot</a></p>
+{% endblock %}

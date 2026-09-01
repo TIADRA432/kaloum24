@@ -10,6 +10,7 @@
     <a href="{{ url_for('admin.comments') }}" class="{{ 'is-active' if request.endpoint == 'admin.comments' }}">
       Commentaires{% if pending_comments_count %} <span class="badge-count">{{ pending_comments_count }}</span>{% endif %}
     </a>
+    <a href="{{ url_for('admin.pulaar_dashboard') }}" class="{{ 'is-active' if request.endpoint and request.endpoint.startswith('admin.pulaar') or request.endpoint in ['admin.new_pulaar_term'] }}">Pulaar</a>
     {% if current_user.is_admin %}
     <a href="{{ url_for('admin.categories') }}" class="{{ 'is-active' if request.endpoint == 'admin.categories' }}">Rubriques</a>
     <a href="{{ url_for('admin.sources') }}" class="{{ 'is-active' if request.endpoint in ['admin.sources','admin.new_source','admin.edit_source'] }}">Sources</a>

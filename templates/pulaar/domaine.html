@@ -1,0 +1,24 @@
+{% extends "pulaar/_base.html" %}
+{% block titre %}{{ domaine.name }} — Dictionnaire Pulaar{% endblock %}
+
+{% block entete %}
+  <h1>{{ domaine.name }}</h1>
+  <p>{{ termes|length }} terme{{ 's' if termes|length != 1 }} dans ce domaine.</p>
+{% endblock %}
+
+{% block contenu %}
+<p class="tc-fil"><a href="{{ url_for('pulaar.accueil') }}">← Tous les domaines</a></p>
+
+{% for t in termes %}
+<div class="tc-carte">
+  <div class="tc-carte__meta">
+    {{ t.part_of_speech or '' }}
+    {% if t.status == 'validated' %}<span class="tc-pastille tc-pastille--validee">Validé</span>{% else %}<span class="tc-pastille">Documenté</span>{% endif %}
+  </div>
+  <h3><a href="{{ url_for('pulaar.terme', slug=t.slug) }}">{{ t.lemma }}</a></h3>
+  {% for d in t.definitions if d.lang == 'fr' %}<p>{{ d.text }}</p>{% endfor %}
+</div>
+{% else %}
+<p class="tc-vide">Aucun terme dans ce domaine pour l'instant.</p>
+{% endfor %}
+{% endblock %}

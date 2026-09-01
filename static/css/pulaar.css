@@ -1,0 +1,124 @@
+/* ==========================================================================
+   Identité Tiadra Consortium — module Pulaar UNIQUEMENT.
+   Chargée uniquement sur les gabarits templates/pulaar/*.html — jamais sur
+   base.html. Variables préfixées --tc- pour ne jamais entrer en conflit
+   avec --ink/--paper/--gold du thème Kaloum24 existant (static/css/style.css,
+   jamais modifié par ce fichier). Voir PLAN_PULAAR.md, §B.
+   ========================================================================== */
+
+@font-face {
+  font-family: 'Montserrat Tiadra';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url('../fonts/tiadra/montserrat-variable-latin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Roboto Slab Tiadra';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../fonts/tiadra/robotoslab-700-latin.woff2') format('woff2');
+}
+
+.tc {
+  --tc-or: #D19F5E;
+  --tc-bordeaux: #5D2E38;
+  --tc-sable: #DCB786;
+  --tc-bronze: #C48738;
+  --tc-mauve: #7F3F4D;
+  --tc-noir-vineux: #3B1D23;
+  --tc-blanc: #FFFFFF;
+  --tc-ivoire: #F7F3EF;
+  --tc-gris-encre: #2B2225;
+  --tc-gris-doux: #8A7B76;
+  --tc-titre: 'Roboto Slab Tiadra', Georgia, serif;
+  --tc-corps: 'Montserrat Tiadra', Helvetica, Arial, sans-serif;
+
+  font-family: var(--tc-corps);
+  color: var(--tc-gris-encre);
+  background: var(--tc-ivoire);
+  min-height: 100vh;
+}
+
+.tc a { color: var(--tc-bronze); }
+.tc h1, .tc h2 { font-family: var(--tc-titre); font-weight: 700; color: var(--tc-noir-vineux); }
+.tc h1 { font-size: 2.2rem; }
+.tc h2 { font-size: 1.6rem; }
+.tc h3 { font-family: var(--tc-corps); font-weight: 600; font-size: 1.15rem; }
+
+/* En-tête de section — fond Bordeaux, motif hexagonal, logo Tiadra. Rôle
+   dominant (~60%) de la palette, conforme à la répartition du guide. */
+.tc-entete {
+  background: var(--tc-bordeaux) url('../img/tiadra/pattern-hex-dark.png') repeat;
+  background-size: 340px;
+  color: var(--tc-ivoire);
+  padding: 2rem 1.5rem;
+}
+.tc-entete__marque { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1.2rem; }
+.tc-entete__marque img { height: 28px; }
+.tc-entete__marque span { font-family: var(--tc-corps); font-weight: 300; letter-spacing: 0.25em;
+  text-transform: uppercase; font-size: 0.7rem; color: var(--tc-sable); }
+.tc-entete h1 { color: var(--tc-blanc); margin: 0 0 0.4rem; }
+.tc-entete p { color: var(--tc-sable); max-width: 60ch; margin: 0; }
+
+/* Barre de recherche — angles nets (2px), jamais arrondie, conforme au
+   système graphique du guide ("jamais de courbe dans les éléments
+   structurels"). */
+.tc-recherche { display: flex; gap: 0; max-width: 560px; margin-top: 1.5rem; }
+.tc-recherche input { flex: 1; border: 2px solid var(--tc-or); border-right: none;
+  padding: 0.7rem 1rem; font-family: var(--tc-corps); font-size: 1rem; border-radius: 2px 0 0 2px; }
+.tc-recherche button { background: var(--tc-or); color: var(--tc-blanc); border: 2px solid var(--tc-or);
+  padding: 0.7rem 1.4rem; font-family: var(--tc-corps); font-weight: 600; letter-spacing: 0.05em;
+  text-transform: uppercase; font-size: 0.8rem; cursor: pointer; border-radius: 0 2px 2px 0; }
+.tc-recherche button:hover { background: var(--tc-bronze); border-color: var(--tc-bronze); }
+
+.tc-corps { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+/* Carte — bordure fine + accent supérieur Or, coins légèrement adoucis en
+   usage digital (6-10px, autorisé par le guide malgré la règle des angles
+   nets pour les structures). */
+.tc-carte { background: var(--tc-blanc); border: 1px solid var(--tc-sable); border-top: 3px solid var(--tc-or);
+  border-radius: 8px; padding: 1.2rem 1.4rem; margin-bottom: 1rem; }
+.tc-carte h3 { margin: 0 0 0.3rem; }
+.tc-carte h3 a { color: var(--tc-noir-vineux); text-decoration: none; }
+.tc-carte h3 a:hover { color: var(--tc-bronze); }
+.tc-carte__meta { font-size: 0.78rem; color: var(--tc-gris-doux); text-transform: uppercase;
+  letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+
+.tc-pastille { display: inline-block; background: var(--tc-sable); color: var(--tc-noir-vineux);
+  font-size: 0.72rem; font-weight: 600; padding: 0.15rem 0.55rem; border-radius: 3px;
+  text-transform: uppercase; letter-spacing: 0.04em; }
+.tc-pastille--validee { background: var(--tc-or); color: var(--tc-blanc); }
+
+.tc-bouton { display: inline-block; background: var(--tc-or); color: var(--tc-blanc) !important;
+  font-family: var(--tc-corps); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+  font-size: 0.8rem; padding: 0.65rem 1.4rem; border: none; border-radius: 2px; cursor: pointer;
+  text-decoration: none !important; }
+.tc-bouton:hover { background: var(--tc-bronze); }
+.tc-bouton--secondaire { background: transparent; color: var(--tc-bordeaux) !important;
+  border: 2px solid var(--tc-bordeaux); }
+.tc-bouton--secondaire:hover { background: var(--tc-bordeaux); color: var(--tc-blanc) !important; }
+
+.tc-champ { margin-bottom: 1.1rem; }
+.tc-champ label { display: block; font-family: var(--tc-corps); font-weight: 600; font-size: 0.85rem;
+  color: var(--tc-noir-vineux); margin-bottom: 0.35rem; }
+.tc-champ input, .tc-champ textarea, .tc-champ select { width: 100%; border: 1px solid var(--tc-gris-doux);
+  border-radius: 2px; padding: 0.6rem 0.8rem; font-family: var(--tc-corps); font-size: 0.95rem; }
+.tc-champ textarea { min-height: 100px; }
+
+.tc-separateur { border: none; border-top: 3px solid var(--tc-or); width: 60px; margin: 1.5rem 0; }
+.tc-separateur--fin { border: none; border-top: 1px solid var(--tc-sable); margin: 1.5rem 0; }
+
+.tc-fil { font-size: 0.82rem; color: var(--tc-gris-doux); margin-bottom: 1rem; }
+.tc-fil a { color: var(--tc-gris-doux); text-decoration: underline; }
+
+.tc-note { background: var(--tc-sable); color: var(--tc-noir-vineux); padding: 0.9rem 1.1rem;
+  border-radius: 4px; font-size: 0.85rem; margin-bottom: 1.2rem; }
+
+.tc-vide { color: var(--tc-gris-doux); font-style: italic; padding: 2rem 0; text-align: center; }
+
+.tc-domaines { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0 2rem; }
+.tc-domaines a { background: var(--tc-blanc); border: 1px solid var(--tc-sable); color: var(--tc-bordeaux);
+  padding: 0.4rem 0.9rem; border-radius: 3px; text-decoration: none; font-size: 0.85rem; font-weight: 600; }
+.tc-domaines a:hover { border-color: var(--tc-or); background: var(--tc-ivoire); }

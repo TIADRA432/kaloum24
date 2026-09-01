@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titre %}Pulaar{% endblock %} — Kaloum24</title>
+  <link rel="icon" href="{{ url_for('static', filename='img/tiadra/favicon-512.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pulaar.css') }}">
+  {% block head_extra %}{% endblock %}
+</head>
+<body class="tc">
+  <div class="tc-entete">
+    <div class="tc-corps" style="padding-top:0;padding-bottom:0;">
+      <div class="tc-entete__marque">
+        <img src="{{ url_for('static', filename='img/tiadra/tiadra-symbol-color.svg') }}" alt="Tiadra Consortium">
+        <span>Tiadra Consortium — Growup the World</span>
+      </div>
+      {% block entete %}{% endblock %}
+    </div>
+  </div>
+
+  <div class="tc-corps">
+    <p class="tc-fil"><a href="{{ url_for('main.home') }}">← Retour à Kaloum24</a></p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="tc-note">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% block contenu %}{% endblock %}
+  </div>
+</body>
+</html>

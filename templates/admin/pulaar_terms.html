@@ -1,0 +1,50 @@
+{% extends "admin/_base.html" %}
+{% block admin_title %}Termes Pulaar{% endblock %}
+{% block admin_content %}
+
+<div class="section-head">
+  <h2>{{ termes|length }} terme(s)</h2>
+  <a class="btn" href="{{ url_for('admin.new_pulaar_term') }}">Nouveau terme</a>
+</div>
+
+<div style="margin-bottom:1rem;">
+  <a class="btn btn--small {{ 'btn--ghost' if statut }}" href="{{ url_for('admin.pulaar_terms') }}">Tous</a>
+  <a class="btn btn--small {{ 'btn--ghost' if statut != 'documented' }}" href="{{ url_for('admin.pulaar_terms', statut='documented') }}">Documentés</a>
+  <a class="btn btn--small {{ 'btn--ghost' if statut != 'validated' }}" href="{{ url_for('admin.pulaar_terms', statut='validated') }}">Validés</a>
+</div>
+
+<div class="table-scroll">
+<table class="admin-table">
+  <thead><tr><th>Terme</th><th>Domaine</th><th>Source</th><th>Statut</th><th>Actions</th></tr></thead>
+  <tbody>
+    {% for t in termes %}
+    <tr>
+      <td>{{ t.lemma }} {% if t.part_of_speech %}<small style="color:var(--text-muted);">({{ t.part_of_speech }})</small>{% endif %}</td>
+      <td>{{ t.domain.name if t.domain else '—' }}</td>
+      <td>{{ t.source.name }}</td>
+      <td>
+        <span class="pill pill--{{ 'approuve' if t.status == 'validated' else 'brouillon' }}">
+          {{ 'Validé' if t.status == 'validated' else 'Documenté' }}
+        </span>
+      </td>
+      <td class="row-actions">
+        <a class="link-btn" href="{{ url_for('pulaar.terme', slug=t.slug) }}" target="_blank" rel="noopener noreferrer">Voir</a>
+        <form method="post" action="{{ url_for('admin.validate_pulaar_term', term_id=t.id) }}" style="display:inline;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="link-btn">{{ 'Repasser en documenté' if t.status == 'validated' else 'Valider' }}</button>
+        </form>
+        <form method="post" action="{{ url_for('admin.delete_pulaar_term', term_id=t.id) }}"
+              onsubmit="return confirm('Supprimer ce terme ?');" style="display:inline;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="link-btn link-btn--danger">Supprimer</button>
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5" class="empty-state">Aucun terme dans cette sélection.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+
+{% endblock %}

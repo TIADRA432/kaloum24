@@ -1,0 +1,56 @@
+{% extends "admin/_base.html" %}
+{% block admin_title %}Nouveau terme Pulaar{% endblock %}
+{% block admin_content %}
+
+<form method="post" style="max-width:600px;">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <div class="field">
+    <label for="lemma">Mot en pulaar</label>
+    <input type="text" id="lemma" name="lemma" required>
+  </div>
+
+  <div class="field">
+    <label for="part_of_speech">Nature (facultatif)</label>
+    <input type="text" id="part_of_speech" name="part_of_speech" placeholder="Ex. : nom, verbe, adjectif">
+  </div>
+
+  <div class="field">
+    <label for="definition_fr">Définition en français</label>
+    <textarea id="definition_fr" name="definition_fr" required minlength="3"></textarea>
+  </div>
+
+  <div class="field">
+    <label for="definition_en">Définition en anglais (facultatif)</label>
+    <textarea id="definition_en" name="definition_en"></textarea>
+  </div>
+
+  <div class="field">
+    <label for="domain_id">Domaine (facultatif)</label>
+    <select id="domain_id" name="domain_id">
+      <option value="">— Aucun —</option>
+      {% for d in domaines %}
+      <option value="{{ d.id }}">{{ d.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="field">
+    <label for="source_id">Source — obligatoire, un terme n'existe jamais sans provenance</label>
+    <select id="source_id" name="source_id" required>
+      <option value="">— Choisir —</option>
+      {% for s in sources %}
+      <option value="{{ s.id }}">{{ s.name }}{% if s.license %} ({{ s.license }}){% endif %}</option>
+      {% endfor %}
+    </select>
+    {% if not sources %}
+    <p class="field-hint">Aucune source enregistrée — <code>flask seed-pulaar</code> en crée depuis Wiktionary,
+      ou ajoute-en une manuellement en base pour l'instant (pas encore d'écran dédié en Phase 1).</p>
+    {% endif %}
+  </div>
+
+  <button type="submit" class="btn">Créer le terme</button>
+  <a class="btn btn--ghost" href="{{ url_for('admin.pulaar_terms') }}">Annuler</a>
+</form>
+
+{% endblock %}

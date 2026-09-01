@@ -1,0 +1,38 @@
+{% extends "pulaar/_base.html" %}
+{% block titre %}{{ terme.lemma }} — Dictionnaire Pulaar{% endblock %}
+
+{% block entete %}
+  <h1>{{ terme.lemma }}</h1>
+  <p>
+    {% if terme.part_of_speech %}{{ terme.part_of_speech }} · {% endif %}
+    {% if terme.domain %}<a href="{{ url_for('pulaar.domaine', slug=terme.domain.slug) }}" style="color:var(--tc-or);">{{ terme.domain.name }}</a>{% endif %}
+  </p>
+{% endblock %}
+
+{% block contenu %}
+<p class="tc-fil"><a href="{{ url_for('pulaar.accueil') }}">← Retour à la recherche</a></p>
+
+{% if terme.status == 'validated' %}
+<span class="tc-pastille tc-pastille--validee">Validé</span>
+{% else %}
+<span class="tc-pastille">Documenté — pas encore vérifié par un linguiste</span>
+{% endif %}
+
+<hr class="tc-separateur">
+
+{% for d in terme.definitions if d.lang == 'fr' %}
+<h3>Français</h3>
+<p>{{ d.text }}</p>
+{% endfor %}
+{% for d in terme.definitions if d.lang == 'en' %}
+<h3>English</h3>
+<p>{{ d.text }}</p>
+{% endfor %}
+
+<hr class="tc-separateur--fin">
+<p class="tc-carte__meta">
+  Source : {{ terme.source.name }}
+  {% if terme.source.url %} — <a href="{{ terme.source.url }}" target="_blank" rel="noopener noreferrer">voir la source</a>{% endif %}
+  {% if terme.source.license %} · {{ terme.source.license }}{% endif %}
+</p>
+{% endblock %}

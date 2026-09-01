@@ -1,0 +1,32 @@
+{% extends "admin/_base.html" %}
+{% block admin_title %}Domaines Pulaar{% endblock %}
+{% block admin_content %}
+
+<div class="section-head"><h2>{{ domaines|length }} domaine(s)</h2></div>
+
+<form method="post" style="display:flex; gap:0.6rem; align-items:flex-end; margin-bottom:2rem; max-width:480px;">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="field" style="flex:1; margin:0;">
+    <label for="name">Nouveau domaine</label>
+    <input type="text" id="name" name="name" required minlength="2" placeholder="Ex. : Technologie">
+  </div>
+  <button type="submit" class="btn">Ajouter</button>
+</form>
+
+<div class="table-scroll">
+<table class="admin-table">
+  <thead><tr><th>Nom</th><th>Adresse</th></tr></thead>
+  <tbody>
+    {% for d in domaines %}
+    <tr>
+      <td>{{ d.name }}</td>
+      <td><code>/pulaar/domaine/{{ d.slug }}</code></td>
+    </tr>
+    {% else %}
+    <tr><td colspan="2" class="empty-state">Aucun domaine pour l'instant.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+
+{% endblock %}

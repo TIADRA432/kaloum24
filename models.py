@@ -543,3 +543,109 @@ class ArticleRevision(db.Model):
 
     def __repr__(self):
         return f"<ArticleRevision {self.field_name} sur article#{self.article_id}>"
+
+
+# =================================================================== PULAAR
+# Module Pulaar, Phase 1 — voir PLAN_PULAAR.md. Modèle volontairement réduit
+# par rapport au document d'origine (18 entités) : ce qui sert réellement un
+# dictionnaire avec provenance et file de contribution modérée, pas plus.
+
+PULAAR_TERM_STATUTS = ("documented", "validated")
+PULAAR_PROPOSAL_STATUTS = ("en_attente", "valide", "rejete")
+
+
+class PulaarDomain(db.Model):
+    """Domaine thématique (Technologie, Quotidien, Agriculture...) — créé
+    depuis l'admin, jamais une liste figée dans le code."""
+    __tablename__ = "pulaar_domains"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    slug = db.Column(db.String(120), nullable=False, unique=True)
+
+    def __repr__(self):
+        return f"<PulaarDomain {self.name}>"
+
+
+class PulaarSource(db.Model):
+    """Provenance d'un terme — jamais une donnée sans source rattachée
+    (voir PLAN_PULAAR.md, §A). method distingue une source externe
+    (wiktionary, import_manuel) d'une contribution communautaire acceptée."""
+    __tablename__ = "pulaar_sources"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    url = db.Column(db.String(500))
+    license = db.Column(db.String(100))
+    method = db.Column(db.String(30), nullable=False)
+
+    def __repr__(self):
+        return f"<PulaarSource {self.name}>"
+
+
+class PulaarTerm(db.Model):
+    """Un terme du dictionnaire. status distingue "documented" (vient d'une
+    source ou d'une proposition acceptée, sans vérification linguistique
+    supplémentaire) de "validated" (un admin/linguiste l'a explicitement
+    confirmé) — jamais l'inverse, jamais présumé validé par défaut."""
+    __tablename__ = "pulaar_terms"
+
+    id = db.Column(db.Integer, primary_key=True)
+    lemma = db.Column(db.String(200), nullable=False)
+    slug = db.Column(db.String(220), nullable=False, unique=True, index=True)
+    part_of_speech = db.Column(db.String(50))
+    status = db.Column(db.String(20), nullable=False, default="documented")
+    domain_id = db.Column(db.Integer, db.ForeignKey("pulaar_domains.id", ondelete="SET NULL"))
+    # Jamais nullable : un terme sans provenance ne devrait jamais exister.
+    # Pas de ondelete ici, volontairement — supprimer une source qui a
+    # encore des termes rattachés doit être bloqué, pas silencieusement
+    # transformé en donnée orpheline.
+    source_id = db.Column(db.Integer, db.ForeignKey("pulaar_sources.id"), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    domain = db.relationship("PulaarDomain")
+    source = db.relationship("PulaarSource")
+    definitions = db.relationship(
+        "PulaarDefinition", back_populates="term", cascade="all, delete-orphan"
+    )
+
+    def __repr__(self):
+        return f"<PulaarTerm {self.lemma!r}>"
+
+
+class PulaarDefinition(db.Model):
+    """Une définition d'un terme, dans une langue donnée (fr/en pour la
+    Phase 1)."""
+    __tablename__ = "pulaar_definitions"
+
+    id = db.Column(db.Integer, primary_key=True)
+    term_id = db.Column(db.Integer, db.ForeignKey("pulaar_terms.id", ondelete="CASCADE"), nullable=False)
+    lang = db.Column(db.String(5), nullable=False)
+    text = db.Column(db.Text, nullable=False)
+
+    term = db.relationship("PulaarTerm", back_populates="definitions")
+
+    def __repr__(self):
+        return f"<PulaarDefinition {self.lang} sur terme#{self.term_id}>"
+
+
+class PulaarProposal(db.Model):
+    """Une suggestion communautaire, jamais publiée directement — même
+    principe que CollectedArticle pour l'agrégateur média : une file de
+    modération distincte du contenu final, jamais confondue avec lui."""
+    __tablename__ = "pulaar_proposals"
+
+    id = db.Column(db.Integer, primary_key=True)
+    term_lemma = db.Column(db.String(200), nullable=False)
+    definition_fr = db.Column(db.Text, nullable=False)
+    domain_id = db.Column(db.Integer, db.ForeignKey("pulaar_domains.id", ondelete="SET NULL"))
+    justification = db.Column(db.Text)
+    proposed_by_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"))
+    status = db.Column(db.String(20), nullable=False, default="en_attente")
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    domain = db.relationship("PulaarDomain")
+    proposed_by = db.relationship("User")
+
+    def __repr__(self):
+        return f"<PulaarProposal {self.term_lemma!r} ({self.status})>"
