@@ -60,3 +60,17 @@ def on_starting(server):
     except Exception as exc:
         server.log.warning("bootstrap-admin : n'a pas pu s'exécuter (%s) — "
                            "sans conséquence si un admin existe déjà.", exc)
+
+    # Même principe : flask seed-pulaar est idempotent (vérifié — voir
+    # seed_pulaar.py, PLAN_PULAAR.md §G) et pas d'accès shell direct sur
+    # Render pour le lancer manuellement une seule fois.
+    try:
+        resultat = subprocess.run(
+            ["flask", "seed-pulaar"],
+            capture_output=True, text=True, timeout=30,
+        )
+        for ligne in (resultat.stdout + resultat.stderr).splitlines():
+            server.log.info("seed-pulaar: %s", ligne)
+    except Exception as exc:
+        server.log.warning("seed-pulaar : n'a pas pu s'exécuter (%s) — "
+                           "sans conséquence si déjà amorcé.", exc)
