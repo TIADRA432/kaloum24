@@ -1241,6 +1241,12 @@ def new_pulaar_term():
         def_en = request.form.get("definition_en", "").strip()
         if def_en:
             db.session.add(PulaarDefinition(term_id=t.id, lang="en", text=def_en))
+        # Définition en pulaar même : un dictionnaire monolingue est l'objectif
+        # à terme, mais elle reste facultative — personne ne doit être forcé
+        # d'en inventer une pour pouvoir enregistrer un terme.
+        def_ff = request.form.get("definition_ff", "").strip()
+        if def_ff:
+            db.session.add(PulaarDefinition(term_id=t.id, lang="ff", text=def_ff))
         db.session.commit()
         flash(f"Terme « {lemme} » créé.", "success")
         return redirect(url_for("admin.pulaar_terms"))

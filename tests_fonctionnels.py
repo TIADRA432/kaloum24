@@ -3384,6 +3384,52 @@ with app.app_context():
     ok("Pulaar cascade : ses definitions supprimees avec lui (ORM cascade)",
        PulaarDefinition.query.filter_by(term_id=_terme_manuel_id).count() == 0)
 
+# --- interface en pulaar : traductions verifiees uniquement ---
+from pulaar_i18n import TRADUCTIONS, t as traduire_pl, couverture_pulaar  # noqa: E402
+
+ok("Pulaar i18n : aucune traduction sans provenance documentee",
+   all(src for _, ff, src in TRADUCTIONS.values() if ff))
+ok("Pulaar i18n : 'chercher' traduit par le terme Mozilla verifie",
+   traduire_pl("chercher", "ff") == "Yiylo")
+ok("Pulaar i18n : repli en francais quand aucune traduction attestee",
+   traduire_pl("dictionnaire", "ff") == "Dictionnaire")
+_traduites, _total = couverture_pulaar()
+ok("Pulaar i18n : couverture partielle honnetement mesuree",
+   0 < _traduites < _total)
+
+page_ff = text(lecteur_pl.get("/pulaar?lang=ff"))
+ok("Pulaar i18n : interface pulaar affiche le terme verifie", "Yiylo" in page_ff)
+ok("Pulaar i18n : avis de traduction partielle affiche a l'utilisateur",
+   "partiellement traduite" in page_ff)
+page_fr = text(lecteur_pl.get("/pulaar?lang=fr"))
+ok("Pulaar i18n : interface francaise par defaut inchangee",
+   "Chercher" in page_fr and "partiellement traduite" not in page_fr)
+ok("Pulaar i18n : langue invalide retombe sur le francais",
+   "Chercher" in text(lecteur_pl.get("/pulaar?lang=xx")))
+
+# --- definition en pulaar (lang='ff') sur un terme ---
+tok = csrf(admin_pl, "/admin/pulaar/termes/nouveau")
+admin_pl.post("/admin/pulaar/termes/nouveau", data={
+    "csrf_token": tok, "lemma": "terme-avec-def-pulaar",
+    "definition_ff": "Firdeere e pulaar.", "definition_fr": "Definition en francais",
+    "source_id": str(src_wiktionary.id),
+})
+with app.app_context():
+    t_ff = PulaarTerm.query.filter_by(lemma="terme-avec-def-pulaar").first()
+    ok("Pulaar definition : terme cree avec une definition en pulaar", t_ff is not None)
+    langues = sorted(d.lang for d in t_ff.definitions) if t_ff else []
+    ok("Pulaar definition : les deux langues enregistrees (ff + fr)", langues == ["ff", "fr"])
+    _slug_ff = t_ff.slug if t_ff else None
+
+page_terme_ff = text(lecteur_pl.get("/pulaar/terme/" + _slug_ff))
+ok("Pulaar definition : la definition pulaar s'affiche sur la fiche",
+   "Firdeere e pulaar." in page_terme_ff)
+ok("Pulaar definition : le pulaar apparait AVANT le francais",
+   page_terme_ff.index("Firdeere e pulaar.") < page_terme_ff.index("Definition en francais"))
+
+ok("Pulaar definition : le texte pulaar est cherchable",
+   "terme-avec-def-pulaar" in text(lecteur_pl.get("/pulaar?q=Firdeere")))
+
 os.close(_db_fd)
 os.unlink(_db_path)
 

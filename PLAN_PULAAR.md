@@ -165,3 +165,37 @@ vierge.
 
 Prochaine étape naturelle si on continue : Phase 2 (audio, variantes
 régionales, corpus) — non commencée, non planifiée en détail.
+
+---
+
+## H. Pulaar dans le module lui-même (interface + définitions)
+
+**Définitions en pulaar** — le modèle acceptait déjà n'importe quelle
+langue ; ajout du champ `ff` au formulaire admin et à l'affichage public
+(pulaar affiché AVANT le français : c'est la langue du dictionnaire). La
+recherche couvre automatiquement ce texte, sans filtre de langue. Reste
+facultatif : personne n'est forcé d'inventer une définition pulaar pour
+enregistrer un terme.
+
+**Interface en pulaar** — règle absolue posée dans `pulaar_i18n.py` :
+**aucune traduction inventée**. Je ne parle pas pulaar ; produire du
+pulaar approximatif généré par IA sur un site dont le sujet EST le pulaar
+serait précisément le problème de légitimité identifié dans la recherche.
+
+Chaque terme provient de la **localisation fulah officielle de Firefox**
+(`mozilla-l10n/firefox-l10n`, locale `ff`, MPL 2.0), réalisée par Ibrahima
+Sarr, qui travaille avec la Commission Fulfulde (FULCOM) de l'ACALAN. La
+provenance exacte (fichier + clé Mozilla) est notée pour chaque terme, donc
+vérifiable par n'importe qui.
+
+Termes attestés utilisés : Yiylo (chercher), Ɗemngal (langue), Suɓo
+(choisir), Helmere (mot), Ɓeydu (ajouter), Neldu (envoyer), walla (ou).
+
+Les chaînes sans équivalent attesté (« dictionnaire », « domaine »,
+« proposer un mot »…) **restent en français**, et l'interface affiche
+ouvertement le taux de couverture (7/15) à l'utilisateur plutôt que de
+laisser croire à une traduction complète.
+
+**À faire** : un locuteur pulaar doit relire et compléter les chaînes
+manquantes — c'est du travail humain, pas quelque chose que je dois
+fabriquer.

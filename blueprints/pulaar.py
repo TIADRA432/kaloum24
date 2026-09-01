@@ -9,8 +9,27 @@ from flask_login import current_user, login_required
 
 from extensions import db
 from models import PulaarTerm, PulaarDefinition, PulaarDomain, PulaarProposal
+from pulaar_i18n import t as traduire, couverture_pulaar
 
 pulaar_bp = Blueprint("pulaar", __name__, url_prefix="/pulaar")
+
+
+@pulaar_bp.context_processor
+def _injecter_traductions():
+    """Rend `t()` et la langue courante disponibles dans les gabarits DE CE
+    BLUEPRINT uniquement (context_processor, pas app_context_processor :
+    sinon ces variables fuiteraient dans tous les gabarits du site).
+    La langue vit dans l'URL (?lang=ff) plutôt qu'en session : un lien
+    partagé garde la langue choisie, et rien à stocker côté serveur."""
+    langue = request.args.get("lang", "fr")
+    if langue not in ("fr", "ff"):
+        langue = "fr"
+    traduites, total = couverture_pulaar()
+    return {
+        "t": lambda cle: traduire(cle, langue),
+        "langue_ui": langue,
+        "couverture_pulaar": (traduites, total),
+    }
 
 
 @pulaar_bp.route("/", strict_slashes=False)

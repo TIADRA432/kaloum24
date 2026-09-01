@@ -6,8 +6,9 @@
   <p>Un dictionnaire pulaar-français en construction, avec provenance vérifiée pour
     chaque terme — {{ total_termes }} terme{{ 's' if total_termes != 1 }} documenté{{ 's' if total_termes != 1 }} pour l'instant.</p>
   <form class="tc-recherche" method="get" action="{{ url_for('pulaar.accueil') }}">
-    <input type="text" name="q" value="{{ q }}" placeholder="Chercher un mot en pulaar ou en français…">
-    <button type="submit">Chercher</button>
+    <input type="hidden" name="lang" value="{{ langue_ui }}">
+    <input type="text" name="q" value="{{ q }}" placeholder="{{ t('chercher') }} — {{ t('mot')|lower }} pulaar {{ t('ou') }} français…">
+    <button type="submit">{{ t('chercher') }}</button>
   </form>
 {% endblock %}
 

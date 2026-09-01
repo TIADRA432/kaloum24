@@ -14,7 +14,18 @@
       <div class="tc-entete__marque">
         <img src="{{ url_for('static', filename='img/tiadra/tiadra-symbol-color.svg') }}" alt="Tiadra Consortium">
         <span>Tiadra Consortium — Growup the World</span>
+        <span class="tc-langues">
+          <a href="?lang=fr" class="{{ 'is-active' if langue_ui == 'fr' }}">Français</a>
+          <a href="?lang=ff" class="{{ 'is-active' if langue_ui == 'ff' }}">Pulaar</a>
+        </span>
       </div>
+      {% if langue_ui == 'ff' %}
+      <p class="tc-avis-traduction">
+        Interface partiellement traduite ({{ couverture_pulaar[0] }}/{{ couverture_pulaar[1] }} termes) —
+        traductions issues de la localisation fulah officielle de Firefox. Le reste
+        s'affiche en français en attendant la relecture d'un locuteur pulaar.
+      </p>
+      {% endif %}
       {% block entete %}{% endblock %}
     </div>
   </div>

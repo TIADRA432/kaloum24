@@ -59,6 +59,13 @@
 .tc-entete__marque img { height: 28px; }
 .tc-entete__marque span { font-family: var(--tc-corps); font-weight: 300; letter-spacing: 0.25em;
   text-transform: uppercase; font-size: 0.7rem; color: var(--tc-sable); }
+.tc-langues { margin-left: auto; letter-spacing: normal !important; text-transform: none !important; }
+.tc-langues a { color: var(--tc-sable); text-decoration: none; font-size: 0.8rem; padding: 0.2rem 0.5rem;
+  border: 1px solid transparent; border-radius: 2px; }
+.tc-langues a.is-active { border-color: var(--tc-or); color: var(--tc-or); font-weight: 600; }
+.tc-avis-traduction { background: rgba(0,0,0,0.22); border-left: 3px solid var(--tc-or);
+  padding: 0.6rem 0.9rem; font-size: 0.8rem; color: var(--tc-sable) !important; margin-bottom: 1rem !important;
+  max-width: 66ch; }
 .tc-entete h1 { color: var(--tc-blanc); margin: 0 0 0.4rem; }
 .tc-entete p { color: var(--tc-sable); max-width: 60ch; margin: 0; }
 
