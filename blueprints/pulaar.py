@@ -28,9 +28,13 @@ def accueil():
         )
     domaines = PulaarDomain.query.order_by(PulaarDomain.name).all()
     total_termes = PulaarTerm.query.count()
+    # Sans recherche, on liste quand même les termes : autrement un visiteur
+    # arrive sur une page vide et doit deviner quoi chercher pour voir
+    # quoi que ce soit (constaté sur la vraie page en production).
+    tous_termes = [] if q else PulaarTerm.query.order_by(PulaarTerm.lemma).limit(100).all()
     return render_template(
         "pulaar/accueil.html", q=q, resultats=resultats, domaines=domaines,
-        total_termes=total_termes,
+        total_termes=total_termes, tous_termes=tous_termes,
     )
 
 

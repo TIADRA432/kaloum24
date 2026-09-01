@@ -3200,6 +3200,11 @@ lecteur_pl = app.test_client()
 r = lecteur_pl.get("/pulaar")
 ok("Pulaar public : accueil accessible sans connexion", r.status_code == 200)
 ok("Pulaar public : compte de termes affiche", "22" in text(r))
+# Sans recherche, la page doit quand meme montrer les termes — sinon un
+# visiteur arrive sur une page vide et doit deviner quoi chercher.
+_page_accueil = text(r)
+ok("Pulaar public : accueil liste les termes sans recherche prealable",
+   "aada" in _page_accueil and "aaden" in _page_accueil)
 
 r = lecteur_pl.get("/pulaar?q=semer")
 page_recherche = text(r)
