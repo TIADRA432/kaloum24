@@ -3430,6 +3430,46 @@ ok("Pulaar definition : le pulaar apparait AVANT le francais",
 ok("Pulaar definition : le texte pulaar est cherchable",
    "terme-avec-def-pulaar" in text(lecteur_pl.get("/pulaar?q=Firdeere")))
 
+# --- dictionnaire monolingue : contribuer une definition EN pulaar seul ---
+tok = csrf(contributeur_pl, "/pulaar/proposer")
+contributeur_pl.post("/pulaar/proposer", data={
+    "csrf_token": tok, "term_lemma": "nafoore",
+    "definition_ff": "Ko nafata, ko moƴƴi.",   # pulaar seul, aucun francais
+})
+with app.app_context():
+    p_mono = PulaarProposal.query.filter_by(term_lemma="nafoore").first()
+    ok("Monolingue : proposition acceptee avec le pulaar SEUL, sans francais",
+       p_mono is not None and p_mono.definition_ff and not p_mono.definition_fr)
+    _p_mono_id = p_mono.id if p_mono else None
+
+tok = csrf(admin_pl, "/compte")
+admin_pl.post(f"/admin/pulaar/propositions/{_p_mono_id}/accepter", data={"csrf_token": tok})
+with app.app_context():
+    t_mono = PulaarTerm.query.filter_by(lemma="nafoore").first()
+    ok("Monolingue : terme cree depuis une proposition pulaar seule", t_mono is not None)
+    langues_mono = sorted(d.lang for d in t_mono.definitions) if t_mono else []
+    ok("Monolingue : une seule definition, en pulaar", langues_mono == ["ff"])
+    _slug_mono = t_mono.slug if t_mono else None
+
+ok("Monolingue : la definition pulaar s'affiche publiquement",
+   "Ko nafata" in text(lecteur_pl.get("/pulaar/terme/" + _slug_mono)))
+
+# --- proposition totalement vide : toujours refusee ---
+tok = csrf(contributeur_pl, "/pulaar/proposer")
+r = contributeur_pl.post("/pulaar/proposer", data={
+    "csrf_token": tok, "term_lemma": "motsansdefinition",
+})
+ok("Monolingue : proposition sans aucune definition refusee",
+   "au moins une d" in text(r))
+with app.app_context():
+    ok("Monolingue : rien cree suite au refus",
+       PulaarProposal.query.filter_by(term_lemma="motsansdefinition").first() is None)
+
+# --- couverture monolingue affichee honnetement ---
+page_couverture = text(lecteur_pl.get("/pulaar"))
+ok("Monolingue : la couverture reelle est affichee au visiteur",
+   "une définition en pulaar" in page_couverture)
+
 os.close(_db_fd)
 os.unlink(_db_path)
 

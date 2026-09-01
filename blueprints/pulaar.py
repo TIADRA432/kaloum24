@@ -47,6 +47,14 @@ def accueil():
         )
     domaines = PulaarDomain.query.order_by(PulaarDomain.name).all()
     total_termes = PulaarTerm.query.count()
+    # Couverture monolingue : combien de termes ont réellement une
+    # définition EN pulaar. Affiché tel quel, même à 0 — l'objectif est un
+    # dictionnaire monolingue, autant montrer honnêtement la distance
+    # restante plutôt que de la masquer.
+    termes_monolingues = (
+        PulaarTerm.query.join(PulaarDefinition)
+        .filter(PulaarDefinition.lang == "ff").distinct().count()
+    )
     # Sans recherche, on liste quand même les termes : autrement un visiteur
     # arrive sur une page vide et doit deviner quoi chercher pour voir
     # quoi que ce soit (constaté sur la vraie page en production).
@@ -54,6 +62,7 @@ def accueil():
     return render_template(
         "pulaar/accueil.html", q=q, resultats=resultats, domaines=domaines,
         total_termes=total_termes, tous_termes=tous_termes,
+        termes_monolingues=termes_monolingues,
     )
 
 
@@ -77,15 +86,20 @@ def proposer():
     if request.method == "POST":
         lemme = request.form.get("term_lemma", "").strip()
         definition = request.form.get("definition_fr", "").strip()
-        if len(lemme) < 1 or len(definition) < 5:
-            flash("Indique au moins le mot pulaar et une définition en français "
-                 "(5 caractères minimum).", "error")
+        definition_ff = request.form.get("definition_ff", "").strip()
+        # Au moins UNE des deux définitions suffit : exiger le français
+        # empêcherait un locuteur pulaar de contribuer en pulaar seul, ce
+        # qui est précisément l'objectif du dictionnaire monolingue.
+        if len(lemme) < 1 or (len(definition) < 5 and len(definition_ff) < 5):
+            flash("Indique le mot pulaar et au moins une définition — en pulaar ou en "
+                 "français (5 caractères minimum).", "error")
             return render_template("pulaar/proposer.html", domaines=domaines)
 
         domain_id = request.form.get("domain_id", type=int)
         db.session.add(PulaarProposal(
             term_lemma=lemme,
             definition_fr=definition,
+            definition_ff=definition_ff or None,
             domain_id=domain_id if domain_id else None,
             justification=request.form.get("justification", "").strip() or None,
             proposed_by_id=current_user.id,

@@ -637,7 +637,12 @@ class PulaarProposal(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     term_lemma = db.Column(db.String(200), nullable=False)
-    definition_fr = db.Column(db.Text, nullable=False)
+    # Les deux définitions sont facultatives EN BASE, mais la route exige
+    # qu'au moins une des deux soit fournie (voir blueprints/pulaar.py) :
+    # un locuteur pulaar doit pouvoir contribuer en pulaar seul, sans être
+    # obligé de passer par le français.
+    definition_fr = db.Column(db.Text)
+    definition_ff = db.Column(db.Text)
     domain_id = db.Column(db.Integer, db.ForeignKey("pulaar_domains.id", ondelete="SET NULL"))
     justification = db.Column(db.Text)
     proposed_by_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"))

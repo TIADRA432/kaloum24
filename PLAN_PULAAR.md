@@ -199,3 +199,31 @@ laisser croire à une traduction complète.
 **À faire** : un locuteur pulaar doit relire et compléter les chaînes
 manquantes — c'est du travail humain, pas quelque chose que je dois
 fabriquer.
+
+---
+
+## I. Cap sur le dictionnaire monolingue
+
+Objectif reformulé : expliquer le pulaar **par le pulaar**, pas via le
+français. Constat de départ, affiché publiquement sans le masquer :
+**0 terme sur 22** a une définition en pulaar — les 22 viennent de
+Wiktionary avec des gloses anglaises traduites en français.
+
+Cet écart ne peut être comblé que par des locuteurs. Ce qui a été construit
+ici, c'est le chemin pour qu'ils le fassent :
+
+- **Contribuer en pulaar seul est désormais possible** — le formulaire
+  exigeait une définition française, ce qui bloquait précisément la
+  contribution monolingue. Une seule des deux définitions suffit
+  maintenant ; `definition_fr` est devenue facultative en base
+  (migration `f95738c58aa2`), `definition_ff` ajoutée.
+- La file de modération affiche la définition pulaar proposée.
+- L'acceptation crée les définitions dans les langues réellement fournies.
+- La page d'accueil affiche la **couverture monolingue réelle** et appelle
+  à contribuer.
+
+Sur la fiche d'un terme, le pulaar s'affiche avant le français.
+
+**Ce qui reste hors de ma portée** : écrire les définitions elles-mêmes.
+C'est du travail de locuteurs, et le nier serait fabriquer du faux contenu
+linguistique sur un site dont le sujet est justement la langue.

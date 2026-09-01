@@ -18,7 +18,8 @@
     <tr>
       <td>{{ p.term_lemma }}</td>
       <td style="max-width:280px;">
-        {{ p.definition_fr }}
+        {% if p.definition_ff %}<strong>Pulaar :</strong> {{ p.definition_ff }}<br>{% endif %}
+        {% if p.definition_fr %}{{ p.definition_fr }}{% endif %}
         {% if p.justification %}<br><small style="color:var(--text-muted);">{{ p.justification }}</small>{% endif %}
       </td>
       <td>{{ p.domain.name if p.domain else '—' }}</td>

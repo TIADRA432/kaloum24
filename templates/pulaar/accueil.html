@@ -3,8 +3,15 @@
 
 {% block entete %}
   <h1>Dictionnaire Pulaar</h1>
-  <p>Un dictionnaire pulaar-français en construction, avec provenance vérifiée pour
+  <p>Un dictionnaire pulaar en construction, avec provenance vérifiée pour
     chaque terme — {{ total_termes }} terme{{ 's' if total_termes != 1 }} documenté{{ 's' if total_termes != 1 }} pour l'instant.</p>
+  <p class="tc-avis-traduction">
+    <strong>Objectif : un dictionnaire monolingue</strong> — expliquer le pulaar par le pulaar.
+    {{ termes_monolingues }} terme{{ 's' if termes_monolingues != 1 }} sur {{ total_termes }}
+    {{ 'ont' if termes_monolingues != 1 else 'a' }} une définition en pulaar.
+    Seuls des locuteurs peuvent combler cet écart —
+    <a href="{{ url_for('pulaar.proposer', lang=langue_ui) }}" style="color:var(--tc-or);">contribue une définition</a>.
+  </p>
   <form class="tc-recherche" method="get" action="{{ url_for('pulaar.accueil') }}">
     <input type="hidden" name="lang" value="{{ langue_ui }}">
     <input type="text" name="q" value="{{ q }}" placeholder="{{ t('chercher') }} — {{ t('mot')|lower }} pulaar {{ t('ou') }} français…">

@@ -1322,7 +1322,10 @@ def accept_pulaar_proposal(proposal_id):
     )
     db.session.add(t)
     db.session.flush()
-    db.session.add(PulaarDefinition(term_id=t.id, lang="fr", text=p.definition_fr))
+    if p.definition_ff:
+        db.session.add(PulaarDefinition(term_id=t.id, lang="ff", text=p.definition_ff))
+    if p.definition_fr:
+        db.session.add(PulaarDefinition(term_id=t.id, lang="fr", text=p.definition_fr))
     p.status = "valide"
     db.session.commit()
     flash(f"Proposition acceptée — « {p.term_lemma} » ajouté au dictionnaire.", "success")
