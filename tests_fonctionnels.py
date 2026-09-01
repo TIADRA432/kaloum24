@@ -3146,6 +3146,32 @@ with app.app_context():
     ok("Tableau (injection reelle via formulaire) : script retire, texte conserve",
        "<script" not in art_tab_inj.content and "Cellule" in art_tab_inj.content)
 
+# =============================================== Robustesse : cascade au
+# niveau base de données, pas seulement au niveau ORM (voir migration
+# b483485d15db). SQLite n'applique jamais les clés étrangères par défaut
+# (vérifié directement pendant le développement — PRAGMA foreign_keys=ON
+# est nécessaire par connexion) ; Postgres, la vraie base de production,
+# les applique nativement. Ce test vérifie donc que le SCHÉMA déclare le
+# bon comportement — la garantie structurelle qui compte réellement,
+# indépendamment de ce qu'un moteur applique ou non par défaut.
+import sqlalchemy as sa  # noqa: E402
+with app.app_context():
+    inspecteur = sa.inspect(db.engine)
+    _CASCADES_ATTENDUES = [
+        ("article_revisions", "article_id", "CASCADE"),
+        ("article_sources", "article_id", "CASCADE"),
+        ("comments", "article_id", "CASCADE"),
+        ("editorial_comments", "article_id", "CASCADE"),
+        ("collected_articles", "published_article_id", "SET NULL"),
+    ]
+    for table, colonne, attendu in _CASCADES_ATTENDUES:
+        trouve = None
+        for fk in inspecteur.get_foreign_keys(table):
+            if colonne in fk.get("constrained_columns", []) and fk.get("referred_table") == "articles":
+                trouve = (fk.get("options") or {}).get("ondelete")
+        ok(f"Cascade DB : {table}.{colonne} -> articles a bien ondelete={attendu}",
+           trouve == attendu)
+
 os.close(_db_fd)
 os.unlink(_db_path)
 

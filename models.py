@@ -150,7 +150,7 @@ class Comment(db.Model):
     reported = db.Column(db.Boolean, nullable=False, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    article_id = db.Column(db.Integer, db.ForeignKey("articles.id"), nullable=False)
+    article_id = db.Column(db.Integer, db.ForeignKey("articles.id", ondelete="CASCADE"), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     parent_id = db.Column(db.Integer, db.ForeignKey("comments.id"))
 
@@ -377,7 +377,9 @@ class CollectedArticle(db.Model):
 
     topic_id = db.Column(db.Integer, db.ForeignKey("topics.id"))
     # Renseigné quand un admin accepte l'item : le brouillon Article créé.
-    published_article_id = db.Column(db.Integer, db.ForeignKey("articles.id"))
+    # SET NULL (pas CASCADE) si cet article est ensuite supprimé : l'item
+    # collecté garde son historique de collecte, seul le lien se rompt.
+    published_article_id = db.Column(db.Integer, db.ForeignKey("articles.id", ondelete="SET NULL"))
 
     source = db.relationship("Source", back_populates="collected_articles")
     topic = db.relationship("Topic", back_populates="articles")
@@ -483,7 +485,7 @@ class ArticleSource(db.Model):
     __tablename__ = "article_sources"
 
     id = db.Column(db.Integer, primary_key=True)
-    article_id = db.Column(db.Integer, db.ForeignKey("articles.id"), nullable=False)
+    article_id = db.Column(db.Integer, db.ForeignKey("articles.id", ondelete="CASCADE"), nullable=False)
     nom = db.Column(db.String(200), nullable=False)
     url = db.Column(db.String(500))
     type_source = db.Column(db.String(30))
@@ -504,7 +506,7 @@ class EditorialComment(db.Model):
     __tablename__ = "editorial_comments"
 
     id = db.Column(db.Integer, primary_key=True)
-    article_id = db.Column(db.Integer, db.ForeignKey("articles.id"), nullable=False)
+    article_id = db.Column(db.Integer, db.ForeignKey("articles.id", ondelete="CASCADE"), nullable=False)
     author_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     content = db.Column(db.Text, nullable=False)
     resolved = db.Column(db.Boolean, nullable=False, default=False)
@@ -527,7 +529,7 @@ class ArticleRevision(db.Model):
     __tablename__ = "article_revisions"
 
     id = db.Column(db.Integer, primary_key=True)
-    article_id = db.Column(db.Integer, db.ForeignKey("articles.id"), nullable=False)
+    article_id = db.Column(db.Integer, db.ForeignKey("articles.id", ondelete="CASCADE"), nullable=False)
     author_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     field_name = db.Column(db.String(50), nullable=False)
     old_value = db.Column(db.Text)

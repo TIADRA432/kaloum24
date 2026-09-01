@@ -212,3 +212,42 @@ neutralisées sans casser la structure du tableau.
 
 **Phase B est maintenant complète** : embed YouTube, citation avec
 attribution, tableaux.
+
+---
+
+## N. Audit de robustesse (données)
+
+Suite à une demande explicite de robustesse sur l'ensemble éditorial,
+plutôt que d'ajouter une nouvelle fonctionnalité :
+
+**Un vrai problème structurel trouvé et corrigé.** Aucune des clés
+étrangères pointant vers `articles` (sources citées, commentaires
+éditoriaux, historique des modifications, commentaires lecteurs, lien
+`published_article_id` de l'agrégateur) n'avait de comportement `ondelete`
+défini au niveau de la base de données — seule la discipline de l'ORM
+(`cascade="all, delete-orphan"` côté SQLAlchemy) protégeait contre les
+données orphelines, uniquement quand la suppression passe par l'ORM.
+
+**Une découverte qui a surpris pendant l'audit** : SQLite, la base
+utilisée pour tous les tests locaux depuis le début de ce projet, n'a
+*jamais* appliqué les contraintes de clé étrangère par défaut (`PRAGMA
+foreign_keys` est désactivé par connexion sauf activation explicite) —
+contrairement à PostgreSQL, la vraie base de production, qui les applique
+nativement. Autrement dit : cette protection n'a jamais été testée pour de
+vrai localement jusqu'à cet audit, seulement supposée.
+
+**Correctif** : `ondelete="CASCADE"` pour les sources citées, commentaires
+éditoriaux, historique et commentaires lecteurs (n'ont pas de sens sans
+leur article) ; `ondelete="SET NULL"` pour le lien de l'agrégateur
+(`collected_articles.published_article_id`) — l'historique de collecte
+doit survivre même si l'article publié est supprimé.
+
+**Un piège de migration trouvé en le corrigeant** : aucune de ces
+contraintes n'avait jamais reçu de nom explicite depuis la création du
+projet — dropper une contrainte non nommée en mode batch Alembic échoue
+avec "Constraint must have a name". Corrigé en découvrant le vrai nom à
+l'exécution via l'inspecteur SQLAlchemy, plutôt que de supposer la
+convention de nommage d'un moteur donné (elle diffère entre SQLite et
+PostgreSQL). Testé dans les deux sens (upgrade et downgrade), et avec les
+clés étrangères explicitement activées pour confirmer le comportement réel
+de cascade — pas seulement que la migration s'applique sans erreur.
