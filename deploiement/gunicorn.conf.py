@@ -74,3 +74,16 @@ def on_starting(server):
     except Exception as exc:
         server.log.warning("seed-pulaar : n'a pas pu s'exécuter (%s) — "
                            "sans conséquence si déjà amorcé.", exc)
+
+    # Rattrape les slugs créés avant la correction de slugify() (consonnes
+    # pulaar supprimées au lieu d'être translittérées). Idempotent : ne fait
+    # rien une fois tous les slugs corrects.
+    try:
+        resultat = subprocess.run(
+            ["flask", "corriger-slugs-pulaar"],
+            capture_output=True, text=True, timeout=30,
+        )
+        for ligne in (resultat.stdout + resultat.stderr).splitlines():
+            server.log.info("corriger-slugs-pulaar: %s", ligne)
+    except Exception as exc:
+        server.log.warning("corriger-slugs-pulaar : n'a pas pu s'exécuter (%s).", exc)

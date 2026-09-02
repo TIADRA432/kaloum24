@@ -50,7 +50,27 @@ def admin_required(view_func):
 
 # ---------------------------------------------------------------- texte
 
+# Consonnes propres à l'alphabet pulaar (et à d'autres langues ouest-
+# africaines) : ce sont de vraies lettres, pas des variantes décoratives.
+# Sans cette table, la réduction ASCII ci-dessous les supprime purement et
+# simplement — « Ɗemngal » devenait « emngal », « ɓeydu » devenait « eydu ».
+# Constaté sur un vrai terme du dictionnaire, pas en théorie.
+_LETTRES_AFRICAINES = {
+    "ɓ": "b", "Ɓ": "b",   # b implosif
+    "ɗ": "d", "Ɗ": "d",   # d implosif
+    "ƴ": "y", "Ƴ": "y",   # y glottalisé
+    "ŋ": "ng", "Ŋ": "ng",  # ng vélaire
+    "ñ": "n", "Ñ": "n",
+    "ɲ": "ny", "Ɲ": "ny",
+    "ɛ": "e", "Ɛ": "e",
+    "ɔ": "o", "Ɔ": "o",
+    "ʼ": "",              # coup de glotte
+}
+
+
 def slugify(text):
+    for lettre, remplacement in _LETTRES_AFRICAINES.items():
+        text = text.replace(lettre, remplacement)
     text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
     text = re.sub(r"[^\w\s-]", "", text).strip().lower()
     return re.sub(r"[\s_-]+", "-", text) or "article"

@@ -227,3 +227,34 @@ Sur la fiche d'un terme, le pulaar s'affiche avant le français.
 **Ce qui reste hors de ma portée** : écrire les définitions elles-mêmes.
 C'est du travail de locuteurs, et le nier serait fabriquer du faux contenu
 linguistique sur un site dont le sujet est justement la langue.
+
+---
+
+## J. Consonnes pulaar — deux vrais bugs trouvés en production
+
+Le premier contenu écrit par un locuteur (« Taskotooɗo jonnanɗe », analyste
+de données, définition entièrement en pulaar) a révélé deux défauts que les
+22 termes amorcés depuis Wiktionary n'avaient jamais déclenchés :
+
+**1. `slugify()` supprimait les consonnes pulaar** au lieu de les
+translittérer. `encode("ascii", "ignore")` jette silencieusement tout
+caractère sans équivalent ASCII : « Ɗemngal » devenait `emngal`, « ɓeydu »
+devenait `eydu`, et le terme réel a reçu le slug `taskotooo-jonnane`.
+Ces lettres — ɗ, ɓ, ŋ, ƴ — sont de vraies consonnes de l'alphabet pulaar,
+pas des variantes décoratives. Table de translittération ajoutée dans
+`utils.py`, avant la réduction ASCII.
+
+**2. La recherche exigeait les caractères spéciaux.** Chercher
+« taskotoodo » ne trouvait pas « Taskotooɗo » — or ces caractères sont
+difficiles à saisir sur un clavier ordinaire, ce qui rendait le
+dictionnaire pratiquement inutilisable pour beaucoup de gens. La recherche
+interroge maintenant aussi le slug (forme translittérée).
+
+Commande `flask corriger-slugs-pulaar` ajoutée pour rattraper les termes
+déjà en base, idempotente, branchée au démarrage (pas d'accès shell sur
+Render).
+
+**Ce que ça illustre** : les 22 termes Wiktionary étaient tous en ASCII
+simple. C'est le premier vrai contenu pulaar qui a exposé le problème —
+un rappel que du contenu réel de locuteurs révèle des choses qu'aucun
+jeu de données de démarrage ne montre.

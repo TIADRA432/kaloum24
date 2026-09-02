@@ -3470,6 +3470,35 @@ page_couverture = text(lecteur_pl.get("/pulaar"))
 ok("Monolingue : la couverture reelle est affichee au visiteur",
    "une définition en pulaar" in page_couverture)
 
+# --- consonnes propres au pulaar : slugs et recherche ---
+# Bug reel trouve sur un vrai terme en production (« Taskotooɗo jonnanɗe »
+# donnait le slug « taskotooo-jonnane ») : slugify supprimait ɗ/ɓ/ŋ/ƴ au
+# lieu de les translitterer. Ce sont de vraies lettres de l'alphabet pulaar.
+from utils import slugify as _slugify  # noqa: E402
+
+ok("Pulaar slug : ɗ translittere en d, pas supprime",
+   _slugify("Taskotooɗo jonnanɗe") == "taskotoodo-jonnande")
+ok("Pulaar slug : ɓ translittere en b", _slugify("ɓeydu") == "beydu")
+ok("Pulaar slug : Ɗ majuscule translitteree", _slugify("Ɗemngal") == "demngal")
+ok("Pulaar slug : ŋ translittere en ng", _slugify("ŋeeŋu") == "ngeengu")
+ok("Pulaar slug : ƴ translittere en y", _slugify("ƴiiƴam") == "yiiyam")
+
+tok = csrf(admin_pl, "/admin/pulaar/termes/nouveau")
+admin_pl.post("/admin/pulaar/termes/nouveau", data={
+    "csrf_token": tok, "lemma": "ɗemɗe",
+    "definition_fr": "les langues", "source_id": str(src_wiktionary.id),
+})
+with app.app_context():
+    t_cons = PulaarTerm.query.filter_by(lemma="ɗemɗe").first()
+    ok("Pulaar slug : terme avec consonnes pulaar cree avec un slug correct",
+       t_cons is not None and t_cons.slug == "demde")
+
+ok("Pulaar recherche : le terme se trouve avec les vrais caracteres",
+   "ɗemɗe" in text(lecteur_pl.get("/pulaar?q=ɗemɗe")))
+ok("Pulaar recherche : le terme se trouve AUSSI sans les caracteres speciaux "
+   "(clavier ordinaire)",
+   "ɗemɗe" in text(lecteur_pl.get("/pulaar?q=demde")))
+
 os.close(_db_fd)
 os.unlink(_db_path)
 

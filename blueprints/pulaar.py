@@ -10,6 +10,7 @@ from flask_login import current_user, login_required
 from extensions import db
 from models import PulaarTerm, PulaarDefinition, PulaarDomain, PulaarProposal
 from pulaar_i18n import t as traduire, couverture_pulaar
+from utils import slugify
 
 pulaar_bp = Blueprint("pulaar", __name__, url_prefix="/pulaar")
 
@@ -38,9 +39,19 @@ def accueil():
     resultats = []
     if q:
         motif = f"%{q}%"
+        # Beaucoup de claviers ne permettent pas de taper ɗ, ɓ, ŋ, ƴ. Une
+        # recherche qui les exigerait rendrait le dictionnaire inutilisable
+        # pour une bonne partie des gens (vérifié : « taskotoodo » ne
+        # trouvait pas « Taskotooɗo »). On cherche donc TOUJOURS aussi dans
+        # le slug, qui est la forme translittérée du lemme.
+        motif_simplifie = f"%{slugify(q).replace('-', '%')}%"
         resultats = (
             PulaarTerm.query.join(PulaarDefinition)
-            .filter(db.or_(PulaarTerm.lemma.ilike(motif), PulaarDefinition.text.ilike(motif)))
+            .filter(db.or_(
+                PulaarTerm.lemma.ilike(motif),
+                PulaarDefinition.text.ilike(motif),
+                PulaarTerm.slug.ilike(motif_simplifie),
+            ))
             .distinct()
             .limit(30)
             .all()

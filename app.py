@@ -215,6 +215,25 @@ def create_app(config_class=Config):
         from seed_pulaar import run_seed_pulaar
         run_seed_pulaar()
 
+    @app.cli.command("corriger-slugs-pulaar")
+    def corriger_slugs_pulaar():
+        """Recalcule les slugs des termes pulaar créés avant la correction
+        de slugify() (les consonnes ɗ/ɓ/ŋ/ƴ étaient supprimées au lieu
+        d'être translittérées). Idempotent : ne touche que ce qui diffère.
+        """
+        from models import PulaarTerm
+        from utils import slugify, unique_slug
+        corriges = 0
+        for terme in PulaarTerm.query.all():
+            attendu = slugify(terme.lemma)
+            if terme.slug != attendu:
+                ancien = terme.slug
+                terme.slug = unique_slug(terme.lemma, PulaarTerm, exclude_id=terme.id)
+                print(f"  {terme.lemma!r} : {ancien} -> {terme.slug}")
+                corriges += 1
+        db.session.commit()
+        print(f"{corriges} slug(s) corrigé(s).")
+
     @app.cli.command("collect-sources")
     @click.option("--force", is_flag=True,
                  help="Ignore la fréquence configurée : collecte toutes les sources actives.")
