@@ -9,3 +9,8 @@ sauvegardes/
 .DS_Store
 logs/
 deploiement/*.local
+
+# Graphes générés localement ; les versions CI sont des artefacts GitHub Actions.
+graphify-out/
+.graphify-ci/
+.venv-audit/

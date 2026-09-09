@@ -8,6 +8,8 @@ optimisations SEO.
 Stack : **Flask 3 · SQLite · Jinja2**. Pas de build front, pas de Node, aucune
 ressource externe au chargement.
 
+Cartographie du code : [Graphify et génération automatique](docs/GRAPHIFY.md).
+
 ---
 
 ## 1. Installation

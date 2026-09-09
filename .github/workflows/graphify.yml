@@ -1,0 +1,62 @@
+name: Graphify
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: graphify-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  functional-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      ENV: development
+      SECRET_KEY: cle-de-test
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - name: Exécuter les tests existants sur Linux
+        run: python tests_fonctionnels.py
+  graph:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-graphify.txt
+      - name: Installer Graphify
+        run: python -m pip install -r requirements-graphify.txt
+      - name: Construire le graphe du code
+        run: python scripts/build_graph.py --output .graphify-ci
+      - name: Résumé
+        run: cat .graphify-ci/graphify-out/GRAPH_REPORT.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Publier les résultats
+        uses: actions/upload-artifact@v7
+        with:
+          name: graphify-${{ github.sha }}
+          path: |
+            .graphify-ci/graphify-out/graph.json
+            .graphify-ci/graphify-out/graph.html
+            .graphify-ci/graphify-out/GRAPH_REPORT.md
+            .graphify-ci/graphify-out/provenance.json
+            .graphify-ci/graphify-out/diagnostics.json
+          if-no-files-found: error
+          retention-days: 30

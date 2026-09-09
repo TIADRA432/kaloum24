@@ -1,0 +1,5 @@
+# Dépendances distribuées avec le site, pas le code de Kaloum24.
+static/vendor/
+.venv-audit/
+.graphify-ci/
+graphify-out/
