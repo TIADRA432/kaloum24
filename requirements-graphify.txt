@@ -1,0 +1,2 @@
+# Outil de développement uniquement ; séparé du serveur Flask.
+graphifyy==0.9.56
