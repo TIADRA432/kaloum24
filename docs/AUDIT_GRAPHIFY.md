@@ -6,6 +6,12 @@ visuels, parcours du graphe puis lecture des sources et sondes locales isolées.
 Les modifications de cette livraison concernent uniquement l'outillage et la
 documentation ; les défauts applicatifs ci-dessous restent à corriger.
 
+Validation GitHub Actions : **512/512 tests réussis sous Linux**, et génération
+du graphe + publication des artefacts réussies lors de
+[l'exécution 34342249795](https://github.com/TIADRA432/kaloum24/actions/runs/34342249795).
+Cette réussite de la suite existante ne couvre pas les défauts reproduits par
+les sondes d'audit ; les régressions correspondantes restent à ajouter.
+
 ## Constats prioritaires
 
 | Priorité | Constat et preuve | Correction proposée |
@@ -53,6 +59,9 @@ déployé et ses secrets ne sont pas consultés.
 Deux gabarits de réinitialisation sont exclus par le filtre sensible de
 Graphify, mais ont été lus séparément. Les références sans cible résolue et les
 relations fusionnées sont documentées dans `diagnostics.json`. Les relations
+du graphe complet comportent 156 références sans cible résolue et 37 relations
+fusionnées lors du passage au graphe non orienté. Ces limites restent visibles
+dans le rapport et empêchent de qualifier la carte d'exhaustive. Les relations
 sémantiques aident à naviguer mais ne prouvent pas une exécution. Les documents
 peuvent décrire des intentions ; les constats ci-dessus sont vérifiés dans le code.
 

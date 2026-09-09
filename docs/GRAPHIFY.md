@@ -15,6 +15,7 @@ push, pull request et lancement manuel. Il publie un artefact
 diagnostics et provenance du commit. Ouvrir GitHub → Actions → Graphify →
 exécution concernée → Artifacts. Télécharger et décompresser ; ouvrir
 `graph.html` dans un navigateur. Les artefacts privés exigent une connexion.
+Un second job exécute les tests fonctionnels existants sous Linux.
 
 Les résultats sont attachés à chaque exécution, sans commit automatique du
 bot et sans boucle de génération. Le job a seulement `contents: read` et ne
