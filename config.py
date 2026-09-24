@@ -33,6 +33,13 @@ class Config:
         _db_url = _db_url.replace("postgres://", "postgresql://", 1)
     SQLALCHEMY_DATABASE_URI = _db_url
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    # Supabase Session Pooler + Render : recycle les connexions longues et
+    # vérifie une connexion avant réutilisation pour éviter les erreurs après
+    # mise en veille/reconnexion du pooler.
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_pre_ping": True,
+        "pool_recycle": 300,
+    }
 
     PERMANENT_SESSION_LIFETIME = timedelta(days=14)
     ARTICLES_PER_PAGE = 10
