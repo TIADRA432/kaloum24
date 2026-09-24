@@ -12,7 +12,7 @@ os.environ["DATABASE_URL"] = "sqlite:///" + _db_path
 
 from app import create_app
 from extensions import db
-from models import User, ROLES, ARTICLE_STATUSES
+from models import User, Category, Article, ROLES, ARTICLE_STATUSES
 
 
 def csrf(client, url):
@@ -50,6 +50,21 @@ def main():
         )
         actif.set_password("MotDePasseSolide2!")
         db.session.add(actif)
+
+        categorie = Category(name="Tests", slug="tests")
+        db.session.add(categorie)
+        db.session.flush()
+
+        publie = Article(
+            title="Article déjà publié",
+            slug="article-deja-publie",
+            summary="Résumé suffisamment long pour le test.",
+            content="<p>Contenu publié qui ne doit pas être modifiable directement.</p>",
+            category_id=categorie.id,
+            author_id=actif.id,
+            status="publie",
+        )
+        db.session.add(publie)
         db.session.commit()
 
     with app.test_client() as client:
@@ -84,6 +99,10 @@ def main():
         )
         assert response.status_code == 200
 
+        # Un rédacteur ne peut pas réécrire directement un contenu déjà publié.
+        publie = client.get("/admin/articles/1/modifier", follow_redirects=False)
+        assert publie.status_code == 403
+
         with app.app_context():
             actif = User.query.filter_by(username="compte-actif").first()
             actif.is_banned = True
@@ -101,6 +120,7 @@ def main():
     print("PASS  statuts éditoriaux cohérents")
     print("PASS  compte banni bloqué à la connexion")
     print("PASS  session existante invalidée après bannissement")
+    print("PASS  article publié verrouillé pour le rédacteur")
 
 
 if __name__ == "__main__":
