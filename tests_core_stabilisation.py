@@ -1,0 +1,75 @@
+"""Régressions ciblées du cœur éditorial et des permissions."""
+import os
+import re
+import tempfile
+
+os.environ.setdefault("SECRET_KEY", "cle-de-test")
+os.environ["SITE_URL"] = "https://exemple.test"
+
+_fd, _db_path = tempfile.mkstemp(suffix=".db")
+os.close(_fd)
+os.environ["DATABASE_URL"] = "sqlite:///" + _db_path
+
+from app import create_app
+from extensions import db
+from models import User, ROLES, ARTICLE_STATUSES
+
+
+def csrf(client, url):
+    html = client.get(url).get_data(as_text=True)
+    match = re.search(r'name="csrf_token" value="([^"]+)"', html)
+    assert match, f"Jeton CSRF introuvable sur {url}"
+    return match.group(1)
+
+
+def main():
+    assert ROLES == ("user", "redacteur", "moderateur", "admin")
+    assert ARTICLE_STATUSES == (
+        "brouillon", "en_relecture", "programme", "publie", "archive"
+    )
+
+    app = create_app()
+    app.config.update(TESTING=True)
+
+    with app.app_context():
+        db.create_all()
+        user = User(
+            username="compte-banni",
+            email="banni@example.test",
+            role="redacteur",
+            is_banned=True,
+        )
+        user.set_password("MotDePasseSolide1!")
+        db.session.add(user)
+        db.session.commit()
+
+    with app.test_client() as client:
+        token = csrf(client, "/connexion")
+        response = client.post(
+            "/connexion",
+            data={
+                "csrf_token": token,
+                "identifiant": "compte-banni",
+                "password": "MotDePasseSolide1!",
+            },
+            follow_redirects=True,
+        )
+        body = response.get_data(as_text=True).lower()
+        assert response.status_code == 200
+        assert "suspendu" in body
+
+        profile = client.get("/compte", follow_redirects=False)
+        assert profile.status_code in (302, 401)
+
+    try:
+        os.remove(_db_path)
+    except OSError:
+        pass
+
+    print("PASS  rôles cohérents")
+    print("PASS  statuts éditoriaux cohérents")
+    print("PASS  compte banni bloqué à la connexion")
+
+
+if __name__ == "__main__":
+    main()
