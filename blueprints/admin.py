@@ -473,7 +473,7 @@ def request_correction(article_id):
     ))
     db.session.commit()
     flash("Correction demandée — l'article est repassé en brouillon.", "info")
-    return redirect(url_for("admin.articles", statut="en_relecture"))
+    return redirect(url_for("admin.articles", statut="brouillon"))
 
 
 @admin_bp.route("/articles/<int:article_id>/supprimer", methods=["POST"])
