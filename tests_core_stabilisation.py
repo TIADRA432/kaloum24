@@ -13,6 +13,7 @@ os.environ["DATABASE_URL"] = "sqlite:///" + _db_path
 from app import create_app
 from extensions import db
 from models import User, Category, Article, ROLES, ARTICLE_STATUSES
+from scheduler import publier_articles_programmes
 
 
 def csrf(client, url):
@@ -65,6 +66,20 @@ def main():
             status="publie",
         )
         db.session.add(publie)
+
+        from datetime import datetime, timedelta
+        programme = Article(
+            title="Article programmé",
+            slug="article-programme",
+            summary="Résumé suffisamment long pour la programmation.",
+            content="<p>Contenu programmé suffisamment long pour être publié.</p>",
+            category_id=categorie.id,
+            author_id=actif.id,
+            status="programme",
+            scheduled_at=datetime.utcnow() - timedelta(minutes=5),
+            is_featured=True,
+        )
+        db.session.add(programme)
         db.session.commit()
 
     with app.test_client() as client:
@@ -111,6 +126,13 @@ def main():
         profile = client.get("/compte", follow_redirects=False)
         assert profile.status_code in (302, 401)
 
+    with app.app_context():
+        n = publier_articles_programmes()
+        assert n == 1
+        programme = Article.query.filter_by(slug="article-programme").first()
+        assert programme.status == "publie"
+        assert programme.scheduled_at is None
+
     try:
         os.remove(_db_path)
     except OSError:
@@ -121,6 +143,7 @@ def main():
     print("PASS  compte banni bloqué à la connexion")
     print("PASS  session existante invalidée après bannissement")
     print("PASS  article publié verrouillé pour le rédacteur")
+    print("PASS  programmation nettoyée après publication")
 
 
 if __name__ == "__main__":
