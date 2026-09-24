@@ -41,6 +41,15 @@ def main():
         )
         user.set_password("MotDePasseSolide1!")
         db.session.add(user)
+
+        actif = User(
+            username="compte-actif",
+            email="actif@example.test",
+            role="redacteur",
+            is_banned=False,
+        )
+        actif.set_password("MotDePasseSolide2!")
+        db.session.add(actif)
         db.session.commit()
 
     with app.test_client() as client:
@@ -61,6 +70,28 @@ def main():
         profile = client.get("/compte", follow_redirects=False)
         assert profile.status_code in (302, 401)
 
+    # Une session existante doit être invalidée dès que le compte est banni.
+    with app.test_client() as client:
+        token = csrf(client, "/connexion")
+        response = client.post(
+            "/connexion",
+            data={
+                "csrf_token": token,
+                "identifiant": "compte-actif",
+                "password": "MotDePasseSolide2!",
+            },
+            follow_redirects=True,
+        )
+        assert response.status_code == 200
+
+        with app.app_context():
+            actif = User.query.filter_by(username="compte-actif").first()
+            actif.is_banned = True
+            db.session.commit()
+
+        profile = client.get("/compte", follow_redirects=False)
+        assert profile.status_code in (302, 401)
+
     try:
         os.remove(_db_path)
     except OSError:
@@ -69,6 +100,7 @@ def main():
     print("PASS  rôles cohérents")
     print("PASS  statuts éditoriaux cohérents")
     print("PASS  compte banni bloqué à la connexion")
+    print("PASS  session existante invalidée après bannissement")
 
 
 if __name__ == "__main__":
