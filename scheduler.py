@@ -24,5 +24,8 @@ def publier_articles_programmes():
     )
     for article in articles:
         article.status = "publie"
+        # Une fois publié, l'horaire n'est plus un état actif : on le retire
+        # pour éviter d'afficher ou de retraiter une programmation obsolète.
+        article.scheduled_at = None
     db.session.commit()
     return len(articles)

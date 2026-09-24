@@ -7,8 +7,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 from extensions import db
 
-ROLES = ("user", "moderateur", "admin")
-ARTICLE_STATUSES = ("brouillon", "publie")
+ROLES = ("user", "redacteur", "moderateur", "admin")
+ARTICLE_STATUSES = ("brouillon", "en_relecture", "programme", "publie", "archive")
 COMMENT_STATUSES = ("en_attente", "approuve", "rejete")
 
 

@@ -75,6 +75,10 @@ def login():
         ).first()
 
         if user and user.check_password(password):
+            if user.is_banned:
+                flash("Ce compte est suspendu. Contacte la rédaction si tu penses qu’il s’agit d’une erreur.", "error")
+                return render_template("login.html")
+
             login_user(user, remember=remember)
             flash(f"Content de te revoir, {user.username}.", "success")
             next_url = request.args.get("next")

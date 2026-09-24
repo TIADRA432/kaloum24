@@ -229,6 +229,8 @@ def archive_article(article_id):
     laisserait croire qu'il n'a jamais été publié."""
     article = Article.query.get_or_404(article_id)
     article.status = "archive"
+    article.scheduled_at = None
+    article.is_featured = False
     db.session.commit()
     flash("Article archivé.", "info")
     return redirect(url_for("admin.articles"))
@@ -306,8 +308,14 @@ def edit_article(article_id):
     article = Article.query.get_or_404(article_id)
     # Un simple rédacteur ne modifie jamais l'article de quelqu'un d'autre —
     # un modérateur/admin peut modifier n'importe lequel, comme avant.
-    if not current_user.is_moderator and article.author_id != current_user.id:
-        abort(403)
+    if not current_user.is_moderator:
+        if article.author_id != current_user.id:
+            abort(403)
+        # Dès qu'un article est programmé, publié ou archivé, il repasse sous
+        # contrôle éditorial du modérateur : un rédacteur ne doit jamais
+        # modifier directement un contenu déjà visible (ou promis à l'être).
+        if article.status in ("programme", "publie", "archive"):
+            abort(403)
     categories = Category.query.order_by(Category.name).all()
 
     if request.method == "POST":
@@ -374,7 +382,13 @@ def _peut_gerer_article(article):
     article. Centralise cette règle pour les sources, commentaires
     éditoriaux et l'édition elle-même — jamais réimplémentée à la main
     à chaque route, au risque d'un oubli."""
-    return current_user.is_moderator or article.author_id == current_user.id
+    return (
+        current_user.is_moderator
+        or (
+            article.author_id == current_user.id
+            and article.status in ("brouillon", "en_relecture")
+        )
+    )
 
 
 @admin_bp.route("/articles/<int:article_id>/sources", methods=["POST"])
@@ -473,7 +487,7 @@ def request_correction(article_id):
     ))
     db.session.commit()
     flash("Correction demandée — l'article est repassé en brouillon.", "info")
-    return redirect(url_for("admin.articles", statut="en_relecture"))
+    return redirect(url_for("admin.articles", statut="brouillon"))
 
 
 @admin_bp.route("/articles/<int:article_id>/supprimer", methods=["POST"])
