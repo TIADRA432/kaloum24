@@ -229,6 +229,8 @@ def archive_article(article_id):
     laisserait croire qu'il n'a jamais été publié."""
     article = Article.query.get_or_404(article_id)
     article.status = "archive"
+    article.scheduled_at = None
+    article.is_featured = False
     db.session.commit()
     flash("Article archivé.", "info")
     return redirect(url_for("admin.articles"))
