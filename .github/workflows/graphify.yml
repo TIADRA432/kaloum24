@@ -28,8 +28,10 @@ jobs:
           python-version: '3.12'
           cache: pip
       - run: python -m pip install -r requirements.txt
-      - name: Exécuter les tests existants sur Linux
+      - name: Exécuter les tests fonctionnels sur Linux
         run: python tests_fonctionnels.py
+      - name: Exécuter les régressions du cœur
+        run: python tests_core_stabilisation.py
   graph:
     runs-on: ubuntu-latest
     timeout-minutes: 15
