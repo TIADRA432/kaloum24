@@ -118,6 +118,12 @@ def main():
         publie = client.get("/admin/articles/1/modifier", follow_redirects=False)
         assert publie.status_code == 403
 
+        # L'interface ne doit pas proposer une action que le serveur refuse.
+        listing = client.get("/admin/articles", follow_redirects=True)
+        listing_html = listing.get_data(as_text=True)
+        assert "/admin/articles/1/modifier" not in listing_html
+        assert "Vérifier maintenant" not in listing_html
+
         with app.app_context():
             actif = User.query.filter_by(username="compte-actif").first()
             actif.is_banned = True
@@ -143,6 +149,7 @@ def main():
     print("PASS  compte banni bloqué à la connexion")
     print("PASS  session existante invalidée après bannissement")
     print("PASS  article publié verrouillé pour le rédacteur")
+    print("PASS  interface alignée avec les permissions rédacteur/admin")
     print("PASS  programmation nettoyée après publication")
 
 
