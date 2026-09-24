@@ -82,7 +82,12 @@ def create_app(config_class=Config):
 
     @login_manager.user_loader
     def load_user(user_id):
-        return db.session.get(User, int(user_id))
+        user = db.session.get(User, int(user_id))
+        # Un bannissement doit invalider aussi les sessions déjà ouvertes,
+        # pas seulement empêcher une nouvelle connexion.
+        if user and user.is_banned:
+            return None
+        return user
 
     @app.context_processor
     def inject_globals():
