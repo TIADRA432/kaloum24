@@ -1,0 +1,32 @@
+name: Kaloum24 V2 Wagtail bootstrap smoke test
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feat/kaloum24-django-wagtail-v2
+    paths:
+      - 'v2/**'
+      - '.github/workflows/wagtail-v2-bootstrap.yml'
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: v2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Wagtail generator
+        run: python -m pip install 'wagtail>=7.0,<8.0'
+      - name: Generate starter from upstream
+        run: python bootstrap_v2.py
+      - name: Install generated dependencies
+        run: python -m pip install -r site/requirements.txt
+      - name: Django checks
+        run: cd site && python manage.py check
+      - name: Run tests
+        run: cd site && python manage.py test
