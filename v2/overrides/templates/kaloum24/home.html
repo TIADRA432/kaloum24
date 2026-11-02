@@ -1,0 +1,52 @@
+{% load static %}<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{% if query %}Recherche{% else %}{{ section_title }}{% endif %} — Kaloum24</title>
+  <meta name="description" content="Kaloum24, l’actualité de Guinée au plus près de vous.">
+  <link rel="stylesheet" href="{% static 'kaloum24/public.css' %}">
+</head>
+<body>
+  <a class="skip-link" href="#contenu">Aller au contenu</a>
+  <div class="topline"><div class="wrap"><span>GUINÉE · CONAKRY</span><span>{{ date_label }}</span></div></div>
+  <header class="masthead wrap">
+    <a class="wordmark" href="{% url 'kaloum24_preview_home' %}" aria-label="Kaloum24, accueil">Kaloum<span>24</span><i aria-hidden="true">.</i></a>
+    <p class="tagline">L’actualité de Guinée,<br>au plus près de vous.</p>
+    <form class="search" action="{% url 'kaloum24_preview_home' %}" method="get" role="search">
+      <label class="sr-only" for="recherche">Rechercher dans le journal</label>
+      <input id="recherche" type="search" name="q" value="{{ query }}" maxlength="200" placeholder="Rechercher dans le journal…">
+      <button type="submit" aria-label="Lancer la recherche"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg></button>
+    </form>
+  </header>
+  <div class="nav-border"><nav class="wrap navigation" aria-label="Rubriques" id="rubriques">
+    <a href="{% url 'kaloum24_preview_home' %}" {% if not selected_category and not query %}aria-current="page"{% endif %}>À la une</a>
+    {% for slug, label in categories %}<a href="{% url 'kaloum24_preview_home' %}?rubrique={{ slug }}" {% if selected_category == slug %}aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}
+    <span class="edition">ÉDITION FRANÇAISE</span>
+  </nav></div>
+
+  <main class="wrap" id="contenu">
+    <div class="edition-note"><span class="status-dot" aria-hidden="true"></span>Aperçu de la nouvelle édition de Kaloum24</div>
+    {% if not query and not selected_category %}
+    <section class="intro" aria-labelledby="titre-journal">
+      <div class="intro-copy"><p class="eyebrow">LE JOURNAL</p><h1 id="titre-journal">Un regard d’ici.<br>Une ouverture<br><em>sur le monde.</em></h1><p class="intro-description">La Guinée, ses territoires et celles et ceux qui la font vivre. Une lecture claire pour suivre l’essentiel et comprendre ce qui nous rassemble.</p><a class="text-link" href="#actualites">Parcourir les actualités <span aria-hidden="true">↘</span></a></div>
+      <div class="identity-panel" aria-hidden="true"><div class="identity-top">KALOUM24 / NOUVELLE ÉDITION</div><div class="identity-mark">K<span>24</span><i>.</i></div><div class="identity-bottom"><span>PROCHE DE VOUS.</span><span>OUVERT SUR LE MONDE.</span></div></div>
+    </section>
+    {% endif %}
+
+    <section class="news-section" id="actualites" aria-labelledby="titre-actualites">
+      <div class="section-heading"><div><p class="eyebrow">LE FIL DU JOURNAL</p><{% if query or selected_category %}h1{% else %}h2{% endif %} id="titre-actualites">{{ section_title }}</{% if query or selected_category %}h1{% else %}h2{% endif %}></div><span class="section-count">0 publication</span></div>
+      {% if query %}<p class="search-summary">Recherche : <strong>« {{ query }} »</strong></p>{% endif %}
+      <div class="empty-state"><span class="empty-symbol" aria-hidden="true">K24</span>
+        {% if query %}<h2>Aucun article ne correspond à cette recherche.</h2><p>Essayez un autre mot ou revenez à l’ensemble des actualités.</p>
+        {% elif selected_category %}<h2>Cette rubrique attend ses premières publications.</h2><p>Les articles publiés dans cette rubrique apparaîtront ici.</p>
+        {% else %}<h3>L’actualité se prépare ici.</h3><p>Les articles de la nouvelle édition apparaîtront ici dès leur publication.</p>{% endif %}
+        {% if query or selected_category %}<a class="text-link" href="{% url 'kaloum24_preview_home' %}">Toutes les actualités <span aria-hidden="true">→</span></a>{% endif %}
+      </div>
+    </section>
+    <section class="journal-values" id="journal" aria-label="L’esprit du journal"><div><span>01 / PROXIMITÉ</span><h2>La Guinée au cœur.</h2><p>Un espace consacré à la vie locale, à la société et aux territoires.</p></div><div><span>02 / COMPRÉHENSION</span><h2>Prendre le temps de lire.</h2><p>Une présentation claire pour faire place aux faits et à leur contexte.</p></div><div><span>03 / ACCESSIBILITÉ</span><h2>Le journal vous accompagne.</h2><p>Une lecture légère, pensée aussi pour le téléphone et les connexions modestes.</p></div></section>
+  </main>
+  <footer class="footer"><div class="wrap footer-main"><div><a class="wordmark" href="{% url 'kaloum24_preview_home' %}">Kaloum<span>24</span><i aria-hidden="true">.</i></a><p>L’actualité de Guinée, au plus près de vous.</p></div><nav aria-label="Navigation de pied de page"><a href="{% url 'kaloum24_preview_home' %}">À la une</a><a href="#rubriques">Les rubriques</a><a href="#journal">Le journal</a></nav></div><div class="wrap footer-bottom"><span>© {{ year }} Kaloum24</span><span>Conakry, Guinée</span></div></footer>
+</body>
+</html>

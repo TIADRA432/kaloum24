@@ -7,9 +7,10 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-import shutil
 import subprocess
 import sys
+
+from apply_overrides import apply_overrides
 
 ROOT = Path(__file__).resolve().parent
 TARGET = ROOT / "site"
@@ -31,8 +32,7 @@ def main() -> int:
         cwd=ROOT,
         check=True,
     )
-    for source in (ROOT / "config").glob("*.py"):
-        shutil.copy2(source, TARGET / "kaloum24_v2" / "settings" / source.name)
+    apply_overrides(TARGET)
     print("Generated v2/site. Review generated settings, dependencies and sample credentials before running it.")
     return 0
 

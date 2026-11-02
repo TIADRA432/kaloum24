@@ -1,6 +1,9 @@
 # KALOUM24 V2 — Plan de tests et recette
 
-Statut : tests définis, NON EXÉCUTÉS. Ne pas confondre ce document avec un rapport de réussite.
+Statut : plan de recette. Les preuves obtenues sont dans `v2/VALIDATION.md` et
+ne valident pas toutes les lignes ci-dessous. Les vérifications étendues sont
+actuellement différées à la demande du propriétaire. L'aperçu ne valide pas la
+publication, l'admin, la migration ou le rendu des vrais articles.
 
 | ID | Contrôle | Critère attendu |
 |---|---|---|
@@ -15,10 +18,12 @@ Statut : tests définis, NON EXÉCUTÉS. Ne pas confondre ce document avec un ra
 | T09 | Commentaires modérés, signalements | Pas de publication sans modération |
 | T10 | Abonnements / paywall / webhooks | Contrôles d'accès et idempotence |
 | T11 | WhatsApp et agrégateur RSS | Brouillons sûrs, aucune autopublication |
-| T12 | Import dry-run / import réel staging | Comptages et IDs cohérents, pas de doublons |
-| T13 | Sauvegarde et restauration staging | Données et médias restaurés |
+| T12 | Import dry-run / import réel explicitement autorisé | Comptages et IDs cohérents, pas de doublons ; aucun staging créé |
+| T13 | Sauvegarde et restauration dans une destination locale temporaire approuvée | Données et médias restaurés ; production préservée |
 | T14 | Security checks, dépendances, CSRF, sessions | Pas de vulnérabilité bloquante connue |
 | T15 | Performance mobile / Core Web Vitals | Mesures comparées à l'existant, seuils à fixer |
-| T16 | Rollback staging | Retour à version précédente validé |
+| T16 | Rollback V2 dans le périmètre autorisé | Retour à version précédente validé ; V1 préservée |
 
-Automatisation prévue : CI GitHub Actions avec lint, tests Django, vérification migrations, scan dépendances; ne pas ajouter avant prototype exécutable.
+La CI V2 existe pour les contrôles sans base, le bootstrap et la configuration.
+Les tests nécessitant migrations ou écritures ne sont pas ajoutés implicitement.
+L'aperçu utilise un backend de base factice et ne charge pas les secrets Supabase.

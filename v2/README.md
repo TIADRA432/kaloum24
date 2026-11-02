@@ -4,7 +4,41 @@ Le bootstrap génère le site dans `v2/site/` (ignoré par Git). La V1 Flask,
 `main` et la configuration Render existante ne sont pas modifiés. Aucun staging
 n'est créé. Le seul projet Supabase visé est `qlkeieckyhvpjmyzuwjk`.
 
-## Génération vérifiée
+## Suivi du projet
+
+Le suivi des étapes est publié dans [Confluence — Roadmap Kaloum24 V2](https://joomwan.atlassian.net/wiki/spaces/TIADRA/pages/43483138/Kaloum24+V2+Roadmap+and+delivery+tracker).
+
+## Aperçu public et édition locale
+
+Après génération du starter et installation de ses dépendances :
+
+```bash
+cd v2
+# Utiliser l'interpréteur de .venv (ou activer cet environnement).
+python preview_v2.py
+```
+
+Ouvrir `http://127.0.0.1:8782/`. Ce serveur est limité à localhost ; il utilise
+un backend de base factice, ne charge pas `.env`, n'exécute aucune migration et
+ne lit ni n'écrit Supabase. Le rendu est français, avec rubriques, formulaire de
+recherche et états vides. Aucun article ou historique n'est inventé. Les flux
+éditoriaux réels restent à brancher après installation du schéma autorisée.
+
+Les sources à modifier sont suivies dans `v2/overrides/`, et les settings dans
+`v2/config/`. Les modifications directes de `v2/site/` resteraient ignorées par Git.
+
+```bash
+python apply_overrides.py
+```
+
+Après cette commande, rafraîchir le navigateur pour les changements HTML/CSS.
+Redémarrer l'aperçu après une modification Python ou des settings. Le bootstrap
+applique aussi ces fichiers automatiquement lors d'une nouvelle génération.
+L'URL Wagtail générée conserve ses routes admin, recherche et RSS et ajoute
+`/healthz`, un endpoint de vie sans requête SQL. L'aperçu sert aussi `/healthz`
+et un `robots.txt` qui interdit l'indexation. Aucun déploiement public n'est réalisé.
+
+## Bootstrap reproductible
 
 Python 3.12 ou 3.13, accès GitHub/PyPI, environnement sans `DATABASE_URL`,
 `PGHOST` ni `PGSERVICE` :

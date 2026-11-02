@@ -197,3 +197,24 @@ Après l'instruction explicite de poursuivre les actions concrètes :
   applicatif écrit. Les changements Supabase sont l'obligation SSL, l'activation
   JIT et le mapping temporaire du seul compte propriétaire. `main` et la
   configuration Render Flask V1 restent hors du périmètre des modifications.
+
+## Interface française et roadmap — 2 novembre 2026 (UTC)
+
+- [Roadmap Confluence](https://joomwan.atlassian.net/wiki/spaces/TIADRA/pages/43483138/Kaloum24+V2+Roadmap+and+delivery+tracker) publiée dans l'espace TIADRA : six étapes, critères de livraison, états, décisions et journal de progression.
+- Sources spécifiques suivies dans `v2/overrides/`, appliquées par
+  `apply_overrides.py` au starter généré. Les modifications ne reposent plus sur
+  des fichiers ignorés de `v2/site/`. Le bootstrap applique ces sources aussi.
+- Aperçu lancé sur `http://127.0.0.1:8782/` avec le backend Django factice,
+  sans chargement des identifiants Supabase : aucun accès à une base possible.
+- Rendu d'accueil français observé dans le navigateur ; une rubrique Politique
+  a également été affichée. CSS servi localement, aucun script, police distante,
+  faux article ou formulaire d'inscription simulé.
+- Rubriques, présentation de la recherche, états vides, navigation et styles
+  responsive implémentés. Aucun contenu réel importé ; la recherche ne consulte
+  pas encore de corpus. Pas de prétention à une recette mobile complète.
+- Endpoint de vie `/healthz` ajouté au starter Wagtail et à l'aperçu. Cet endpoint
+  n'atteste pas que la base ou le schéma éditorial sont prêts.
+- Plans du dépôt actualisés : Supabase existant seulement, aucun staging,
+  sauvegarde/validation avant toute migration ou écriture de contenu.
+- Aucune suite de vérification étendue lancée manuellement, conformément à la
+  demande du propriétaire. Pas de nouvelle migration ni écriture Supabase.
