@@ -133,3 +133,22 @@ la suite V1 a été exécutée automatiquement dans sa CI isolée préexistante.
   n'affiche qu'une raison connue ; les raisons inconnues restent masquées.
 - **20 tests locaux réussis** ; la commande réelle de statut retourne le motif
   SSL attendu avec le token local, sans tentative d'activation.
+
+## SSL activé avec autorisation — 2 novembre 2026 (UTC)
+
+- L'utilisateur a explicitement autorisé l'activation SSL et l'interruption
+  possible sur `kaloum24-production` avant application.
+- Le réglage **Enforce SSL on incoming connections** a été activé dans le
+  tableau de bord du seul projet `qlkeieckyhvpjmyzuwjk`, puis confirmé avec
+  le bouton **Enable SSL**. Aucun réglage Render ou branche `main` modifié.
+- Les observations déjà réalisées après application indiquaient :
+  `currentConfig.database=true`, `appliedSuccessfully=true`, projet
+  `ACTIVE_HEALTHY` et requête MCP READ ONLY réussie avec TLS 1.3.
+- Temporary Access est désormais disponible mais reste **disabled**, avec
+  `appliedSuccessfully=true`. Aucune activation JIT ni attribution de rôle
+  effectuée ; la connexion PostgreSQL directe par PAT reste non validée.
+- L'utilisateur a ensuite demandé de passer les vérifications supplémentaires.
+  Aucun contrôle ou test supplémentaire n'est lancé après cette instruction.
+- Aucune migration, aucun chargement de contenu, aucune écriture de données,
+  aucun rôle créé et aucun mot de passe modifié. L'obligation SSL est la seule
+  modification de configuration Supabase appliquée pendant cette étape.
