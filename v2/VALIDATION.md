@@ -101,3 +101,35 @@ la suite V1 a été exécutée automatiquement dans sa CI isolée préexistante.
   Read** et **Database JIT: Read**. Aucun token créé pendant cette préparation.
 - L'activation JIT, les autorisations de rôle et la connexion réelle par PAT
   restent à valider ; aucune écriture Supabase ni modification Render effectuée.
+
+## Vérification réelle du PAT — 2 novembre 2026 (UTC)
+
+- Token fourni localement par l'utilisateur ; aucune valeur secrète affichée,
+  ajoutée aux commits ou transmise dans une URL.
+- GET du projet avec ce token : **HTTP 200**, projet cible confirmé et état
+  `ACTIVE_HEALTHY`. Le PAT et son périmètre Project Settings Read fonctionnent.
+- Le guide Temporary Access indiquait `/database/jit-access` (HTTP 404).
+  La [référence API](https://supabase.com/docs/reference/api/v1-get-jit-access-config)
+  donne le chemin effectif `/jit-access` : checker et test corrigés.
+- Réponse réelle du statut, sans secret :
+
+```json
+{"temporary_access_state":"unavailable","unavailable_reason":"ssl_enforcement_required"}
+```
+
+- Le GET des autorisations `/database/jit` répond HTTP 406 dans cet état.
+  Aucune autorisation de rôle ne peut être conclue à partir de ce résultat.
+- La sonde PostgreSQL directe par PAT n'a pas été lancée après ce constat.
+- Métadonnées de connexions lues via MCP, dans une transaction READ ONLY puis
+  ROLLBACK : quatre sessions TLS et une session sans TLS du moniteur interne
+  `postgres_exporter`. Ce relevé ponctuel ne garantit pas la compatibilité de
+  tous les clients existants ou déconnectés.
+- Selon la [documentation SSL](https://supabase.com/docs/guides/platform/ssl-enforcement),
+  activer l'obligation SSL entraîne un redémarrage de la base et une interruption
+  possible. Ce changement de production n'a pas été appliqué ; il nécessite une
+  validation et un créneau approprié. Aucun mot de passe réinitialisé, aucune
+  migration ni écriture Supabase effectuée.
+- Le checker traite désormais `unavailable`, conserve les appels GET seuls et
+  n'affiche qu'une raison connue ; les raisons inconnues restent masquées.
+- **20 tests locaux réussis** ; la commande réelle de statut retourne le motif
+  SSL attendu avec le token local, sans tentative d'activation.

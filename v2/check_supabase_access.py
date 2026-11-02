@@ -13,7 +13,8 @@ import urllib.request
 from check_supabase_readonly import load_env_file
 from config.database import PROJECT_REF
 
-ENDPOINT = f"https://api.supabase.com/v1/projects/{PROJECT_REF}/database/jit-access"
+# The API reference uses /jit-access; the guide's /database/jit-access is stale.
+ENDPOINT = f"https://api.supabase.com/v1/projects/{PROJECT_REF}/jit-access"
 
 
 def main() -> int:
@@ -26,10 +27,19 @@ def main() -> int:
         with urllib.request.urlopen(request, timeout=10) as response:
             result = json.load(response)
         state = result.get("state")
-        if not isinstance(state, str) or state not in {"enabled", "disabled"}:
+        if not isinstance(state, str) or state not in {"enabled", "disabled", "unavailable"}:
             print("Temporary access returned an unexpected status; no changes made.", file=sys.stderr)
             return 1
-        print(json.dumps({"project_ref": PROJECT_REF, "temporary_access_state": state}))
+        output = {"project_ref": PROJECT_REF, "temporary_access_state": state}
+        if state == "unavailable":
+            # Only emit a known, non-secret reason; never log arbitrary API bodies.
+            output["unavailable_reason"] = (
+                "ssl_enforcement_required"
+                if result.get("unavailableReason") == "ssl_enforcement_required" else "unspecified"
+            )
+        if isinstance(result.get("appliedSuccessfully"), bool):
+            output["applied_successfully"] = result["appliedSuccessfully"]
+        print(json.dumps(output))
     except urllib.error.HTTPError as error:
         print(f"Temporary access status failed (HTTP {error.code}); check token validity and Project Settings Read permission.", file=sys.stderr)
         return 1

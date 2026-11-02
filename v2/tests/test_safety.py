@@ -108,6 +108,25 @@ class DatabaseSafetyTests(unittest.TestCase):
 
 class TemporaryAccessStatusTests(unittest.TestCase):
     @patch.object(access.urllib.request, "urlopen")
+    def test_unavailable_ssl_prerequisite_is_reported_without_changes(self, urlopen):
+        urlopen.return_value.__enter__.return_value.read.return_value = b'{"state":"unavailable","unavailableReason":"ssl_enforcement_required"}'
+        output = io.StringIO()
+        with patch.dict(os.environ, {"SUPABASE_ACCESS_TOKEN": "sbp_test_only"}, clear=True), contextlib.redirect_stdout(output):
+            self.assertEqual(access.main(), 0)
+        self.assertIn('"temporary_access_state": "unavailable"', output.getvalue())
+        self.assertIn('"unavailable_reason": "ssl_enforcement_required"', output.getvalue())
+        self.assertEqual(urlopen.call_args.args[0].get_method(), "GET")
+
+    @patch.object(access.urllib.request, "urlopen")
+    def test_unrecognized_reason_does_not_expose_response_text(self, urlopen):
+        urlopen.return_value.__enter__.return_value.read.return_value = b'{"state":"unavailable","unavailableReason":"secret_response"}'
+        output = io.StringIO()
+        with patch.dict(os.environ, {"SUPABASE_ACCESS_TOKEN": "sbp_test_only"}, clear=True), contextlib.redirect_stdout(output):
+            self.assertEqual(access.main(), 0)
+        self.assertIn('"unavailable_reason": "unspecified"', output.getvalue())
+        self.assertNotIn("secret_response", output.getvalue())
+
+    @patch.object(access.urllib.request, "urlopen")
     def test_status_uses_only_get_and_does_not_print_token(self, urlopen):
         urlopen.return_value.__enter__.return_value.read.return_value = b'{"state":"disabled","other":"secret_response"}'
         output = io.StringIO()
@@ -116,6 +135,7 @@ class TemporaryAccessStatusTests(unittest.TestCase):
         request = urlopen.call_args.args[0]
         self.assertEqual(request.get_method(), "GET")
         self.assertEqual(request.full_url, access.ENDPOINT)
+        self.assertEqual(request.full_url, "https://api.supabase.com/v1/projects/qlkeieckyhvpjmyzuwjk/jit-access")
         self.assertIsNone(request.data)
         self.assertIn('"temporary_access_state": "disabled"', output.getvalue())
         self.assertNotIn("sbp_test_only", output.getvalue())

@@ -129,7 +129,16 @@ projet `qlkeieckyhvpjmyzuwjk`. **Database JIT: Read** permet aussi l'inspection
 des autorisations JIT. Préférer un PAT limité à ce projet et de courte durée
 (24 heures pour le contrôle initial), sans droits de migration ou d'écriture.
 
-Si le statut est `disabled` ou si aucun rôle n'est autorisé, la connexion
+Le statut est lu sur `GET /v1/projects/{ref}/jit-access`, conformément à la
+[référence API](https://supabase.com/docs/reference/api/v1-get-jit-access-config).
+Le chemin `/database/jit-access` du guide général renvoie 404 sur le projet.
+La commande accepte aussi `unavailable` et rapporte la raison connue
+`ssl_enforcement_required`. Dans ce cas, l'activation de l'obligation SSL est
+un préalable. Cette modification provoque un redémarrage de la base et peut
+interrompre les connexions ; elle doit être examinée et autorisée séparément.
+Voir la [documentation SSL](https://supabase.com/docs/guides/platform/ssl-enforcement).
+
+Si le statut est `disabled`, `unavailable` ou si aucun rôle n'est autorisé, la connexion
 PostgreSQL n'est pas encore utilisable. L'activation et les autorisations JIT
 nécessitent une modification d'accès séparée, examinée avant application.
 Ces scripts n'activent rien, ne créent aucun rôle et ne changent aucun mot de
