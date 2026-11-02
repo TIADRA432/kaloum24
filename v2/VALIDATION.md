@@ -1,0 +1,67 @@
+# Validation Kaloum24 V2 — 2 novembre 2026 (UTC)
+
+## Périmètre et références
+
+- Branche : `feat/kaloum24-django-wagtail-v2`, parent initial
+  `3f563e6bfab6845c1c7259b972329a3c62b21cb4`.
+- `main` initial : `1a898e8c6f365920df1c968cefe9d74e5f2f5907`.
+- [Échec Actions reproduit dans les logs](https://github.com/TIADRA432/kaloum24/actions/runs/41325494536) :
+  `No module named wagtail.__main__` à la génération.
+- Template officiel figé : `3758d56f2c31413bdb1b2aaa96cb7b9e8e150ad9`.
+
+## Résultats locaux
+
+Windows, Python 3.13.4, environnement dédié `v2/.venv` :
+
+| Vérification | Résultat |
+| --- | --- |
+| `python -m unittest discover -s tests -v` depuis `v2` | 10 tests réussis, aucune connexion |
+| `python bootstrap_v2.py` | Génération réelle réussie dans `v2/site`, aucune migration |
+| Installation des dépendances du template | Réussie |
+| `python -m pip check` | Aucune dépendance cassée |
+| `python site/manage.py check --settings=kaloum24_v2.settings.ci` | Code 0, huit avertissements Treebeard |
+| Même check avec `settings.supabase`, URL et secret factices | Code 0, huit avertissements, sans connexion à la base |
+| Trois tests upstream de `utils.tests.test_blocks` via `unittest` après `django.setup()` | 3 réussis ; `SimpleTestCase`, aucun runner de base |
+| `python -m compileall -q site/kaloum24_v2` | Réussi |
+
+Les avertissements `treebeard.E001` annoncent une incompatibilité future des
+managers Wagtail avec Treebeard 6. La version installée est 5.3.1 et Wagtail
+impose `<6` ; les avertissements ne sont pas supprimés.
+
+La CI exécute aussi ces vérifications sur Linux avec Python 3.12 et 3.13.
+Les résultats Actions du correctif sont consignés après leur exécution.
+
+## Supabase : observation réelle en lecture seule
+
+Projet existant `qlkeieckyhvpjmyzuwjk`, nom `kaloum24-production`, région
+`eu-west-3`, état `ACTIVE_HEALTHY`.
+
+Requête exécutée via le connecteur MCP : `BEGIN TRANSACTION READ ONLY`, SELECT
+sur les métadonnées puis `ROLLBACK`.
+
+```json
+{"database":"postgres","read_only":"on","postgres_version":"17.11","ssl":true,"tls_version":"TLSv1.3","public_table_count":0,"wagtail_table_count":0,"django_migrations_present":false}
+```
+
+Les comptes de tables sont limités aux objets visibles par le rôle MCP. Aucun
+contenu applicatif n'a été consulté ni modifié. Cette observation valide le
+chemin MCP, pas une connexion Django/psycopg locale : aucun `DATABASE_URL`
+authentifié n'est fourni dans l'environnement local. La sonde locale est testée
+avec connexions simulées ; le test réseau direct reste à réaliser avec un secret
+fourni par un canal sécurisé.
+
+## Limites et suite autorisée
+
+Aucun staging, aucune migration (y compris base de test), aucun chargement de
+fixtures, utilisateur ou rôle créé, aucune écriture en base, aucun changement
+Render. Seuls `v2/**` et le workflow V2 sont modifiés. La suite V1 et les tests
+upstream qui nécessitent des écritures n'ont pas été exécutés.
+
+1. Fournir de manière sécurisée l'URL PostgreSQL du projet existant et exécuter
+   `python check_supabase_readonly.py` ; vérifier éventuellement `verify-full`
+   avec le certificat CA Supabase.
+2. Avant tout changement en base : sauvegarde vérifiée/restaurable, inventaire
+   des schémas et revue du plan de migration, puis validation explicite.
+3. Après cette validation seulement : installation du schéma, tests applicatifs
+   complets et vérifications publiques/admin ; aucun déploiement V1 implicite.
+4. Verrouiller les dépendances transitives avant un déploiement V2.

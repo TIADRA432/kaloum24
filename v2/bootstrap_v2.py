@@ -7,26 +7,32 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parent
 TARGET = ROOT / "site"
-TEMPLATE_URL = "https://github.com/wagtail/news-template/archive/refs/heads/main.zip"
+TEMPLATE_COMMIT = "3758d56f2c31413bdb1b2aaa96cb7b9e8e150ad9"
+TEMPLATE_URL = f"https://github.com/wagtail/news-template/archive/{TEMPLATE_COMMIT}.zip"
 
 
 def main() -> int:
     if TARGET.exists():
         print("Refusing to overwrite existing v2/site; inspect or remove manually.", file=sys.stderr)
         return 2
-    if os.getenv("DATABASE_URL"):
+    if any(os.getenv(key) for key in ("DATABASE_URL", "PGSERVICE", "PGHOST")):
         print("Refusing bootstrap with DATABASE_URL set. Use a clean isolated environment.", file=sys.stderr)
         return 3
+    # Django startproject requires an explicitly supplied destination to exist.
+    TARGET.mkdir()
     subprocess.run(
-        [sys.executable, "-m", "wagtail", "start", f"--template={TEMPLATE_URL}", "kaloum24_v2", str(TARGET)],
+        [sys.executable, "-m", "wagtail.bin.wagtail", "start", f"--template={TEMPLATE_URL}", "kaloum24_v2", str(TARGET)],
         cwd=ROOT,
         check=True,
     )
+    for source in (ROOT / "config").glob("*.py"):
+        shutil.copy2(source, TARGET / "kaloum24_v2" / "settings" / source.name)
     print("Generated v2/site. Review generated settings, dependencies and sample credentials before running it.")
     return 0
 

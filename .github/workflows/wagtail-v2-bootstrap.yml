@@ -8,25 +8,62 @@ on:
     paths:
       - 'v2/**'
       - '.github/workflows/wagtail-v2-bootstrap.yml'
+  pull_request:
+    paths:
+      - 'v2/**'
+      - '.github/workflows/wagtail-v2-bootstrap.yml'
+
+permissions:
+  contents: read
 
 jobs:
   bootstrap:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        python-version: ['3.12', '3.13']
+    env:
+      # No Supabase secrets are exposed to this job.
+      DATABASE_URL: ''
+      PGHOST: ''
+      PGSERVICE: ''
+      DJANGO_SETTINGS_MODULE: kaloum24_v2.settings.ci
     defaults:
       run:
         working-directory: v2
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
         with:
-          python-version: '3.12'
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: v2/requirements-bootstrap.txt
       - name: Install Wagtail generator
-        run: python -m pip install 'wagtail>=7.0,<8.0'
+        run: python -m pip install -r requirements-bootstrap.txt
+      - name: Safety regression tests (no database)
+        run: python -m unittest discover -s tests -v
       - name: Generate starter from upstream
         run: python bootstrap_v2.py
       - name: Install generated dependencies
         run: python -m pip install -r site/requirements.txt
+      - name: Validate installed dependencies
+        run: python -m pip check
       - name: Django checks
-        run: cd site && python manage.py check
-      - name: Run tests
-        run: cd site && python manage.py test
+        run: python site/manage.py check
+      - name: PostgreSQL settings checks (placeholder credentials, no connection)
+        env:
+          DATABASE_URL: postgresql://postgres:placeholder@db.qlkeieckyhvpjmyzuwjk.supabase.co:5432/postgres
+          SECRET_KEY: ci-only-unused-for-deployment
+          ALLOWED_HOSTS: localhost
+        run: python site/manage.py check --settings=kaloum24_v2.settings.supabase
+      - name: Upstream SimpleTestCase tests (no database runner)
+        run: |
+          cd site
+          python -c "import django, unittest; django.setup(); unittest.main(module='kaloum24_v2.utils.tests.test_blocks', verbosity=2)"
+      - name: Compile generated Python
+        run: python -m compileall -q site/kaloum24_v2
+      # No manage.py test: Django's test runner would create/migrate a test DB.
+      # No upstream bootstrap.py, migrate, loaddata or createsuperuser.
