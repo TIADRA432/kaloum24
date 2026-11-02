@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import urllib.error
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -14,6 +15,7 @@ sys.path.insert(0, str(ROOT))
 
 import bootstrap_v2
 import check_supabase_readonly as probe
+import check_supabase_access as access
 from config.database import database_config, require_supabase_target
 from django.core.exceptions import ImproperlyConfigured
 
@@ -21,6 +23,43 @@ URL = "postgresql://postgres:p%40ss@db.qlkeieckyhvpjmyzuwjk.supabase.co:5432/pos
 
 
 class DatabaseSafetyTests(unittest.TestCase):
+    def test_token_auth_pooler_keeps_ssl_and_readonly(self):
+        config = database_config({
+            "DATABASE_URL": "postgresql://postgres.qlkeieckyhvpjmyzuwjk@aws-0-eu-west-3.pooler.supabase.com:5432/postgres",
+            "DATABASE_AUTH_MODE": "access_token", "SUPABASE_ACCESS_TOKEN": "sbp_test_only",
+        })
+        self.assertEqual(config["PASSWORD"], "sbp_test_only")
+        self.assertIn("-c jit=on", config["OPTIONS"]["options"])
+        self.assertIn("default_transaction_read_only=on", config["OPTIONS"]["options"])
+        self.assertEqual(config["OPTIONS"]["sslmode"], "require")
+
+    def test_token_auth_direct_replaces_old_password_without_pooler_flag(self):
+        config = database_config({"DATABASE_URL": URL, "DATABASE_AUTH_MODE": "access_token",
+                                  "SUPABASE_ACCESS_TOKEN": "sbp_test_only"})
+        self.assertEqual(config["PASSWORD"], "sbp_test_only")
+        self.assertNotIn("jit=on", config["OPTIONS"]["options"])
+
+    def test_token_auth_rejects_missing_token_unknown_mode_and_wrong_target(self):
+        for env in (
+            {"DATABASE_URL": URL, "DATABASE_AUTH_MODE": "unknown"},
+            {"DATABASE_URL": URL, "DATABASE_AUTH_MODE": "access_token"},
+            {"DATABASE_URL": URL.replace("db.qlkeieckyhvpjmyzuwjk.supabase.co", "example.org"),
+             "DATABASE_AUTH_MODE": "access_token", "SUPABASE_ACCESS_TOKEN": "sbp_test_only"},
+        ):
+            with self.subTest(env_keys=list(env)), self.assertRaises(ImproperlyConfigured) as error:
+                database_config(env)
+            self.assertNotIn("sbp_test_only", str(error.exception))
+
+    def test_token_url_allows_only_exact_documented_jit_option(self):
+        env = {"DATABASE_URL": URL + "?options=-c%20jit%3Don", "DATABASE_AUTH_MODE": "access_token",
+               "SUPABASE_ACCESS_TOKEN": "sbp_test_only"}
+        database_config(env)
+        for options in ("-c%20jit%3Doff", "-c%20jit%3Don%20-c%20default_transaction_read_only%3Doff"):
+            with self.subTest(options=options), self.assertRaises(ImproperlyConfigured):
+                database_config({**env, "DATABASE_URL": URL + "?options=" + options})
+        with self.assertRaises(ImproperlyConfigured):
+            database_config({"DATABASE_URL": URL + "?options=-c%20jit%3Don"})
+
     def test_tls_readonly_timeout_and_encoded_password(self):
         config = database_config({"DATABASE_URL": URL})
         self.assertEqual(config["ENGINE"], "django.db.backends.postgresql")
@@ -67,6 +106,37 @@ class DatabaseSafetyTests(unittest.TestCase):
                                  "USER": "postgres.qlkeieckyhvpjmyzuwjk"})
 
 
+class TemporaryAccessStatusTests(unittest.TestCase):
+    @patch.object(access.urllib.request, "urlopen")
+    def test_status_uses_only_get_and_does_not_print_token(self, urlopen):
+        urlopen.return_value.__enter__.return_value.read.return_value = b'{"state":"disabled","other":"secret_response"}'
+        output = io.StringIO()
+        with patch.dict(os.environ, {"SUPABASE_ACCESS_TOKEN": "sbp_test_only"}, clear=True), contextlib.redirect_stdout(output):
+            self.assertEqual(access.main(), 0)
+        request = urlopen.call_args.args[0]
+        self.assertEqual(request.get_method(), "GET")
+        self.assertEqual(request.full_url, access.ENDPOINT)
+        self.assertIsNone(request.data)
+        self.assertIn('"temporary_access_state": "disabled"', output.getvalue())
+        self.assertNotIn("sbp_test_only", output.getvalue())
+        self.assertNotIn("secret_response", output.getvalue())
+
+    @patch.object(access.urllib.request, "urlopen")
+    def test_missing_token_does_not_contact_api(self, urlopen):
+        with patch.dict(os.environ, {}, clear=True), contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(access.main(), 2)
+        urlopen.assert_not_called()
+
+    @patch.object(access.urllib.request, "urlopen")
+    def test_http_failure_never_prints_server_body(self, urlopen):
+        urlopen.side_effect = urllib.error.HTTPError(access.ENDPOINT, 403, "secret_response", None, None)
+        output = io.StringIO()
+        with patch.dict(os.environ, {"SUPABASE_ACCESS_TOKEN": "sbp_test_only"}, clear=True), contextlib.redirect_stderr(output):
+            self.assertEqual(access.main(), 1)
+        self.assertIn("HTTP 403", output.getvalue())
+        self.assertNotIn("secret_response", output.getvalue())
+
+
 class BootstrapSafetyTests(unittest.TestCase):
     def test_guards_never_spawn_generator(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -104,6 +174,15 @@ class BootstrapSafetyTests(unittest.TestCase):
 
 
 class ProbeSafetyTests(unittest.TestCase):
+    def test_explicit_env_file_loads_only_connection_fields(self):
+        with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, {}, clear=True):
+            path = Path(directory) / ".env"
+            path.write_text('# local\nSUPABASE_ACCESS_TOKEN="sbp_test_only"\nDATABASE_AUTH_MODE=access_token\nSECRET_KEY=ignored\n', encoding="utf-8-sig")
+            probe.load_env_file(path)
+            self.assertEqual(os.environ["SUPABASE_ACCESS_TOKEN"], "sbp_test_only")
+            self.assertEqual(os.environ["DATABASE_AUTH_MODE"], "access_token")
+            self.assertNotIn("SECRET_KEY", os.environ)
+
     @patch.object(probe.psycopg, "connect")
     def test_probe_sets_readonly_and_rolls_back(self, connect):
         connection = connect.return_value.__enter__.return_value

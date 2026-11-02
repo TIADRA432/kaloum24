@@ -13,6 +13,12 @@ PROJECT_REF = "qlkeieckyhvpjmyzuwjk"
 
 def database_config(environ: Mapping[str, str] | None = None) -> dict:
     env = os.environ if environ is None else environ
+    auth_mode = env.get("DATABASE_AUTH_MODE", "password")
+    if auth_mode not in {"password", "access_token"}:
+        raise ImproperlyConfigured("DATABASE_AUTH_MODE must be password or access_token.")
+    token = env.get("SUPABASE_ACCESS_TOKEN", "").strip()
+    if auth_mode == "access_token" and not token:
+        raise ImproperlyConfigured("Temporary access requires SUPABASE_ACCESS_TOKEN in the local environment.")
     url = env.get("DATABASE_URL", "")
     try:
         parts = urlsplit(url)
@@ -21,17 +27,23 @@ def database_config(environ: Mapping[str, str] | None = None) -> dict:
             parts.scheme not in {"postgres", "postgresql"}
             or not parts.hostname
             or not parts.username
-            or not parts.password
+            or (auth_mode == "password" and not parts.password)
             or not parts.path.strip("/")
             or parts.fragment
-            or set(query) - {"sslmode", "sslrootcert"}
+            or set(query) - {"sslmode", "sslrootcert", "options"}
             or any(len(values) != 1 for values in query.values())
+            or ("options" in query and (auth_mode != "access_token" or query["options"] != ["-c jit=on"]))
         ):
             raise ValueError
         config = dj_database_url.parse(url, conn_max_age=0, conn_health_checks=True)
     except (ValueError, KeyError, TypeError):
         # Parsing exceptions can contain passwords; never propagate them.
-        raise ImproperlyConfigured("DATABASE_URL must be a complete PostgreSQL URL with only SSL query parameters.") from None
+        raise ImproperlyConfigured("DATABASE_URL must be a PostgreSQL URL with valid credentials and SSL parameters; only jit=on is allowed for temporary access.") from None
+
+    if auth_mode == "access_token":
+        # Restrict the token's destination before handing it to a driver.
+        require_supabase_target(config)
+        config["PASSWORD"] = token
 
     mode = env.get("DATABASE_SSLMODE") or query.get("sslmode", ["require"])[0]
     if mode not in {"require", "verify-ca", "verify-full"}:
@@ -49,6 +61,9 @@ def database_config(environ: Mapping[str, str] | None = None) -> dict:
         # Also safe for Supabase's transaction pooler (port 6543).
         prepare_threshold=None,
     )
+    if auth_mode == "access_token" and config["HOST"].endswith(".pooler.supabase.com"):
+        # Supavisor needs this flag to authenticate a personal access token.
+        options["options"] += " -c jit=on"
     if rootcert:
         options["sslrootcert"] = rootcert
     config["DISABLE_SERVER_SIDE_CURSORS"] = True

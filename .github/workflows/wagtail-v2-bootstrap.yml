@@ -28,6 +28,8 @@ jobs:
       DATABASE_URL: ''
       PGHOST: ''
       PGSERVICE: ''
+      DATABASE_AUTH_MODE: password
+      SUPABASE_ACCESS_TOKEN: ''
       DJANGO_SETTINGS_MODULE: kaloum24_v2.settings.ci
     defaults:
       run:
@@ -63,6 +65,14 @@ jobs:
         run: |
           cd site
           python -c "import django, unittest; django.setup(); unittest.main(module='kaloum24_v2.utils.tests.test_blocks', verbosity=2)"
+      - name: Temporary access settings checks (fake token, no connection)
+        env:
+          DATABASE_URL: postgresql://postgres.qlkeieckyhvpjmyzuwjk@aws-0-eu-west-3.pooler.supabase.com:5432/postgres
+          DATABASE_AUTH_MODE: access_token
+          SUPABASE_ACCESS_TOKEN: sbp_test_only
+          SECRET_KEY: ci-only-unused-for-deployment
+          ALLOWED_HOSTS: localhost
+        run: python site/manage.py check --settings=kaloum24_v2.settings.supabase
       - name: Compile generated Python
         run: python -m compileall -q site/kaloum24_v2
       # No manage.py test: Django's test runner would create/migrate a test DB.

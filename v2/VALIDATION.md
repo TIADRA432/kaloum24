@@ -80,3 +80,24 @@ la suite V1 a été exécutée automatiquement dans sa CI isolée préexistante.
 3. Après cette validation seulement : installation du schéma, tests applicatifs
    complets et vérifications publiques/admin ; aucun déploiement V1 implicite.
 4. Verrouiller les dépendances transitives avant un déploiement V2.
+
+## Préparation de Temporary Access — 2 novembre 2026 (UTC)
+
+- Connexion directe avec le mot de passe local : refus d'authentification par
+  Supabase, avant toute requête SQL applicative. Aucun secret n'est consigné.
+- Contrôle MCP supplémentaire : base `postgres`, transaction `read_only=on`,
+  SSL actif et TLS 1.3 ; ce chemin existant reste fonctionnel.
+- Ajout de `DATABASE_AUTH_MODE=access_token` et `SUPABASE_ACCESS_TOKEN` : token
+  injecté en mémoire, destination limitée au projet existant, `jit=on` ajouté
+  uniquement pour le pooler, lecture seule et SSL conservés.
+- Ajout d'un GET du statut JIT et du chargement explicite d'un fichier `.env`.
+- **18 tests locaux réussis**, sans connexion réseau/base. Le check Django avec
+  mode PAT et token factice réussit avec les huit avertissements connus.
+- Tableau de bord inspecté : aucune commande Temporary Access visible dans
+  Database Settings pour ce projet. Le statut réel doit donc être lu via l'API
+  de gestion après fourniture du PAT ; il n'est pas présumé activé ou désactivé.
+- Formulaire de création préparé, pas soumis : `kaloum24-v2-temporary-check`,
+  expiration 24 heures, seul projet `qlkeieckyhvpjmyzuwjk`, **Project Settings:
+  Read** et **Database JIT: Read**. Aucun token créé pendant cette préparation.
+- L'activation JIT, les autorisations de rôle et la connexion réelle par PAT
+  restent à valider ; aucune écriture Supabase ni modification Render effectuée.

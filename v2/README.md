@@ -92,6 +92,51 @@ Le contrôle du nombre de tables reflète uniquement les tables visibles au rôl
 Le connecteur MCP Supabase a été testé séparément ; il ne fournit pas le mot de
 passe nécessaire à une connexion Django/psycopg locale.
 
+## Alternative : Personal Access Token et Temporary Access
+
+La connexion au tableau de bord avec GitHub reste utilisable. Supabase propose
+[Temporary Access](https://supabase.com/docs/guides/platform/temporary-access)
+pour authentifier une connexion PostgreSQL avec un Personal Access Token (PAT).
+Il faut d'abord que cette fonctionnalité soit activée sur le projet et que
+l'utilisateur soit autorisé à utiliser le rôle PostgreSQL choisi. Le PAT ne
+remplace pas ces autorisations et conserve les permissions du rôle assumé.
+Les clés API de projet `anon`, `service_role`, publishable ou secret ne sont
+pas des PAT.
+
+Dans l'environnement local, ou le fichier `.env` ignoré par Git :
+
+```dotenv
+DATABASE_AUTH_MODE=access_token
+SUPABASE_ACCESS_TOKEN=<PAT à saisir localement uniquement>
+```
+
+Conserver l'URL du projet existant. Le champ mot de passe peut être retiré de
+l'URL : le PAT est injecté en mémoire, sans être journalisé. Pour le pooler,
+`-c jit=on` est ajouté automatiquement aux options, en conservant SSL, le mode
+lecture seule et les délais. Aucun autre paramètre SQL arbitraire n'est accepté.
+
+La sonde et la commande de statut peuvent lire explicitement le fichier local :
+
+```bash
+cd v2
+python check_supabase_access.py --env-file .env
+python check_supabase_readonly.py --env-file .env
+```
+
+La première commande fait uniquement un GET du statut Temporary Access via
+l'API de gestion. Elle exige un PAT avec **Project Settings: Read** sur le seul
+projet `qlkeieckyhvpjmyzuwjk`. **Database JIT: Read** permet aussi l'inspection
+des autorisations JIT. Préférer un PAT limité à ce projet et de courte durée
+(24 heures pour le contrôle initial), sans droits de migration ou d'écriture.
+
+Si le statut est `disabled` ou si aucun rôle n'est autorisé, la connexion
+PostgreSQL n'est pas encore utilisable. L'activation et les autorisations JIT
+nécessitent une modification d'accès séparée, examinée avant application.
+Ces scripts n'activent rien, ne créent aucun rôle et ne changent aucun mot de
+passe. Le PAT d'inspection préparé ne possède pas ces droits de modification.
+Le paramètre de lecture seule du client ne remplace pas une restriction du rôle
+PostgreSQL lui-même. Voir aussi les [permissions PAT](https://supabase.com/docs/guides/platform/personal-access-tokens).
+
 ## Tests et étapes suivantes
 
 La CI vérifie Python 3.12 et 3.13, les régressions du bootstrap/configuration,
