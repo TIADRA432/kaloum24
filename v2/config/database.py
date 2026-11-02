@@ -11,6 +11,19 @@ from django.core.exceptions import ImproperlyConfigured
 PROJECT_REF = "qlkeieckyhvpjmyzuwjk"
 
 
+def enforce_read_only_connection(sender, connection, **kwargs) -> None:
+    """Enforce inspection mode after the session pooler opens a backend session."""
+    if connection.vendor != "postgresql":
+        return
+    with connection.cursor() as cursor:
+        cursor.execute("SET default_transaction_read_only = on")
+        cursor.execute("SHOW default_transaction_read_only")
+        enabled = cursor.fetchone()[0] == "on"
+    if not enabled:
+        connection.close()
+        raise ImproperlyConfigured("PostgreSQL inspection session must be read-only.")
+
+
 def database_config(environ: Mapping[str, str] | None = None) -> dict:
     env = os.environ if environ is None else environ
     auth_mode = env.get("DATABASE_AUTH_MODE", "password")
@@ -32,13 +45,13 @@ def database_config(environ: Mapping[str, str] | None = None) -> dict:
             or parts.fragment
             or set(query) - {"sslmode", "sslrootcert", "options"}
             or any(len(values) != 1 for values in query.values())
-            or ("options" in query and (auth_mode != "access_token" or query["options"] != ["-c jit=on"]))
+            or ("options" in query and (auth_mode != "access_token" or query["options"] not in (["-c jit=true"], ["-c jit=on"])))
         ):
             raise ValueError
         config = dj_database_url.parse(url, conn_max_age=0, conn_health_checks=True)
     except (ValueError, KeyError, TypeError):
         # Parsing exceptions can contain passwords; never propagate them.
-        raise ImproperlyConfigured("DATABASE_URL must be a PostgreSQL URL with valid credentials and SSL parameters; only jit=on is allowed for temporary access.") from None
+        raise ImproperlyConfigured("DATABASE_URL must be a PostgreSQL URL with valid credentials and SSL parameters; only the JIT option is allowed for temporary access.") from None
 
     if auth_mode == "access_token":
         # Restrict the token's destination before handing it to a driver.
@@ -63,7 +76,8 @@ def database_config(environ: Mapping[str, str] | None = None) -> dict:
     )
     if auth_mode == "access_token" and config["HOST"].endswith(".pooler.supabase.com"):
         # Supavisor needs this flag to authenticate a personal access token.
-        options["options"] += " -c jit=on"
+        # Supavisor checks for literal true; the old guide's jit=on is not accepted.
+        options["options"] += " -c jit=true"
     if rootcert:
         options["sslrootcert"] = rootcert
     config["DISABLE_SERVER_SIDE_CURSORS"] = True

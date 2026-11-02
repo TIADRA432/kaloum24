@@ -64,12 +64,17 @@ Copier l'URL exacte dans le panneau **Connect** du projet existant. La connexion
 directe `db.qlkeieckyhvpjmyzuwjk.supabase.co:5432` exige généralement IPv6 ; pour
 un réseau IPv4, utiliser le **Session pooler**, port 5432, utilisateur
 `postgres.qlkeieckyhvpjmyzuwjk`, avec l'hôte fourni par Supabase. Ne pas inventer
-l'hôte du pooler. Les curseurs serveur et les prepared statements sont désactivés,
-ce qui permet également le pooler transactionnel si nécessaire.
+l'hôte du pooler. Les curseurs serveur et les prepared statements sont désactivés.
+L'inspection Django exige le port 5432 (direct ou Session pooler) ; le pooler
+transactionnel 6543 est refusé car la protection en lecture seule utilise une
+configuration de session.
 
 La configuration refuse SQLite, les modes SSL faibles et les paramètres URL
 arbitraires. Elle impose `default_transaction_read_only=on`, une connexion de
-10 secondes et un délai SQL de 10 secondes. Le cache Django reste en mémoire.
+10 secondes et un délai SQL de 10 secondes. Après connexion, un hook Django
+impose `SET default_transaction_read_only = on` et ferme la connexion si cette
+protection n'est pas active : le pooler ignore ce réglage dans les options de
+démarrage. Le cache Django reste en mémoire.
 Ces paramètres protègent l'inspection ; un rôle PostgreSQL dédié en lecture
 seule reste préférable à un compte administrateur. Aucun rôle n'est créé ici.
 
@@ -112,8 +117,11 @@ SUPABASE_ACCESS_TOKEN=<PAT à saisir localement uniquement>
 
 Conserver l'URL du projet existant. Le champ mot de passe peut être retiré de
 l'URL : le PAT est injecté en mémoire, sans être journalisé. Pour le pooler,
-`-c jit=on` est ajouté automatiquement aux options, en conservant SSL, le mode
+`-c jit=true` est ajouté automatiquement aux options, en conservant SSL, le mode
 lecture seule et les délais. Aucun autre paramètre SQL arbitraire n'est accepté.
+Le pooler exige la chaîne littérale `true` ; `jit=on` provenant de l'ancien
+exemple est normalisé en `jit=true`. Voir le
+[parseur Supavisor](https://github.com/supabase/supavisor/blob/3829f69b78ed254be2444ccb5f86f8a100a4bc0c/lib/supavisor/client_handler/protocol_helpers.ex#L79).
 
 La sonde et la commande de statut peuvent lire explicitement le fichier local :
 

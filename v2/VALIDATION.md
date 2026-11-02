@@ -152,3 +152,48 @@ la suite V1 a été exécutée automatiquement dans sa CI isolée préexistante.
 - Aucune migration, aucun chargement de contenu, aucune écriture de données,
   aucun rôle créé et aucun mot de passe modifié. L'obligation SSL est la seule
   modification de configuration Supabase appliquée pendant cette étape.
+
+## Temporary Access activé et connexion Django effective — 2 novembre 2026 (UTC)
+
+Après l'instruction explicite de poursuivre les actions concrètes :
+
+- Temporary Access activé via `PUT /v1/projects/{ref}/jit-access` : HTTP 200,
+  `state=enabled`, `appliedSuccessfully=true`.
+- Le token ne peut pas lire le profil ou l'annuaire des membres (HTTP 403).
+  L'identifiant du compte propriétaire a été retrouvé dans son propre événement
+  d'audit affiché dans le tableau de bord, sans demander un nouveau token.
+- Ce compte est autorisé à utiliser le rôle **existant** `postgres` pendant
+  24 heures, avec restriction à son adresse IPv4 actuelle `/32`. Le PUT du
+  mapping a répondu HTTP 200 ; l'API d'autorisation accepte le rôle. Aucun
+  identifiant personnel ni adresse IP n'est consigné dans ce rapport public.
+- Le corps actuel du PUT utilise `roles` et `expires_at` en secondes, selon
+  [la documentation de mapping](https://supabase.com/docs/guides/platform/team-database-access).
+- Le pooler exige **`jit=true`**, et non `jit=on` : défaut confirmé dans
+  [le parseur officiel](https://github.com/supabase/supavisor/blob/3829f69b78ed254be2444ccb5f86f8a100a4bc0c/lib/supavisor/client_handler/protocol_helpers.ex#L79).
+  Le code et les exemples ont été corrigés. Les anciennes URL `jit=on` sont
+  normalisées vers la valeur effective `true`.
+- La sonde réelle via le Session pooler et le PAT retourne :
+
+```json
+{"database":"postgres","django_migrations_present":false,"postgres_version":"17.11","public_table_count":0,"read_only":"on","ssl":true,"tls_version":"TLSv1.3","wagtail_table_count":0}
+```
+
+- Le pooler ignore `default_transaction_read_only` dans les options initiales :
+  le réglage serveur par défaut restait `off`, tandis que la sonde imposait bien
+  sa transaction READ ONLY. Un hook de connexion Django impose désormais la
+  protection au niveau de la session et ferme une connexion non protégée. Le
+  mode Django est limité au port 5432 pour éviter une configuration de session
+  sur le pooler transactionnel.
+- **Connexion Django réelle réussie**, après cette correction, avec :
+
+```json
+{"django_postgresql_connected":true,"default_read_only":"on","transaction_read_only":"on","ssl":true}
+```
+
+- Les configurations corrigées ont été copiées dans le site local généré.
+  Les tests de régression ont été adaptés ; la suite locale complète n'est pas
+  relancée, conformément à la demande de passer les vérifications supplémentaires.
+- Aucun mot de passe réinitialisé, rôle PostgreSQL créé, schéma migré ou contenu
+  applicatif écrit. Les changements Supabase sont l'obligation SSL, l'activation
+  JIT et le mapping temporaire du seul compte propriétaire. `main` et la
+  configuration Render Flask V1 restent hors du périmètre des modifications.

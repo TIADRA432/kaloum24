@@ -8,7 +8,7 @@ import sys
 import tempfile
 import unittest
 import urllib.error
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -16,20 +16,37 @@ sys.path.insert(0, str(ROOT))
 import bootstrap_v2
 import check_supabase_readonly as probe
 import check_supabase_access as access
-from config.database import database_config, require_supabase_target
+from config.database import database_config, require_supabase_target, enforce_read_only_connection
 from django.core.exceptions import ImproperlyConfigured
 
 URL = "postgresql://postgres:p%40ss@db.qlkeieckyhvpjmyzuwjk.supabase.co:5432/postgres"
 
 
 class DatabaseSafetyTests(unittest.TestCase):
+    def test_django_connection_hook_enforces_session_readonly(self):
+        connection = MagicMock(vendor="postgresql")
+        cursor = connection.cursor.return_value.__enter__.return_value
+        cursor.fetchone.return_value = ("on",)
+        enforce_read_only_connection(None, connection)
+        self.assertEqual([call.args[0] for call in cursor.execute.call_args_list],
+                         ["SET default_transaction_read_only = on", "SHOW default_transaction_read_only"])
+        connection.close.assert_not_called()
+
+    def test_django_connection_hook_closes_unprotected_session(self):
+        connection = MagicMock(vendor="postgresql")
+        connection.cursor.return_value.__enter__.return_value.fetchone.return_value = ("off",)
+        with self.assertRaises(ImproperlyConfigured):
+            enforce_read_only_connection(None, connection)
+        connection.close.assert_called_once()
+
     def test_token_auth_pooler_keeps_ssl_and_readonly(self):
         config = database_config({
             "DATABASE_URL": "postgresql://postgres.qlkeieckyhvpjmyzuwjk@aws-0-eu-west-3.pooler.supabase.com:5432/postgres",
             "DATABASE_AUTH_MODE": "access_token", "SUPABASE_ACCESS_TOKEN": "sbp_test_only",
         })
         self.assertEqual(config["PASSWORD"], "sbp_test_only")
-        self.assertIn("-c jit=on", config["OPTIONS"]["options"])
+        self.assertIn("-c jit=true", config["OPTIONS"]["options"])
+        self.assertNotIn("-c jit=on", config["OPTIONS"]["options"])
         self.assertIn("default_transaction_read_only=on", config["OPTIONS"]["options"])
         self.assertEqual(config["OPTIONS"]["sslmode"], "require")
 
@@ -37,7 +54,7 @@ class DatabaseSafetyTests(unittest.TestCase):
         config = database_config({"DATABASE_URL": URL, "DATABASE_AUTH_MODE": "access_token",
                                   "SUPABASE_ACCESS_TOKEN": "sbp_test_only"})
         self.assertEqual(config["PASSWORD"], "sbp_test_only")
-        self.assertNotIn("jit=on", config["OPTIONS"]["options"])
+        self.assertNotIn("jit=", config["OPTIONS"]["options"])
 
     def test_token_auth_rejects_missing_token_unknown_mode_and_wrong_target(self):
         for env in (
@@ -51,9 +68,13 @@ class DatabaseSafetyTests(unittest.TestCase):
             self.assertNotIn("sbp_test_only", str(error.exception))
 
     def test_token_url_allows_only_exact_documented_jit_option(self):
-        env = {"DATABASE_URL": URL + "?options=-c%20jit%3Don", "DATABASE_AUTH_MODE": "access_token",
+        env = {"DATABASE_URL": URL + "?options=-c%20jit%3Dtrue", "DATABASE_AUTH_MODE": "access_token",
                "SUPABASE_ACCESS_TOKEN": "sbp_test_only"}
         database_config(env)
+        pooler_url = "postgresql://postgres.qlkeieckyhvpjmyzuwjk@aws-1-eu-west-3.pooler.supabase.com:5432/postgres"
+        legacy = database_config({**env, "DATABASE_URL": pooler_url + "?options=-c%20jit%3Don"})
+        self.assertIn("-c jit=true", legacy["OPTIONS"]["options"])
+        self.assertNotIn("-c jit=on", legacy["OPTIONS"]["options"])
         for options in ("-c%20jit%3Doff", "-c%20jit%3Don%20-c%20default_transaction_read_only%3Doff"):
             with self.subTest(options=options), self.assertRaises(ImproperlyConfigured):
                 database_config({**env, "DATABASE_URL": URL + "?options=" + options})
