@@ -28,8 +28,22 @@ Les avertissements `treebeard.E001` annoncent une incompatibilité future des
 managers Wagtail avec Treebeard 6. La version installée est 5.3.1 et Wagtail
 impose `<6` ; les avertissements ne sont pas supprimés.
 
-La CI exécute aussi ces vérifications sur Linux avec Python 3.12 et 3.13.
-Les résultats Actions du correctif sont consignés après leur exécution.
+## Résultats GitHub Actions
+
+Commit correctif : [`9fae4f952336dad68b8538bb9f847a2c6b0bd47a`](https://github.com/TIADRA432/kaloum24/commit/9fae4f952336dad68b8538bb9f847a2c6b0bd47a).
+
+- [Workflow V2 réussi](https://github.com/TIADRA432/kaloum24/actions/runs/41514543094) :
+  Linux Python 3.12 et 3.13, chacun avec 10 tests de régression et 3 tests
+  upstream réussis, génération réelle, dépendances et checks validés.
+  Huit avertissements Treebeard par check, aucune erreur.
+- [Workflow existant Graphify réussi](https://github.com/TIADRA432/kaloum24/actions/runs/41514543063) :
+  graphe construit et **512/512 tests V1 réussis**. Il a été déclenché
+  automatiquement par le push et n'a pas été modifié. Ces tests existants
+  utilisent des données et bases temporaires isolées, sans secret Supabase.
+- `main` vérifié après publication : toujours
+  `1a898e8c6f365920df1c968cefe9d74e5f2f5907`.
+- Copie locale alignée sur le commit publié ; seuls les fichiers `v2/**` et
+  `.github/workflows/wagtail-v2-bootstrap.yml` diffèrent du parent initial.
 
 ## Supabase : observation réelle en lecture seule
 
@@ -52,10 +66,11 @@ fourni par un canal sécurisé.
 
 ## Limites et suite autorisée
 
-Aucun staging, aucune migration (y compris base de test), aucun chargement de
-fixtures, utilisateur ou rôle créé, aucune écriture en base, aucun changement
-Render. Seuls `v2/**` et le workflow V2 sont modifiés. La suite V1 et les tests
-upstream qui nécessitent des écritures n'ont pas été exécutés.
+Aucun staging, aucune migration ni écriture sur Supabase, aucun changement
+Render. La validation V2 n'a créé ni migré de base de test et n'a chargé ni
+fixtures, utilisateur ou rôle en base. Seuls `v2/**` et le workflow V2 sont
+modifiés. Les tests upstream nécessitant des écritures n'ont pas été exécutés ;
+la suite V1 a été exécutée automatiquement dans sa CI isolée préexistante.
 
 1. Fournir de manière sécurisée l'URL PostgreSQL du projet existant et exécuter
    `python check_supabase_readonly.py` ; vérifier éventuellement `verify-full`

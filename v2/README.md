@@ -98,7 +98,9 @@ La CI vérifie Python 3.12 et 3.13, les régressions du bootstrap/configuration,
 la génération réelle, les dépendances, les checks Django et trois tests upstream
 `SimpleTestCase`, exécutés via `unittest` sans création de base ni migrations.
 Elle ne reçoit aucun secret Supabase. Les tests upstream nécessitant une base
-et les tests V1 Flask avec écritures ne sont pas lancés dans cette intervention.
+ne sont pas lancés. Le workflow Graphify préexistant lance automatiquement les
+tests Flask V1 dans des bases temporaires isolées ; ce workflow reste inchangé.
+Voir [le rapport de validation](VALIDATION.md) pour les résultats et liens Actions.
 
 Les huit avertissements `treebeard.E001` constatés avec treebeard 5.3.1 concernent
 les managers Wagtail et une future incompatibilité avec Treebeard 6 ; Wagtail
