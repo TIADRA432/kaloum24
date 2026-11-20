@@ -62,8 +62,31 @@ class Command(BaseCommand):
         )
         groupe.permissions.set(perms)
 
+        self._placeholder()
         self._admin()
         self.stdout.write("Initialisation Kaloum24 terminée.")
+
+    def _placeholder(self):
+        """Recopie l'image par défaut dans le stockage si son fichier a disparu
+        (disque éphémère de Render avant le branchement de Supabase Storage)."""
+        from django.contrib.staticfiles.finders import find
+        from django.core.files.base import ContentFile
+        from django.core.files.storage import default_storage
+
+        from kaloum24_v2.images.models import CustomImage
+
+        chemin = find("images/placeholder-image.webp")
+        if not chemin:
+            return
+        with open(chemin, "rb") as f:
+            contenu = f.read()
+        for image in CustomImage.objects.filter(tags__name="placeholder"):
+            if image.file and not default_storage.exists(image.file.name):
+                # Écriture directe : évite le recalcul des dimensions sur un fichier absent.
+                nom = default_storage.save(image.file.name, ContentFile(contenu))
+                CustomImage.objects.filter(pk=image.pk).update(file=nom)
+                image.renditions.all().delete()
+                self.stdout.write(f"Image par défaut restaurée : {nom}")
 
     def _navigation(self, site, listing):
         from kaloum24_v2.navigation.models import NavigationSettings

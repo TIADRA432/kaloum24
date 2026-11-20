@@ -26,3 +26,34 @@ class InitKaloum24Tests(TestCase):
         r = self.client.get("/admin/")
         self.assertEqual(r.status_code, 302)
         self.assertIn("/admin/login/", r["Location"])
+
+
+class ImageParDefautTests(TestCase):
+    def test_fichier_perdu_est_restaure(self):
+        import tempfile
+
+        from django.core.files.base import ContentFile
+        from django.core.files.storage import default_storage
+        from django.test import override_settings
+
+        from kaloum24_v2.images.models import CustomImage
+
+        with tempfile.TemporaryDirectory() as tmp, override_settings(MEDIA_ROOT=tmp):
+            from io import BytesIO
+
+            from PIL import Image
+
+            tampon = BytesIO()
+            Image.new("RGB", (10, 10), "white").save(tampon, "PNG")
+            image = CustomImage(title="Placeholder Image")
+            image.file.save("Placeholder_Image.png", ContentFile(tampon.getvalue()), save=False)
+            image.width = image.height = 10
+            image.save()
+            image.tags.add("placeholder")
+            nom = image.file.name
+            default_storage.delete(nom)  # le disque éphémère a tout perdu
+            self.assertFalse(default_storage.exists(nom))
+            call_command("init_kaloum24", verbosity=0)
+            image.refresh_from_db()
+            self.assertTrue(default_storage.exists(image.file.name))
+            self.assertGreater(default_storage.size(image.file.name), 1000)
