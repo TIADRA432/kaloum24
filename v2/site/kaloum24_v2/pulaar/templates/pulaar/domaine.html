@@ -1,0 +1,15 @@
+{% extends "pulaar/base.html" %}
+{% block titre %}{{ domaine.name }} — Dictionnaire Pulaar{% endblock %}
+
+{% block entete %}
+  <h1>{{ domaine.name }}</h1>
+  <p>{{ termes|length }} terme{{ termes|length|pluralize }} dans ce domaine.</p>
+{% endblock %}
+
+{% block contenu %}
+<p class="tc-fil"><a href="{% url 'pulaar:accueil' %}">← Tous les domaines</a></p>
+{% for t in termes %}{% include "pulaar/_carte.html" %}
+{% empty %}
+<p class="tc-vide">Aucun terme dans ce domaine pour l'instant.</p>
+{% endfor %}
+{% endblock %}

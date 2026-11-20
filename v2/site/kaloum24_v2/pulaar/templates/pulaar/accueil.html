@@ -1,0 +1,50 @@
+{% extends "pulaar/base.html" %}
+{% load pulaar_tags %}
+{% block titre %}Dictionnaire Pulaar{% endblock %}
+
+{% block entete %}
+  <h1>Dictionnaire Pulaar</h1>
+  <p>Un dictionnaire pulaar en construction, avec provenance vérifiée pour
+    chaque terme — {{ total_termes }} terme{{ total_termes|pluralize }} documenté{{ total_termes|pluralize }} pour l'instant.</p>
+  <p class="tc-avis-traduction">
+    <strong>Objectif : un dictionnaire monolingue</strong> — expliquer le pulaar par le pulaar.
+    {{ termes_monolingues }} terme{{ termes_monolingues|pluralize }} sur {{ total_termes }}
+    {% if termes_monolingues == 1 %}a{% else %}ont{% endif %} une définition en pulaar.
+    Seuls des locuteurs peuvent combler cet écart —
+    <a href="{% url 'pulaar:proposer' %}?lang={{ langue_ui }}" style="color:var(--tc-or);">contribue une définition</a>.
+  </p>
+  <form class="tc-recherche" method="get" action="{% url 'pulaar:accueil' %}">
+    <input type="hidden" name="lang" value="{{ langue_ui }}">
+    <input type="text" name="q" value="{{ q }}" placeholder="{% t 'chercher' %} — {% t 'mot' %} pulaar {% t 'ou' %} français…">
+    <button type="submit">{% t 'chercher' %}</button>
+  </form>
+{% endblock %}
+
+{% block contenu %}
+{% if q %}
+  <h2>Résultats pour « {{ q }} »</h2>
+  {% for t in resultats %}{% include "pulaar/_carte.html" %}
+  {% empty %}
+  <p class="tc-vide">Aucun résultat pour « {{ q }} ». <a href="{% url 'pulaar:proposer' %}">Propose ce mot</a> si tu connais sa définition.</p>
+  {% endfor %}
+{% else %}
+  {% if domaines %}
+  <h2>{% t 'domaine' %}s</h2>
+  <div class="tc-domaines">
+    {% for d in domaines %}<a href="{% url 'pulaar:domaine' d.slug %}">{{ d.name }}</a>{% endfor %}
+  </div>
+  {% endif %}
+
+  <h2>{% t 'tous_les_termes' %}</h2>
+  {% for t in tous_termes %}{% include "pulaar/_carte.html" %}
+  {% empty %}
+  <p class="tc-vide">Le dictionnaire est encore vide.</p>
+  {% endfor %}
+  {% if total_termes > 100 %}
+  <p class="tc-vide">100 premiers termes affichés sur {{ total_termes }} — utilise la recherche pour trouver les autres.</p>
+  {% endif %}
+{% endif %}
+
+<hr class="tc-separateur--fin">
+<p><a href="{% url 'pulaar:proposer' %}?lang={{ langue_ui }}" class="tc-bouton tc-bouton--secondaire">{% t 'proposer_un_mot' %}</a></p>
+{% endblock %}

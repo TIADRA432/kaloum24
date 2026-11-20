@@ -1,0 +1,52 @@
+{% extends "pulaar/base.html" %}
+{% block titre %}Proposer un mot — Dictionnaire Pulaar{% endblock %}
+
+{% block entete %}
+  <h1>Proposer un mot</h1>
+  <p>Ta proposition part en relecture avant toute publication — jamais visible directement.</p>
+{% endblock %}
+
+{% block contenu %}
+<p class="tc-fil"><a href="{% url 'pulaar:accueil' %}">← Retour à la recherche</a></p>
+
+{% if form.non_field_errors %}<div class="tc-note">{{ form.non_field_errors.0 }}</div>{% endif %}
+
+<form method="post">
+  {% csrf_token %}
+  <div class="tc-champ">
+    <label for="id_term_lemma">Mot en pulaar</label>
+    <input type="text" id="id_term_lemma" name="term_lemma" value="{{ form.term_lemma.value|default:'' }}" required>
+  </div>
+  <div class="tc-champ">
+    <label for="id_definition_ff">Définition en pulaar</label>
+    <textarea id="id_definition_ff" name="definition_ff" placeholder="Expliquer ce mot en pulaar même — c'est ce qui fait un dictionnaire monolingue.">{{ form.definition_ff.value|default:'' }}</textarea>
+  </div>
+  <div class="tc-champ">
+    <label for="id_definition_fr">Définition en français</label>
+    <textarea id="id_definition_fr" name="definition_fr">{{ form.definition_fr.value|default:'' }}</textarea>
+    <p class="tc-fil" style="margin-top:0.3rem;">Une des deux définitions suffit — le pulaar seul est
+      parfaitement valable, c'est même l'objectif.</p>
+  </div>
+  <div class="tc-champ">
+    <label for="id_domain">Domaine (facultatif)</label>
+    {{ form.domain }}
+  </div>
+  <div class="tc-champ">
+    <label for="id_justification">D'où vient ce mot ? (facultatif, mais aide beaucoup la relecture)</label>
+    <textarea id="id_justification" name="justification" placeholder="Ex. : entendu dans ma famille, tiré d'un livre, variante régionale…">{{ form.justification.value|default:'' }}</textarea>
+  </div>
+  <div class="tc-champ">
+    <label for="id_contributor_name">Ton nom (facultatif)</label>
+    <input type="text" id="id_contributor_name" name="contributor_name" value="{{ form.contributor_name.value|default:'' }}">
+  </div>
+  <div class="tc-champ">
+    <label for="id_contributor_contact">Contact (facultatif — jamais publié, sert seulement à te poser une question)</label>
+    <input type="text" id="id_contributor_contact" name="contributor_contact" value="{{ form.contributor_contact.value|default:'' }}">
+  </div>
+  <div style="position:absolute;left:-9999px;" aria-hidden="true">
+    <label for="id_site_web">Ne pas remplir</label>
+    <input type="text" id="id_site_web" name="site_web" tabindex="-1" autocomplete="off">
+  </div>
+  <button type="submit" class="tc-bouton">Envoyer la proposition</button>
+</form>
+{% endblock %}

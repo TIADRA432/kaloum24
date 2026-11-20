@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.env
+.env.*
+!.env.example
+*.sqlite3
+/venv/
+/.venv/
+/static/
+/media/
+node_modules/
+.DS_Store
+kaloum24_v2/settings/local.py

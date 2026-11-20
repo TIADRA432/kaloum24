@@ -1,0 +1,41 @@
+{% load static pulaar_tags %}<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titre %}Pulaar{% endblock %} — Kaloum24</title>
+  <link rel="icon" href="{% static 'pulaar/img/tiadra/favicon-512.png' %}">
+  <link rel="stylesheet" href="{% static 'pulaar/css/pulaar.css' %}">
+</head>
+<body class="tc">
+  <div class="tc-entete">
+    <div class="tc-corps" style="padding-top:0;padding-bottom:0;">
+      <div class="tc-entete__marque">
+        <img src="{% static 'pulaar/img/tiadra/tiadra-symbol-color.svg' %}" alt="Tiadra Consortium">
+        <span>Tiadra Consortium — Growup the World</span>
+        <span class="tc-langues">
+          <a href="?lang=fr" class="{% if langue_ui == 'fr' %}is-active{% endif %}">Français</a>
+          <a href="?lang=ff" class="{% if langue_ui == 'ff' %}is-active{% endif %}">Pulaar</a>
+        </span>
+      </div>
+      {% if langue_ui == 'ff' %}
+      {% couverture as cov %}
+      <p class="tc-avis-traduction">
+        Interface partiellement traduite ({{ cov.0 }}/{{ cov.1 }} termes) —
+        traductions issues de la localisation fulah officielle de Firefox. Le reste
+        s'affiche en français en attendant la relecture d'un locuteur pulaar.
+      </p>
+      {% endif %}
+      {% block entete %}{% endblock %}
+    </div>
+  </div>
+
+  <div class="tc-corps">
+    <p class="tc-fil"><a href="/">← Retour à Kaloum24</a></p>
+    {% for message in messages %}
+      <div class="tc-note">{{ message }}</div>
+    {% endfor %}
+    {% block contenu %}{% endblock %}
+  </div>
+</body>
+</html>

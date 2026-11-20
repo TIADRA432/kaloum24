@@ -1,0 +1,47 @@
+name: Kaloum24 V2 (Wagtail)
+
+on:
+  workflow_dispatch:
+  push:
+    paths: ['v2/**', '.github/workflows/wagtail-v2.yml']
+  pull_request:
+    paths: ['v2/**', '.github/workflows/wagtail-v2.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        env: {POSTGRES_USER: kal, POSTGRES_PASSWORD: kal, POSTGRES_DB: kaloum}
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U kal" --health-interval 5s --health-timeout 5s --health-retries 10
+    defaults:
+      run:
+        working-directory: v2/site
+    steps:
+      - uses: actions/checkout@v6
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v6
+        with: {python-version: '3.13', cache: pip, cache-dependency-path: v2/site/requirements.txt}
+      - run: python -m pip install -r requirements.txt
+      - run: python -m pip check
+      - name: Tests (SQLite en mémoire, aucun secret)
+        run: python manage.py test kaloum24_v2
+        env: {DJANGO_SETTINGS_MODULE: kaloum24_v2.settings.test}
+      - name: Migrations à jour
+        run: python manage.py makemigrations --check --dry-run
+        env: {DJANGO_SETTINGS_MODULE: kaloum24_v2.settings.test}
+      - name: Build complet sur PostgreSQL éphémère (migrate + init + seed)
+        run: ./build.sh
+        env:
+          DJANGO_SETTINGS_MODULE: kaloum24_v2.settings.render
+          DATABASE_URL: postgresql://kal:kal@localhost:5432/kaloum
+          DATABASE_SSLMODE: prefer
+          SECRET_KEY: ci-only-not-a-secret-0123456789-abcdefghijklmnopqrstuvwxyz
+          SITE_URL: https://ci.invalid
