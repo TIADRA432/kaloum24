@@ -87,10 +87,13 @@ Sécurité Supabase à faire après le premier `migrate` : activer **RLS** sur t
 
 Groupes natifs **Editors** (rédacteurs) et **Moderators** (relecteurs/publication) + groupe **Lexicographes Pulaar** créé par `init_kaloum24`. Le workflow « Moderators approval » est celui de Wagtail : un rédacteur soumet, un modérateur publie. Rubriques = snippets `ArticleTopic` (Politique, Économie, Société, Afrique, Culture, Sport, Pulaar). Signature par défaut : « Rédaction Kaloum24 ». Dictionnaire : menu admin « Dictionnaire Pulaar » (termes, domaines, sources, propositions ; passer une proposition à « Validée » publie le terme).
 
-## 8. Reste à faire (par priorité)
+## 8. État au 2026-11-20 et reste à faire (par priorité)
 
-1. **Déployer** : pousser la branche, créer le service Render, renseigner `DATABASE_URL`, vérifier `/healthz`, `/`, `/actualites/`, `/pulaar/`, `/admin/`.
-2. RLS sur toutes les tables Supabase + export de sauvegarde planifié.
+**En ligne** : service Render `kaloum24-wagtail` (id `srv-dc0cgf3ncjis739esfv0`, branche `feat/kaloum24-v2-render`, https://kaloum24-wagtail.onrender.com), base Supabase migrée (74 tables), `init_kaloum24` et `seed_pulaar` exécutés, `/`, `/actualites/`, `/pulaar/`, `/admin/login/`, `/healthz` répondent 200, `SEO_NOINDEX=true` (retirer au lancement). L'ancien service Flask `kaloum24` (adresse `kaloum24.onrender.com`) plante toujours : à suspendre ou à rediriger.
+**RLS** : activée sur les 74 tables (migration `enable_rls_on_all_public_tables`) + déclencheur d'événement `kaloum24_auto_rls` qui l'active sur les futures tables. L'avertissement Supabase « RLS enabled, no policy » (INFO) est voulu : aucun accès via l'API REST.
+
+1. Connexion admin à vérifier par le propriétaire (compte `samba`), puis supprimer `ADMIN_PASSWORD` de Render. Health check à régler sur `/healthz` au dashboard.
+2. Export de sauvegarde planifié (`pg_dump`) hors de Supabase.
 3. Médias persistants (Supabase Storage via S3) — clés à créer au dashboard par le propriétaire.
 4. Changer le mot de passe admin, retirer `ADMIN_PASSWORD`, **renouveler tous les secrets déjà vus en conversation** (ancienne `SECRET_KEY`, ancien mot de passe admin, ancien jeton GitHub, ancien mot de passe de base).
 5. Parité V1 à décider avec le propriétaire : commentaires, agrégateur RSS (`collector.py`, `scoring_engine.py`), publication programmée (Wagtail le fait nativement), Stripe, WhatsApp/Meta, newsletter (non fonctionnelle en V1).
