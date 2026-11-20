@@ -44,6 +44,8 @@ INSTALLED_APPS = [
     "wagtail.contrib.settings",
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",
+    "wagtail.contrib.sitemaps",
+    "django.contrib.sitemaps",
     "wagtail.sites",
     "wagtail.users",
     "wagtail.snippets",

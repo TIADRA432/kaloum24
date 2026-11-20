@@ -5,15 +5,20 @@ from django.urls import include, path
 
 from wagtail.admin import urls as wagtailadmin_urls
 from wagtail import urls as wagtail_urls
+from wagtail.contrib.sitemaps.views import sitemap
 from wagtail.documents import urls as wagtaildocs_urls
 
 from kaloum24_v2.news.feeds import LatestArticlesFeed
-from kaloum24_v2.public.views import health
+from kaloum24_v2.public.views import health, robots
+from kaloum24_v2.pulaar.sitemaps import PulaarSitemap
+from wagtail.contrib.sitemaps import Sitemap as WagtailSitemap
 from kaloum24_v2.search import views as search_views
 
 urlpatterns = [
     path("healthz", health, name="kaloum24_health"),
     path("healthz/", health),
+    path("robots.txt", robots),
+    path("sitemap.xml", sitemap, {"sitemaps": {"pages": WagtailSitemap, "pulaar": PulaarSitemap}}),
     path("django-admin/", admin.site.urls),
     path("admin/", include(wagtailadmin_urls)),
     path("documents/", include(wagtaildocs_urls)),

@@ -41,4 +41,15 @@ def health(request):
 
 @require_GET
 def robots(request):
-    return HttpResponse("User-agent: *\nDisallow: /\n", content_type="text/plain; charset=utf-8")
+    """robots.txt : tout est fermé tant que SEO_NOINDEX est actif, sinon seules
+    l'administration et la recherche interne sont exclues."""
+    from django.conf import settings
+
+    if settings.SEO_NOINDEX:
+        corps = "User-agent: *\nDisallow: /\n"
+    else:
+        corps = (
+            "User-agent: *\nDisallow: /admin/\nDisallow: /django-admin/\nDisallow: /search/\n"
+            f"Sitemap: {request.build_absolute_uri('/sitemap.xml')}\n"
+        )
+    return HttpResponse(corps, content_type="text/plain; charset=utf-8")

@@ -57,3 +57,26 @@ class ImageParDefautTests(TestCase):
             image.refresh_from_db()
             self.assertTrue(default_storage.exists(image.file.name))
             self.assertGreater(default_storage.size(image.file.name), 1000)
+
+
+class IndexationTests(TestCase):
+    def setUp(self):
+        call_command("init_kaloum24", verbosity=0)
+        call_command("seed_pulaar", verbosity=0)
+
+    def test_robots_ouvert_et_ferme_admin(self):
+        from django.test import override_settings
+
+        with override_settings(SEO_NOINDEX=False):
+            r = self.client.get("/robots.txt")
+            self.assertContains(r, "Disallow: /admin/")
+            self.assertContains(r, "Sitemap: http")
+            self.assertNotContains(r, "Disallow: /\n")
+        with override_settings(SEO_NOINDEX=True):
+            self.assertContains(self.client.get("/robots.txt"), "Disallow: /\n")
+
+    def test_sitemap_pages_et_termes(self):
+        r = self.client.get("/sitemap.xml")
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "/actualites/")
+        self.assertContains(r, "/pulaar/terme/aada/")
