@@ -94,7 +94,7 @@ Groupes natifs **Editors** (rédacteurs) et **Moderators** (relecteurs/publicati
 
 1. Connexion admin à vérifier par le propriétaire (compte `samba`), puis supprimer `ADMIN_PASSWORD` de Render. Health check à régler sur `/healthz` au dashboard.
 2. Export de sauvegarde planifié (`pg_dump`) hors de Supabase.
-3. Médias persistants (Supabase Storage via S3) — clés à créer au dashboard par le propriétaire.
+3. ~~Médias persistants~~ **Fait** (2026-11-20) : bucket public `media` (10 Mo max, images + PDF) sur Supabase Storage via S3, variables `AWS_*` posées sur Render ; vérifié (image envoyée par l'admin présente dans `storage.objects`). Piège : le bucket refuse les fichiers sans extension (`InvalidMimeType`) ; `init_kaloum24` restaure l'image par défaut `original_images/placeholder-image.webp` si son fichier a disparu.
 4. Changer le mot de passe admin, retirer `ADMIN_PASSWORD`, **renouveler tous les secrets déjà vus en conversation** (ancienne `SECRET_KEY`, ancien mot de passe admin, ancien jeton GitHub, ancien mot de passe de base).
 5. Parité V1 à décider avec le propriétaire : commentaires, agrégateur RSS (`collector.py`, `scoring_engine.py`), publication programmée (Wagtail le fait nativement), Stripe, WhatsApp/Meta, newsletter (non fonctionnelle en V1).
 6. Pulaar : plus de définitions monolingues (0/22 aujourd'hui) ; un locuteur doit fournir les 8 chaînes d'interface manquantes (dictionnaire, définition, domaine, proposer un mot, tous les termes, documenté, validé, source).
