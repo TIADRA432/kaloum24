@@ -62,7 +62,10 @@ class Command(BaseCommand):
         )
         groupe.permissions.set(perms)
 
-        self._placeholder()
+        try:
+            self._placeholder()
+        except Exception as exc:  # le stockage ne doit jamais bloquer un déploiement
+            self.stderr.write(f"Image par défaut non restaurée : {exc}")
         self._admin()
         self.stdout.write("Initialisation Kaloum24 terminée.")
 
@@ -83,7 +86,8 @@ class Command(BaseCommand):
         for image in CustomImage.objects.filter(tags__name="placeholder"):
             if image.file and not default_storage.exists(image.file.name):
                 # Écriture directe : évite le recalcul des dimensions sur un fichier absent.
-                nom = default_storage.save(image.file.name, ContentFile(contenu))
+                # Extension .webp obligatoire : le bucket n'accepte que des types MIME connus.
+                nom = default_storage.save("original_images/placeholder-image.webp", ContentFile(contenu))
                 CustomImage.objects.filter(pk=image.pk).update(file=nom)
                 image.renditions.all().delete()
                 self.stdout.write(f"Image par défaut restaurée : {nom}")
