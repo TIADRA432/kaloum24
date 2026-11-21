@@ -52,7 +52,8 @@ jobs:
           test "$T" -ge 50 && test "$P" -ge 1
       - name: Avertissement dépôt public
         if: ${{ !github.event.repository.private }}
-        run: echo "::warning::Dépôt public : la sauvegarde n'est PAS conservée (une archive y serait téléchargeable). Passer le dépôt en privé ou brancher un stockage privé."
+        run: |
+          echo "::warning::Depot public, la sauvegarde n'est PAS conservee (une archive y serait telechargeable). Passer le depot en prive ou brancher un stockage prive."
       - name: Chiffrer
         if: ${{ github.event.repository.private }}
         env:
