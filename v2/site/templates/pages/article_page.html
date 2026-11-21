@@ -3,6 +3,7 @@
 {% load wagtailcore_tags wagtailimages_tags static %}
 
 {% block og_type %}article{% endblock %}
+{% block og_description %}{% firstof page.plain_introduction "L'actualité de Guinée et d'Afrique de l'Ouest, rédigée à Conakry." as desc %}{{ desc|truncatechars:200 }}{% endblock %}
 
 {% block extra_css %}
     <link rel="stylesheet" type="text/css" href="{% static 'news/article.css' %}">
