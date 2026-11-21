@@ -52,14 +52,5 @@ header.site-container::after{content:"";position:absolute;left:0;right:0;bottom:
 @media (prefers-reduced-motion:reduce){.header-logo::before{animation:none}}
 
 /* Hero d'accueil : indigo, médaillon ocre, titre en Unbounded */
-.k24-hero{background:var(--k24-fond);color:var(--k24-indigo);margin-top:18px;padding:3.5rem 0 3rem;position:relative;overflow:hidden}
-.k24-hero__in{position:relative}
-.k24-hero__titre{font-size:clamp(2.2rem,6vw,4.2rem);margin:0 0 1rem;max-width:14ch}
-.k24-hero__texte{max-width:34rem;font-size:1.2rem;color:var(--k24-texte)}
-.dark .k24-hero{color:var(--k24-creme)}
-.k24-hero__texte p{margin:0}
-.k24-hero__medaillon{position:absolute;right:2rem;top:-10px;width:min(34vw,250px);aspect-ratio:1;background:var(--k24-ocre);opacity:.85;
   -webkit-mask:url("medaillon.svg") center/contain no-repeat;mask:url("medaillon.svg") center/contain no-repeat;animation:k24-tourne 90s linear infinite}
-@media (prefers-reduced-motion:reduce){.k24-hero__medaillon{animation:none}}
-.acc{padding-top:2rem}
 .acc > *{animation-fill-mode:both}

@@ -4,29 +4,43 @@
 
 {% block extra_css %}
     <link rel="stylesheet" type="text/css" href="{% static 'home/accueil.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'home/immersif.css' %}">
 {% endblock %}
 
 {% block content %}
-    <section class="k24-hero">
-        <div class="site-padding site-container k24-hero__in">
-            <h1 class="k24-hero__titre">{{ page.title }}</h1>
-            <div class="k24-hero__texte rich-text">
-                {{ page.introduction|richtext }}
-            </div>
-            <span class="k24-hero__medaillon" aria-hidden="true"></span>
+    <section class="i-hero" aria-label="Accueil">
+        <div class="i-stage">
+            <svg class="i-med" viewBox="0 0 200 200" aria-hidden="true"><circle class="r " cx="100" cy="100" r="94" stroke-width="3"/><circle class="r d" cx="100" cy="100" r="80" stroke-width="5" stroke-dasharray="2 7" stroke-linecap="round"/><circle class="r " cx="100" cy="100" r="70" stroke-width="3"/><circle class="r d" cx="100" cy="100" r="60" stroke-width="6"/></svg>
+            <h1 class="i-wm">{{ page.title }}<small>{{ page.introduction|striptags }}</small></h1>
+            <div class="i-hint" aria-hidden="true">Faites défiler<i></i></div>
+            <div class="i-iris"><div class="i-in">
+                <div>
+                    <h2>Ici, on lit la Guinée.</h2>
+                    <p>Actualité, météo et dictionnaire pulaar, rédigés à Conakry.</p>
+                    {% if page.hero_cta %}<div class="pt-8">{% include "components/button.html" with title=page.hero_cta.0.value.get_title url=page.hero_cta.0.value.get_url %}</div>{% endif %}
+                </div>
+                {% if une %}
+                <a class="i-une" href="{% pageurl une %}"><b>À LA UNE</b><h3>{% firstof une.listing_title une.title %}</h3><span>{{ une.display_date }}</span></a>
+                {% endif %}
+            </div></div>
         </div>
     </section>
-    <div class="site-padding site-container">
-        <div class="relative max-w-[872px]">
-            {% if page.hero_cta %}
-                <div class="pt-10">
-                    {% include "components/button.html" with title=page.hero_cta.0.value.get_title url=page.hero_cta.0.value.get_url %}
-                </div>
-            {% endif %}
-        </div>
-    </div>
+
+    {% if par_rubrique %}
+    <section class="i-tissu" aria-label="Rubriques">
+        {% for bloc in par_rubrique %}
+        <a class="i-band {% cycle 'i-b0' 'i-b1' 'i-b2' 'i-b3' %}" href="{% pageurl listing %}?topic={{ bloc.rubrique.slug }}" data-s="{% cycle '-.35' '.3' '-.25' '.4' %}"><span>{{ bloc.rubrique.title }}</span><span>{{ bloc.rubrique.title }}</span><span>{{ bloc.rubrique.title }}</span><span>{{ bloc.rubrique.title }}</span></a>
+        {% endfor %}
+    </section>
+    {% endif %}
 
     {% include "components/accueil-vivant.html" %}
+
+    <section class="i-lettres">
+        <div class="i-g" data-p=".18" style="left:4%;top:8%" aria-hidden="true">ɓ</div><div class="i-g o" data-p="-.12" style="right:6%;top:4%" aria-hidden="true">ɗ</div>
+        <div class="i-g o" data-p=".25" style="left:10%;bottom:4%" aria-hidden="true">ŋ</div><div class="i-g" data-p="-.2" style="right:8%;bottom:2%" aria-hidden="true">ƴ</div>
+        <div class="c"><h2>Le pulaar a ses lettres. Le site les écrit.</h2><p>Un dictionnaire pulaar, avec ses sources et ses locuteurs. Pas de traduction inventée.</p><p><a href="/pulaar/">Ouvrir le dictionnaire</a></p></div>
+    </section>
 
     {% include_block page.body %}
 
@@ -34,3 +48,4 @@
 
 {% endblock %}
 
+{% block extra_js %}{{ block.super }}<script src="{% static 'home/immersif.js' %}" defer></script>{% endblock %}
