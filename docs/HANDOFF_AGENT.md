@@ -105,7 +105,17 @@ Import d'articles versionné (`publier_articles`, appelé par `build.sh`, non bl
 7. Courriels de demande d'autorisation (rédigés, à envoyer par le propriétaire) : DiLAF/LS2N (Chantal Enguehard, univ-nantes.fr) et SIL Dictionaries & Lexicography ; le consentement d'Oumar Bah est nécessaire pour son *Dictionnaire Pular* (Webonary, non libre de droits).
 8. L'audit Graphify (`docs/AUDIT_GRAPHIFY.md`) liste des défauts V1 non corrigés (XSS dans l'aperçu RSS admin, CSRF des paiements, CSP Facebook…) : ne concernent la V2 que si ces fonctions sont reportées.
 
+## 8 bis. Chantiers en cours (verrous)
+
+Ajouter une ligne avant de commencer, la retirer à la fin (voir `AGENTS.md` §6).
+
+| Item backlog | Branche | Qui | Depuis | Déploiement en cours ? |
+|---|---|---|---|---|
+| _(aucun)_ | | | | |
+
 ## 9. Documents
+
+**Entrée agents** : `AGENTS.md` (règles, rôles, cycle, collaboration). **Technique** : `docs/ARCHITECTURE_TECHNIQUE.md`.
 
 **Planification** : `docs/PLAN_EVOLUTION.md` (étude des références, propositions, backlog priorisé et sprints S0–S8) `docs/PLAN_OBSERVATOIRE_PRIX.md` (volet Prix, P1–P4) et `docs/PLAN_COMMUNAUTE.md` (commentaires, comptes, forum : C1–C3). Ce sont les documents de pilotage : suivre l'ordre du backlog (§5 bis), un sprint à la fois.
 
