@@ -30,7 +30,7 @@ Limites de cette étude : l'accueil de Guinéenews a été lu tronqué (météo,
 
 ## 4. Propositions, par thème
 
-**A. Accueil vivant** — À la une (1 grand + 3), Dernières nouvelles, un bloc par rubrique, « En ce moment » (choix de la rédaction ; « Les plus lus » viendra avec un compteur), bandeau météo, **« Mot du jour en Pulaar » tiré du dictionnaire existant** (donnée réelle, sourcée), pied de page complet. Rubriques proposées : Politique, Économie, Société, Faits divers, Sport, Culture, Régions, Mines & Énergie, Afrique & Monde, Opinions & Tribunes, **Langues & Culture** (existe : Pulaar).
+**A. Accueil vivant** — À la une (1 grand + 3), Dernières nouvelles, un bloc par rubrique, **colonne « Flash info / Brèves »** (2–3 lignes horodatées, lieu de retour plusieurs fois par jour), « En ce moment » (choix de la rédaction ; « Les plus lus » viendra avec un compteur), bandeau météo, **« Mot du jour en Pulaar » tiré du dictionnaire existant** (donnée réelle, sourcée), pied de page complet. Rubriques proposées : Politique, Économie, Société, Faits divers, Sport, Culture, Régions, Mines & Énergie, Afrique & Monde, Opinions & Tribunes, **Langues & Culture** (existe : Pulaar).
 
 **B. Revue de presse automatique (licite)** — pour remplir l'accueil sans inventer : agrégateur RSS avec **extrait ≤ 400 caractères + lien vers la source** (règle du projet), sources guinéennes et régionales. Reprend l'idée de `collector.py` (V1) mais propre. Sans cela, l'accueil restera vide.
 
@@ -40,10 +40,11 @@ Limites de cette étude : l'accueil de Guinéenews a été lu tronqué (météo,
 
 **E. Lecture vocale** — réaliste en trois paliers :
 1. *Français / anglais* : bouton « Écouter » via l'API navigateur (Web Speech) : zéro coût, mais qualité et voix dépendent de l'appareil (Chrome bureau : voix en ligne seulement ; non pris en charge dans les WebView Android).
-2. *Audio pré-généré* pour les articles clés (stocké dans le bucket) si la qualité du palier 1 déçoit.
+2. *Audio pré-généré* pour les articles clés (stocké dans le bucket) si la qualité du palier 1 déçoit. **Voies à écarter ou à encadrer** : Edge-TTS est une bibliothèque **non officielle** qui appelle le service vocal du navigateur Edge (Microsoft n'a pas déclaré son usage interdit, mais ce n'est pas une API prévue pour cela et elle peut cesser de fonctionner) ; préférer un service officiel payant si on automatise. Les modèles Meta MMS-TTS (1 107 langues) sont publiés sous licence **CC-BY-NC 4.0, donc non commerciale** : à écarter si le site vend de la publicité ou des sponsors.
+   - **Champ « Version audio »** (ajout issu de l'analyse Gemini) : l'auteur ou un lecteur enregistre l'article au téléphone, le fichier est envoyé dans l'admin (compression en Opus/MP3 léger), et un mini-lecteur façon note vocale s'affiche en haut de l'article. C'est la voie **la plus réaliste en langues locales** et elle est peu coûteuse à construire.
 3. *Pulaar, mandingue, soussou* : **pas de voix standard dans les navigateurs**. Des fournisseurs privés couvrent le fulfulde/wolof (ex. LAfricaMobile) et un modèle ouvert « Kiriku TTS » (wolof, pulaar, sérère) est en cours ; leur qualité n'est pas validée. → **audio enregistré par des locuteurs humains** d'abord ; voix synthétique seulement après validation par un locuteur, avec la mention « voix synthétique ».
 
-**F. Multilingue** — champ « langue » sur chaque article, pages de liste par langue, interface bilingue FR/EN. **Anglais** : brouillon de traduction + relecture humaine, étiqueté. **Pulaar, maninka, soussou, wolof, mandinka** : contenus rédigés **directement** dans la langue par des locuteurs (pas de traduction automatique présentée comme fiable). Outil de traduction de pages Wagtail à évaluer en début de sprint (compatibilité Wagtail 7.4 non vérifiée). Alphabets non latins (N'Ko, Ajami) : plus tard.
+**F. Multilingue** — champ « langue » sur chaque article, pages de liste par langue, interface bilingue FR/EN. **Anglais** : brouillon de traduction + relecture humaine, étiqueté. **Pulaar, maninka, soussou, wolof, mandinka** : contenus rédigés **directement** dans la langue par des locuteurs (pas de traduction automatique présentée comme fiable). Outil de traduction de pages Wagtail à évaluer en début de sprint (compatibilité Wagtail 7.4 non vérifiée). **Liens entre traductions** : un article peut renvoyer à ses versions dans d'autres langues, avec un sélecteur « Lire cet article en : Pulaar | English » en haut de page. **Adlam** (ajout, j'avais omis cet alphabet) : écriture du pulaar créée en Guinée à la fin des années 1980, intégrée à Unicode 9.0 en 2016, écrite de droite à gauche ; la police libre Noto Sans Adlam (licence OFL) existe. À prévoir : prise en charge du sens d'écriture, choix de l'orthographe et du dialecte (décision d'un locuteur), et **aucune conversion automatique latin↔adlam présentée comme fiable**. N'Ko et Ajami : plus tard.
 
 **G. Distribution & légèreté** — PWA (installable, lecture hors-ligne), boutons de partage WhatsApp, chaîne WhatsApp, newsletter, flux RSS par rubrique, budget de poids de page, **sauvegarde automatique de la base hors Supabase** (c'est ainsi que la première base a été perdue).
 
@@ -60,13 +61,13 @@ Chaque sprint = plan → construction → tests → déploiement → vérificati
 | Sprint | Contenu | Critère de réussite (vérifié en production) | Vous |
 |---|---|---|---|
 | **S0 — Cadre** (court) | Décisions §6, rubriques définitives, charte éditoriale (brouillon), mentions légales | Rubriques créées ; charte et mentions publiées en brouillon | Répondre aux 3 questions §6 |
-| **S1 — Accueil vivant + sauvegarde** | Modèle d'accueil (une, derniers articles, blocs par rubrique, mot du jour pulaar, pied de page), menu des rubriques, sauvegarde `pg_dump` planifiée | Accueil rempli avec les articles existants ; 200 partout ; sauvegarde restaurable testée | Aucun |
+| **S1 — Accueil vivant + sauvegarde** | Modèle d'accueil (une, **brèves / flash info**, derniers articles, blocs par rubrique, mot du jour pulaar, pied de page), menu des rubriques, images en WebP avec chargement différé, sauvegarde `pg_dump` planifiée | Accueil rempli avec les articles existants ; 200 partout ; sauvegarde restaurable testée | Aucun |
 | **S2 — Revue de presse** | Agrégateur RSS licite (extrait + lien), page « Revue de presse », bloc d'accueil | ≥ 5 sources, doublons évités, extraits ≤ 400 car., lien d'origine | Valider la liste de sources |
 | **S3 — Météo** | Service + cache + bandeau d'accueil + page `/meteo/` | 10 villes affichées, attribution présente, panne API sans erreur 500 | Dire si monétisation prévue |
-| **S4 — Contributeurs** | Comptes, formulaire → brouillon, étiquettes, page auteur, droit de réponse, signalement | Un contributeur de test soumet ; rien ne paraît avant relecture | Valider la charte (idéalement avocat) |
-| **S5 — Écouter** | Bouton fr/en, lecteur accessible, mention de la limite | Fonctionne sur Chrome Android et un autre navigateur | Test sur votre téléphone |
-| **S6 — Langues** | Champ langue, listes par langue, interface FR/EN, anglais étiqueté | Un article en anglais et un en pulaar (fourni par un locuteur) en ligne | Fournir/valider les textes locaux |
-| **S7 — Distribution** | PWA, partage WhatsApp, newsletter, RSS par rubrique, budget de poids | Installable ; page d'accueil sous le budget fixé | Créer la chaîne WhatsApp |
+| **S4 — Contributeurs** | Comptes, formulaire → brouillon, étiquettes (**Rédaction / Tribune / Contribution / Décryptage**), **fiche auteur** (photo, courte bio, spécialité, lien vers tous ses articles), droit de réponse, signalement | Un contributeur de test soumet ; rien ne paraît avant relecture | Valider la charte (idéalement avocat) |
+| **S5 — Écouter** | Bouton fr/en (voix de l'appareil), **champ « Version audio » + mini-lecteur** (enregistrement humain, tous langages), mention de la limite | Fonctionne sur Chrome Android et un autre navigateur | Test sur votre téléphone |
+| **S6 — Langues** | Champ langue, **liens entre traductions et sélecteur « Lire en… »**, listes par langue, interface FR/EN, anglais étiqueté, **police et sens d'écriture Adlam (optionnel)** | Un article en anglais et un en pulaar (fourni par un locuteur) en ligne | Fournir/valider les textes locaux |
+| **S7 — Distribution** | PWA, partage WhatsApp **avec aperçu soigné (OpenGraph : miniature + titre)**, newsletter, RSS par rubrique, budget de poids | Installable ; page d'accueil sous le budget fixé | Créer la chaîne WhatsApp |
 | **S8 — Widgets** | Nécrologie, emplois, prière, sondage… selon vos priorités | Un widget à la fois, chacun sourcé | Choisir lesquels |
 
 ## 5 bis. Backlog unifié et priorisé (mis à jour le 2026-11-21)
@@ -90,6 +91,7 @@ Le volet **Prix** (détails dans `PLAN_OBSERVATOIRE_PRIX.md`) et deux nouvelles 
 | 13 | S8 | Widgets : nécrologie, emplois, prière, sondage | M | B | M | faible | S1 |
 | 14 | P4 | Signalements sur carte (carburant, embouteillages, électricité) | M | H | L | **modération, rumeurs** | P2 |
 | 15 | M2 | Cours des matières premières minières | B | M | S | licence données | P1 |
+| 16 | S9 | Réactions rapides (« Pertinent / Utile / À débattre »), puis commentaires modérés | H | M | M | **modération et responsabilité légale** | S4, charte |
 
 **Pourquoi cet ordre** : l'accueil et la revue de presse règlent d'abord le « site vide ». Les prix officiels (P1) donnent vite des chiffres crédibles sans dépendre de personne. Les contributions externes (S4, P2) viennent ensuite, car elles exigent la charte et la modération. Les langues locales (S6) avancent **en parallèle** dès que des locuteurs sont disponibles, car elles ne dépendent pas de moi.
 
@@ -103,6 +105,24 @@ Le volet **Prix** (détails dans `PLAN_OBSERVATOIRE_PRIX.md`) et deux nouvelles 
 2. **Monétisation** (publicité, sponsors) prévue à court terme ? *Défaut : on suppose que oui, donc météo à prévoir en licence commerciale.*
 3. **Ouverture externe** : *Défaut : seulement après S4 (charte + relecture), jamais de publication directe.*
 4. **Volet Prix** (voir `PLAN_OBSERVATOIRE_PRIX.md` §12) : nom (*défaut : « Baromètre des prix », pas « Bourse »*), sens de « fréquentation de zones », produits de départ, qui valide les relevés (*défaut : vous*), partenariat éventuel avec SIMPRIX.
+
+## 6 bis. Intégration de l'analyse de Gemini (2026-11-21)
+
+Votre prompt a aussi été soumis à Gemini. Comparaison avec ce plan, après vérification des points techniques :
+
+**Retenu et ajouté** : colonne « Flash info / Brèves » (S1) ; étiquette « Décryptage » et fiche auteur détaillée (S4) ; liens entre traductions + sélecteur « Lire cet article en » (S6) ; **alphabet Adlam** (S6) ; champ « Version audio » téléversé par l'auteur (S5) ; réactions rapides et commentaires modérés (S9) ; aperçu WhatsApp (OpenGraph), images WebP, chargement différé (S1/S7).
+
+**Déjà présent chez nous** : badges Rédaction / Contribution / Opinion, workflow brouillon → relecture → publication (déjà dans Wagtail), météo mise en cache, taux de change (P1), lecture vocale du navigateur, multilingue par article plutôt que traduction automatique, pages légères.
+
+**Corrigé ou mis en garde** :
+- *Meta MMS-TTS* pour le pulaar : licence **non commerciale** (CC-BY-NC 4.0) ; la couverture exacte du fulfulde n'a pas été vérifiée ; qualité non validée par un locuteur.
+- *Edge-TTS* : bibliothèque non officielle, usage non garanti ; ne pas bâtir la production dessus.
+- *Taux de change « en direct »* : la BCRG publie un cours de référence **quotidien** (PDF), pas un flux en direct ; on affichera « cours du jour » avec sa date.
+- *Alerte Harmattan* dans la météo : idée à étudier (poussière/visibilité) ; non vérifiée comme disponible dans la source météo.
+- Affirmations de Gemini sur la concurrence (« forums non modérés », « 100 % français ») : **non vérifiées** ; Seneweb propose par exemple un lien « In English ».
+- Absents de son plan : le **cadre légal** (HAC, diffamation), le **manque de contenu** (revue de presse), la **licence de la météo** si le site vend de la publicité, la règle « IA ≠ autorité linguistique », et tout le volet **Prix**. Je les garde en priorité.
+
+**Ordre** : Gemini place langues et audio avant les widgets. Je maintiens l'ordre du backlog (accueil et contenu d'abord, contributions après la charte), mais le champ « Version audio » (taille S) peut être avancé si vous le souhaitez.
 
 ## 7. Risques
 
@@ -118,4 +138,5 @@ Le volet **Prix** (détails dans `PLAN_OBSERVATOIRE_PRIX.md`) et deux nouvelles 
 - Cadre légal : RSF, page Guinée ; MFWA/Article 19 (suspension presseinvestigation.com, 2025) ; allAfrica, HAC et loi sur la cybersécurité (26 juillet 2025) ; Journal officiel, loi organique sur la liberté de la presse.
 - RFI en fulfulde/mandenkan : France Médias Monde / ModernGhana (janvier lancement) ; Afri'Kibaaru (AFD).
 - Open-Meteo : open-meteo.com (terms, pricing).
+- Licence MMS-TTS (CC-BY-NC 4.0) : Hugging Face, facebook/mms-tts ; Edge-TTS : PyPI/GitHub rany2/edge-tts et Microsoft Q&A « Unofficial Edge TTS API » ; Adlam : Unicode 9.0, Noto Sans Adlam (Google Fonts, OFL), W3C « Adlam Script Resources ».
 - Voix : Readium « SpeechSynthesis in browsers and OSes » ; caniuse SpeechSynthesis ; arXiv 2601.09716 (TTS langues sénégalaises) ; profil Kiriku TTS.
