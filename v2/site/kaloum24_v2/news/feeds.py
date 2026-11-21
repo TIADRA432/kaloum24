@@ -1,9 +1,11 @@
 from django.db.models.functions import Coalesce
+from django.http import Http404
 from django.urls import reverse
 from django.contrib.syndication.views import Feed
 from wagtail.models import Site
 
 from kaloum24_v2.news.models import ArticlePage, NewsListingPage
+from kaloum24_v2.utils.models import ArticleTopic
 
 
 class LatestArticlesFeed(Feed):
@@ -80,3 +82,26 @@ class LatestArticlesFeed(Feed):
         if item.topic:
             return [item.topic.title]
         return []
+
+
+class TopicArticlesFeed(LatestArticlesFeed):
+    """Même flux, limité à une rubrique (`/news/feed/<slug>/`)."""
+
+    def get_object(self, request, slug):
+        self.request = request
+        try:
+            return ArticleTopic.objects.get(slug=slug)
+        except ArticleTopic.DoesNotExist:
+            raise Http404
+
+    def title(self, obj):
+        return f"{super().title(obj)} – {obj.title}"
+
+    def description(self, obj):
+        return f"Les derniers articles de la rubrique {obj.title}."
+
+    def feed_url(self, obj):
+        return self.request.build_absolute_uri(reverse("news_feed_topic", args=[obj.slug]))
+
+    def items(self, obj):
+        return super().items(obj).filter(topic=obj)

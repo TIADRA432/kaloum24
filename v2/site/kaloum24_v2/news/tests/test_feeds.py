@@ -106,3 +106,18 @@ class LatestArticlesFeedTests(TestCase):
         self.assertIn("/news/published-rss-article/", item.findtext("link"))
         self.assertIn("/news/published-rss-article/", item.findtext("guid"))
         self.assertIsNotNone(item.findtext("pubDate"))
+
+
+class TopicFeedTests(LatestArticlesFeedTests):
+    def test_flux_par_rubrique(self):
+        r = self.client.get(reverse("news_feed_topic", args=["technology"]))
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "Published RSS article")
+        self.assertContains(r, "Technology")
+
+    def test_rubrique_inconnue(self):
+        self.assertEqual(self.client.get("/news/feed/inconnue/").status_code, 404)
+
+    def test_page_liste_des_flux(self):
+        r = self.client.get("/flux-rss/")
+        self.assertContains(r, "/news/feed/technology/")

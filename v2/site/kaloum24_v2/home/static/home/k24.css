@@ -234,3 +234,9 @@ footer.site-container .text-black{color:var(--k24-sable)!important}
 .cv-resultat{font-size:clamp(1.4rem,3.5vw,2.1rem);margin:1rem 0}.cv-resultat b{color:var(--k24-indigo)}.dark .cv-resultat b{color:var(--k24-ocre)}
 .cv-erreur{color:#9A2B14;font-weight:600}.dark .cv-erreur{color:#F2A08A}
 @media(max-width:760px){.cv-form{grid-template-columns:1fr}}
+.k24-partage{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;margin:2.2rem 0;padding:1rem 0;border-top:2px solid var(--k24-indigo);border-bottom:2px solid var(--k24-indigo)}
+.k24-partage-titre{font:600 1rem var(--k24-display);margin-right:.4rem}
+.k24-partage a,.k24-partage button{font:600 .95rem var(--k24-corps);padding:.5rem .9rem;border:2px solid var(--k24-indigo);background:#fff;color:var(--k24-indigo)!important;text-decoration:none;cursor:pointer}
+.k24-partage a:hover,.k24-partage button:hover{background:var(--k24-ocre);color:#1b1b2f!important}
+.dark .k24-partage,.dark .k24-partage a,.dark .k24-partage button{border-color:#3a4a94}.dark .k24-partage a,.dark .k24-partage button{background:#18214d;color:var(--k24-creme)!important}
+.flux-liste{columns:2;max-width:40rem;line-height:2;font-size:1.1rem}

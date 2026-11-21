@@ -33,3 +33,5 @@ class PartageArticleTests(TestCase):
         r = self.client.get(art.url)
         self.assertContains(r, "Le chapô de l&#x27;article.")
         self.assertContains(r, 'og:type" content="article"')
+        self.assertContains(r, "https://wa.me/?text=")
+        self.assertContains(r, "facebook.com/sharer")

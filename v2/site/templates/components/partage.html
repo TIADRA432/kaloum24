@@ -1,0 +1,12 @@
+{% comment %}Boutons de partage sans traqueur : liens simples (WhatsApp, Facebook) et copie du lien.{% endcomment %}
+{% load wagtailcore_tags %}
+<aside class="k24-partage" aria-label="Partager cet article">
+    <span class="k24-partage-titre">Partager</span>
+    <a class="k24-partage-wa" href="https://wa.me/?text={{ page.title|urlencode }}%20{{ page.full_url|urlencode }}" target="_blank" rel="noopener">WhatsApp</a>
+    <a class="k24-partage-fb" href="https://www.facebook.com/sharer/sharer.php?u={{ page.full_url|urlencode }}" target="_blank" rel="noopener">Facebook</a>
+    <button type="button" class="k24-partage-copie" data-url="{{ page.full_url }}" hidden>Copier le lien</button>
+</aside>
+<script>
+(function(){var b=document.querySelector('.k24-partage-copie');if(!b||!navigator.clipboard)return;b.hidden=false;
+b.addEventListener('click',function(){navigator.clipboard.writeText(b.dataset.url).then(function(){var t=b.textContent;b.textContent='Lien copié';setTimeout(function(){b.textContent=t},2000)})})})();
+</script>

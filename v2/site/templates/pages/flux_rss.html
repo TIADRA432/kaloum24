@@ -1,0 +1,20 @@
+{% extends "base_page.html" %}
+{% load static %}
+
+{% block og_title %}Flux RSS{% endblock %}
+{% block title %}Flux RSS{% endblock title %}
+
+{% block extra_css %}
+    <link rel="stylesheet" type="text/css" href="{% static 'home/accueil.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="site-padding site-container acc">
+    <h1 class="rp-titre">Flux RSS</h1>
+    <p class="rp-intro">Suivez Kaloum24 dans votre lecteur de flux (Feedly, Inoreader, NetNewsWire…). Copiez l'adresse du flux qui vous intéresse.</p>
+    <ul class="flux-liste">
+        <li><a href="{% url 'news_feed' %}">Tous les articles</a></li>
+        {% for r in rubriques %}<li><a href="{% url 'news_feed_topic' r.slug %}">{{ r.title }}</a></li>{% endfor %}
+    </ul>
+</div>
+{% endblock %}
