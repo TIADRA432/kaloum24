@@ -61,4 +61,4 @@ class SearchViewTests(TestCase):
             format="json",
         )
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, "There are no matching results.")
+        self.assertContains(resp, "Aucun résultat pour cette recherche.")

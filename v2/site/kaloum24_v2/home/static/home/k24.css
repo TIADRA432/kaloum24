@@ -84,3 +84,17 @@ footer.site-container h2{font-family:var(--k24-display)}
 }
 .button-menu-toggle__line{background:var(--k24-creme)!important}
 @media(max-width:640px){.i-wm small{display:none}}
+
+/* Anciennes teintes du gabarit (mackerel) remplacées par la palette Kaloum24 */
+.bg-mackerel-100{background-color:var(--k24-sable)!important}
+.bg-mackerel-200{background-color:var(--k24-ocre)!important}
+.bg-mackerel-300{background-color:var(--k24-indigo)!important}
+.bg-mackerel-400,.hover\:bg-mackerel-400:hover{background-color:var(--k24-nuit)!important}
+.border-mackerel-200{border-color:var(--k24-ocre)!important}
+.border-mackerel-300,.hover\:border-mackerel-300:hover{border-color:var(--k24-indigo)!important}
+.text-mackerel-300{color:var(--k24-ocre-fonce)!important}
+.text-mackerel-400{color:var(--k24-nuit)!important}
+.decoration-mackerel-200,.decoration-mackerel-300,.decoration-mackerel-400,.hover\:decoration-mackerel-300:hover{text-decoration-color:var(--k24-ocre)!important}
+.dark .text-mackerel-300,.dark .text-mackerel-400{color:var(--k24-ocre)!important}
+.dark .bg-mackerel-300,.dark .bg-mackerel-400{background-color:var(--k24-ocre)!important;color:var(--k24-nuit)!important}
+.dark .border-mackerel-300{border-color:var(--k24-ocre)!important}
