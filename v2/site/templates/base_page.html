@@ -15,6 +15,21 @@
 {% url 'news_feed' as news_feed_url %}
 <link rel="alternate" type="application/rss+xml" title="{{ current_site.site_name|default:'News' }} RSS feed" href="{{ news_feed_url }}">
 
+
+{% comment %}Aperçu de partage (WhatsApp, Facebook, X) : titre, description, image 1200×630 et lien canonique.{% endcomment %}
+{% if page.social_image %}{% image page.social_image fill-1200x630 as og_photo %}{% elif page.listing_image %}{% image page.listing_image fill-1200x630 as og_photo %}{% endif %}
+<link rel="canonical" href="{% if page.full_url %}{{ page.full_url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ request.path }}{% endif %}">
+<meta property="og:site_name" content="Kaloum24">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:type" content="{% block og_type %}website{% endblock %}">
+<meta property="og:title" content="{% block og_title %}{% if page.seo_title %}{{ page.seo_title }}{% elif page.title %}{{ page.title }}{% else %}Kaloum24{% endif %}{% endblock %}">
+<meta property="og:description" content="{% if page.social_text %}{{ page.social_text }}{% elif page.search_description %}{{ page.search_description }}{% elif page.listing_summary %}{{ page.listing_summary }}{% else %}{% block og_description %}L'actualité de Guinée et d'Afrique de l'Ouest, rédigée à Conakry.{% endblock %}{% endif %}">
+<meta property="og:url" content="{% if page.full_url %}{{ page.full_url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ request.path }}{% endif %}">
+<meta property="og:image" content="{% if og_photo %}{{ og_photo.full_url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{% static 'home/partage.jpg' %}{% endif %}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+
 {% endblock meta_tags %}
 
 {% block header %}
