@@ -62,6 +62,7 @@
         <script type="text/javascript" src="{% static 'js/main.js' %}"></script>
         <script defer src="{% static 'home/vie.js' %}"></script>
 
+        <script>if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("/sw.js").catch(function(){})})}</script>
         {% block extra_js %}
 
         {% endblock %}

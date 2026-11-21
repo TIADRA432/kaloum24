@@ -7,11 +7,11 @@
 
 {% block meta_tags %}
 
-<link rel="icon" href="{% static 'images/favicons/favicon.ico' %}" sizes="32x32">
-<link rel="icon" href="{% static 'images/favicons/favicon.svg'%}" type="image/svg+xml">
-<link rel="apple-touch-icon" href="{% static 'images/favicons/apple-touch-icon.png' %}">
-<link rel="manifest" href="{% static 'images/favicons/favicon.webmanifest' %}">
-<meta name="theme-color" content="#26899E"/>
+<link rel="icon" href="{% static 'home/icones/icone.svg' %}" type="image/svg+xml">
+<link rel="icon" href="{% static 'home/icones/favicon-32.png' %}" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="{% static 'home/icones/apple-touch-icon.png' %}">
+<link rel="manifest" href="{% url 'manifeste' %}">
+<meta name="theme-color" content="#1E2B63"/>
 {% url 'news_feed' as news_feed_url %}
 <link rel="alternate" type="application/rss+xml" title="{{ current_site.site_name|default:'News' }} RSS feed" href="{{ news_feed_url }}">
 

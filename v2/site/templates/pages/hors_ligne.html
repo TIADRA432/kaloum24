@@ -1,0 +1,17 @@
+{% extends "base_page.html" %}
+{% load static %}
+
+{% block og_title %}Hors ligne{% endblock %}
+{% block title %}Hors ligne{% endblock title %}
+
+{% block extra_css %}
+    <link rel="stylesheet" type="text/css" href="{% static 'home/accueil.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="site-padding site-container acc">
+    <h1 class="rp-titre">Vous êtes hors ligne</h1>
+    <p class="rp-intro">Pas de connexion pour l'instant. Les pages que vous avez déjà ouvertes restent lisibles ; les autres reviendront dès que le réseau sera de retour.</p>
+    <p><button type="button" onclick="location.reload()" class="k24-partage-copie" style="font:600 1rem var(--k24-display);padding:.7rem 1.2rem;background:var(--k24-ocre);color:#1b1b2f;border:2px solid var(--k24-indigo);cursor:pointer">Réessayer</button></p>
+</div>
+{% endblock %}
