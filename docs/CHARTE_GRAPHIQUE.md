@@ -63,6 +63,14 @@ Direction retenue : **indigo + ocre sur crème**, inspirée des photos de réfé
 - Accessibilité : focus visible ocre, `prefers-reduced-motion` respecté.
 - Fait ensuite : pages article, pied de page, mobile, recherche en français, teintes du gabarit remplacées. Reste : listes par rubrique, dictionnaire `/pulaar/`, Safari, et la diversification par page (voir « Une charte, plusieurs ambiances »).
 
+## Images (2026-11-21)
+
+- **Pas d'image dans ni près de l'en-tête** (retour du propriétaire) : la mosaïque photo et le balayage lumineux de la barre supérieure ont été retirés. Le damier sous l'en-tête reste.
+- Photos libres Wikimedia Commons (CC0, CC BY, CC BY-SA, domaine public ; jamais ND), attribution obligatoire, page `/credits-images/`.
+- Miniatures de la revue de presse : validées par le propriétaire.
+- Produits (prix) : pictogrammes SVG dessinés pour Kaloum24 (trait indigo, aplats ocre), aucune photo tierce.
+- Photos de référence du propriétaire : non utilisées tant que source et droits sont inconnus ; usage prévu en fond discret (teinte unique, faible contraste, léger mouvement).
+
 ## Principe : une charte, plusieurs ambiances (demande du propriétaire, 2026-11-21)
 
 Le propriétaire veut une **hyperdiversification** : chaque type de page a son propre décor et ses propres éléments, au lieu d'un seul habillage répété. Se fait **au fil du temps**, page type par page type. Non planifié en sprint pour l'instant.
