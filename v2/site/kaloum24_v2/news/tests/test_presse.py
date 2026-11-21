@@ -1,6 +1,7 @@
 from unittest import mock
 
 from django.test import TestCase
+from django.utils import timezone
 from django.urls import reverse
 
 from kaloum24_v2.news import presse
@@ -59,3 +60,14 @@ class ImageTests(TestCase):
 </channel></rss>"""
         imgs = [e[4] for e in presse.lire_flux(flux.encode())]
         self.assertEqual(imgs, ["https://e.test/img/a.webp", "https://e.test/b.jpg", "", ""])
+
+
+class LangueTests(TestCase):
+    def test_source_fulfulde_marquee(self):
+        from kaloum24_v2.news.models import ArticlePresse, SourcePresse
+
+        s = SourcePresse.objects.create(nom="RFI Fulfulde", site="https://www.rfi.fr/ff/", flux="https://www.rfi.fr/ff/rss", langue="ff")
+        ArticlePresse.objects.create(source=s, titre="Kabaruuji", lien="https://www.rfi.fr/ff/x", publie_le=timezone.now())
+        r = self.client.get("/revue-de-presse/")
+        self.assertContains(r, 'lang="ff"')
+        self.assertContains(r, "Fulfulde")

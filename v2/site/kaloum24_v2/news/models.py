@@ -221,6 +221,7 @@ class SourcePresse(models.Model):
     flux = models.URLField("flux RSS", help_text="Adresse du flux RSS public.")
     actif = models.BooleanField("actif", default=True, help_text="Décocher pour arrêter la reprise de cette source.")
     note = models.CharField("note", max_length=240, blank=True, help_text="Licence, accord, remarque interne.")
+    langue = models.CharField("langue", max_length=5, default="fr", help_text="Code de langue des titres : fr, ff (fulfulde/pulaar)… Les titres ne sont jamais traduits automatiquement.")
     images = models.BooleanField("afficher les miniatures", default=True, help_text="Les images restent chez l'éditeur (lien direct, rien n'est copié). Décocher pour les masquer.")
     derniere_collecte = models.DateTimeField("dernière collecte", null=True, blank=True, editable=False)
     derniere_erreur = models.CharField("dernière erreur", max_length=240, blank=True, editable=False)

@@ -222,3 +222,5 @@ footer.site-container .text-black{color:var(--k24-sable)!important}
 
 .px-carte{position:relative;padding-right:5rem}.px-ico{position:absolute;right:.8rem;top:.8rem;color:var(--k24-indigo);opacity:.95}.dark .px-ico{color:var(--k24-creme)}
 .px-nom--ico{display:flex;align-items:center;gap:.7rem}.px-ligne .px-ico{position:static;width:40px;height:40px;flex:none;color:var(--k24-indigo)}.dark .px-ligne .px-ico{color:var(--k24-creme)}
+.rp-langue{display:inline-block;margin-left:.4rem;padding:0 .45rem;font:600 .8rem var(--k24-corps);background:var(--k24-ocre);color:#1b1b2f;border-radius:2px}
+.acc-meteo em{display:block;font-style:normal;font-size:.8rem;opacity:.7}

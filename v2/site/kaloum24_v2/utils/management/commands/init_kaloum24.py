@@ -26,6 +26,10 @@ SOURCES_PRESSE = [  # nom, site, flux, actif, note
     ("Guinée Matin", "https://guineematin.com", "https://guineematin.com/feed/", True, "Flux RSS public ; extrait + lien."),
     ("Le Jour Guinée", "https://www.lejourguinee.com", "https://www.lejourguinee.com/feed/", True, "Flux RSS public ; extrait + lien."),
     ("Le Révélateur 224", "https://www.lerevelateur224.com", "https://www.lerevelateur224.com/feed/", True, "Flux RSS public ; extrait + lien."),
+    ("Fouta Ka Meen", "https://foutakameen.com", "https://foutakameen.com/feed/", True, "Flux RSS public (WordPress) ; extrait + lien. Actualité du Fouta."),
+    ("Kumpital", "https://kumpital.com", "https://kumpital.com/feed/", True, "Flux RSS public (WordPress) ; extrait + lien. Publie rarement."),
+    ("RFI Fulfulde", "https://www.rfi.fr/ff/", "https://www.rfi.fr/ff/rss", False,
+     "DÉSACTIVÉ : conditions de réutilisation des flux RFI à vérifier (usage commercial). Titres en fulfulde, non traduits. Activer seulement après accord."),
     ("RFI Afrique", "https://www.rfi.fr/fr/afrique/", "https://www.rfi.fr/fr/afrique/rss", False,
      "DÉSACTIVÉ : conditions de réutilisation des flux RFI à vérifier (usage commercial). Activer seulement après accord."),
 ]
@@ -195,4 +199,6 @@ class Command(BaseCommand):
         from kaloum24_v2.news.models import SourcePresse
 
         for nom, site, flux, actif, note in SOURCES_PRESSE:
-            SourcePresse.objects.get_or_create(flux=flux, defaults={"nom": nom, "site": site, "actif": actif, "note": note})
+            SourcePresse.objects.get_or_create(
+                flux=flux, defaults={"nom": nom, "site": site, "actif": actif, "note": note,
+                                     "langue": "ff" if "/ff/" in flux else "fr"})

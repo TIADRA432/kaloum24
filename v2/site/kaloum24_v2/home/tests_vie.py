@@ -70,6 +70,6 @@ class MetNorwayTests(TestCase):
         faux.__enter__ = lambda s: s
         faux.__exit__ = lambda *a: None
         with mock.patch("urllib.request.urlopen", return_value=faux):
-            v = m._une_ville(("Conakry", 9.5, -13.6))
+            v = m._une_ville(("Conakry", 9.5, -13.6, "Guinée"))
         self.assertEqual(v["temperature"], 30)
         self.assertEqual(v["libelle"], "Partiellement nuageux")

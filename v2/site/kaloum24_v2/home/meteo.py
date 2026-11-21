@@ -15,16 +15,27 @@ from django.core.cache import cache
 
 log = logging.getLogger(__name__)
 
-VILLES = [  # nom, latitude, longitude
-    ("Conakry", 9.5370, -13.6785),
-    ("Labé", 11.3182, -12.2833),
-    ("Kankan", 10.3854, -9.3057),
-    ("Nzérékoré", 7.7562, -8.8179),
-    ("Dakar", 14.6937, -17.4441),
-    ("Bamako", 12.6392, -8.0029),
-    ("Abidjan", 5.3600, -4.0083),
+VILLES = [  # nom, latitude, longitude, pays : la Guinée d'abord, puis le monde peul d'ouest en est
+    ("Conakry", 9.5370, -13.6785, "Guinée"),
+    ("Labé", 11.3182, -12.2833, "Guinée"),
+    ("Mamou", 10.3755, -12.0915, "Guinée"),
+    ("Kankan", 10.3854, -9.3057, "Guinée"),
+    ("Nzérékoré", 7.7562, -8.8179, "Guinée"),
+    ("Saint-Louis", 16.0179, -16.4896, "Sénégal"),
+    ("Dakar", 14.6937, -17.4441, "Sénégal"),
+    ("Matam", 15.6559, -13.2554, "Sénégal"),
+    ("Bamako", 12.6392, -8.0029, "Mali"),
+    ("Mopti", 14.4843, -4.1830, "Mali"),
+    ("Abidjan", 5.3600, -4.0083, "Côte d'Ivoire"),
+    ("Accra", 5.6037, -0.1870, "Ghana"),
+    ("Dori", 14.0354, -0.0346, "Burkina Faso"),
+    ("Sokoto", 13.0059, 5.2476, "Nigéria"),
+    ("Yola", 9.2035, 12.4954, "Nigéria"),
+    ("Maroua", 10.5910, 14.3159, "Cameroun"),
+    ("Ngaoundéré", 7.3167, 13.5833, "Cameroun"),
+    ("Bambari", 5.7622, 20.6750, "Centrafrique"),
 ]
-CLE, CLE_SECOURS = "meteo:v2", "meteo:v2:secours"
+CLE, CLE_SECOURS = "meteo:v3", "meteo:v3:secours"
 DUREE, DUREE_SECOURS = 3 * 3600, 24 * 3600
 URL = "https://api.met.no/weatherapi/locationforecast/2.0/compact?lat={:.4f}&lon={:.4f}"
 AGENT = "Kaloum24/1.0 (+https://kaloum24.onrender.com)"
@@ -51,7 +62,7 @@ def _decrire(symbole):
 
 
 def _une_ville(ville):
-    nom, lat, lon = ville
+    nom, lat, lon, pays = ville
     req = urllib.request.Request(URL.format(lat, lon), headers={"User-Agent": AGENT})
     with urllib.request.urlopen(req, timeout=3) as r:  # court : ne jamais bloquer une page
         data = json.loads(r.read().decode("utf-8"))
@@ -60,7 +71,7 @@ def _une_ville(ville):
     resume = next((premier[k]["summary"]["symbol_code"] for k in ("next_1_hours", "next_6_hours", "next_12_hours")
                    if k in premier), "")
     libelle, icone = _decrire(resume)
-    return {"nom": nom, "temperature": round(temp), "libelle": libelle, "symbole": icone}
+    return {"nom": nom, "pays": pays, "temperature": round(temp), "libelle": libelle, "symbole": icone}
 
 
 def _telecharger():
