@@ -28,8 +28,8 @@ SOURCES_PRESSE = [  # nom, site, flux, actif, note
     ("Le Révélateur 224", "https://www.lerevelateur224.com", "https://www.lerevelateur224.com/feed/", True, "Flux RSS public ; extrait + lien."),
     ("Fouta Ka Meen", "https://foutakameen.com", "https://foutakameen.com/feed/", True, "Flux RSS public (WordPress) ; extrait + lien. Actualité du Fouta."),
     ("Kumpital", "https://kumpital.com", "https://kumpital.com/feed/", True, "Flux RSS public (WordPress) ; extrait + lien. Publie rarement."),
-    ("RFI Fulfulde", "https://www.rfi.fr/ff/", "https://www.rfi.fr/ff/rss", False,
-     "DÉSACTIVÉ : conditions de réutilisation des flux RFI à vérifier (usage commercial). Titres en fulfulde, non traduits. Activer seulement après accord."),
+    ("RFI Fulfulde", "https://www.rfi.fr/ff/", "https://www.rfi.fr/ff/rss", True,
+     "Activé à la demande du responsable éditorial. Titres en fulfulde, non traduits ; extrait + lien. Conditions de réutilisation RFI à confirmer."),
     ("RFI Afrique", "https://www.rfi.fr/fr/afrique/", "https://www.rfi.fr/fr/afrique/rss", False,
      "DÉSACTIVÉ : conditions de réutilisation des flux RFI à vérifier (usage commercial). Activer seulement après accord."),
 ]
