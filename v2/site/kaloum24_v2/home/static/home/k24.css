@@ -54,3 +54,33 @@ header.site-container::after{content:"";position:absolute;left:0;right:0;bottom:
 /* Hero d'accueil : indigo, médaillon ocre, titre en Unbounded */
   -webkit-mask:url("medaillon.svg") center/contain no-repeat;mask:url("medaillon.svg") center/contain no-repeat;animation:k24-tourne 90s linear infinite}
 .acc > *{animation-fill-mode:both}
+
+/* Pages article */
+.art-meta{font-family:var(--k24-display)!important;font-size:.8rem!important}
+.art-meta .text-mackerel-300{color:var(--k24-ocre-fonce)!important;font-weight:600}
+.dark .art-meta .text-mackerel-300{color:var(--k24-ocre)!important}
+article h1,main h1.font-serif4,h1.font-serif4{font-family:var(--k24-display)!important;font-weight:600!important;letter-spacing:-.015em;line-height:1.08;color:var(--k24-indigo);font-size:clamp(2rem,5vw,3.6rem)!important}
+.dark h1.font-serif4{color:var(--k24-creme)}
+.rich-text{font-family:var(--k24-corps);font-size:1.15rem;line-height:1.75}
+.rich-text a{color:var(--k24-indigo);text-decoration-color:var(--k24-ocre);text-decoration-thickness:2px;text-underline-offset:4px}
+.dark .rich-text a{color:var(--k24-ocre)}
+.rich-text h2,.rich-text h3{font-family:var(--k24-display);color:var(--k24-indigo);margin-top:2rem}
+.dark .rich-text h2,.dark .rich-text h3{color:var(--k24-creme)}
+.rich-text blockquote{border-left:6px solid var(--k24-ocre);padding-left:1.2rem;font-style:italic}
+.k24-progress{position:fixed;left:0;top:0;height:5px;width:100%;background:var(--k24-ocre);transform:scaleX(0);transform-origin:left;z-index:60}
+@supports (animation-timeline:scroll()){.k24-progress{animation:k24-prog linear both;animation-timeline:scroll(root)}@keyframes k24-prog{to{transform:scaleX(1)}}}
+
+/* Pied de page */
+.bg-slash{background:repeating-linear-gradient(90deg,var(--k24-ocre) 0 14px,var(--k24-creme) 14px 18px,var(--k24-indigo) 18px 32px,var(--k24-creme) 32px 36px)!important;opacity:1!important;height:12px!important}
+footer.site-container{max-width:none;background:var(--k24-indigo);color:var(--k24-creme);margin-top:1rem}
+footer.site-container a,footer.site-container h2,footer.site-container p{color:var(--k24-creme)!important;text-decoration-color:var(--k24-ocre)!important}
+footer.site-container h2{font-family:var(--k24-display)}
+
+/* Mobile */
+@media(max-width:640px){
+ .header-logo{font-size:1.4rem!important}.header-logo::before{width:1.9rem;height:1.9rem}
+ .acc-nav a{font-size:.75rem}
+ .i-med{--m:96vmin}
+}
+.button-menu-toggle__line{background:var(--k24-creme)!important}
+@media(max-width:640px){.i-wm small{display:none}}
