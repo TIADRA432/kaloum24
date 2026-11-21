@@ -1,0 +1,22 @@
+{% extends "base_page.html" %}
+{% load static %}
+
+{% block title %}Météo{% endblock title %}
+
+{% block extra_css %}
+    <link rel="stylesheet" type="text/css" href="{% static 'home/accueil.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="site-padding site-container acc">
+    <h1 class="rp-titre">Météo</h1>
+    <p class="rp-intro">Températures du moment dans les villes de Guinée et dans la région, du Sénégal au Cameroun. Prévisions de l'institut météorologique norvégien (MET Norway), mises à jour toutes les 3 heures.</p>
+    {% for pays, villes in groupes %}
+    <h2 class="acc-titre">{{ pays }}</h2>
+    <div class="acc-meteo">
+        {% for v in villes %}<div><span aria-hidden="true">{{ v.symbole }}</span> {{ v.nom }}<b>{{ v.temperature }}°C</b><small>{{ v.libelle }}</small></div>{% endfor %}
+    </div>
+    {% empty %}<p class="rp-vide">La météo est momentanément indisponible. Réessayez dans quelques minutes.</p>{% endfor %}
+    <p class="acc-meteo-credit">Météo : <a href="https://api.met.no/">MET Norway</a> (licence CC BY 4.0). Ce sont des prévisions, pas des relevés officiels.</p>
+</div>
+{% endblock %}
