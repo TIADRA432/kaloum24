@@ -1,6 +1,6 @@
 # Kaloum24 — Plan d'évolution (sprints)
 
-> Rédigé le 2026-11-21. Complète `HANDOFF_AGENT.md` (état technique) et `GUIDE_REDACTION_WAGTAIL.md` (équipe).
+> Rédigé le 2026-11-21, enrichi le même jour (volet Prix, backlog unifié §5 bis). Complète `HANDOFF_AGENT.md` (état technique), `GUIDE_REDACTION_WAGTAIL.md` (équipe) et `PLAN_OBSERVATOIRE_PRIX.md` (volet Prix).
 > Règles du projet inchangées : aucun contenu inventé, « IA ≠ autorité linguistique », provenance obligatoire, aucun secret dans le code.
 
 ## 1. Point de départ (constat)
@@ -47,6 +47,10 @@ Limites de cette étude : l'accueil de Guinéenews a été lu tronqué (météo,
 
 **G. Distribution & légèreté** — PWA (installable, lecture hors-ligne), boutons de partage WhatsApp, chaîne WhatsApp, newsletter, flux RSS par rubrique, budget de poids de page, **sauvegarde automatique de la base hors Supabase** (c'est ainsi que la première base a été perdue).
 
+**I. Baromètre des prix** — prix réels du marché guinéen (moto, riz, carburant, transport, loyers, bétail…), officiels et citoyens, avec contrôle qualité. Voir `PLAN_OBSERVATOIRE_PRIX.md` (sprints P1–P4).
+
+**J. Appels d'offres et marchés publics** — rubrique de service (sprint M1).
+
 **H. Widgets utiles (au choix, après le cœur)** — nécrologie / avis de décès et offres d'emploi (très présents chez les références), horaires de prière, sondage du jour, « chiffre du jour », taux de change GNF (source officielle à identifier), résultats sportifs.
 
 ## 5. Sprints (ordre proposé)
@@ -65,11 +69,40 @@ Chaque sprint = plan → construction → tests → déploiement → vérificati
 | **S7 — Distribution** | PWA, partage WhatsApp, newsletter, RSS par rubrique, budget de poids | Installable ; page d'accueil sous le budget fixé | Créer la chaîne WhatsApp |
 | **S8 — Widgets** | Nécrologie, emplois, prière, sondage… selon vos priorités | Un widget à la fois, chacun sourcé | Choisir lesquels |
 
+## 5 bis. Backlog unifié et priorisé (mis à jour le 2026-11-21)
+
+Le volet **Prix** (détails dans `PLAN_OBSERVATOIRE_PRIX.md`) et deux nouvelles pistes s'ajoutent aux sprints S0–S8. Taille : **S** = 1 cycle « go », **M** = 2–3, **L** = 4 ou plus. Valeurs : H = élevée, M = moyenne, B = basse.
+
+| Ordre | Id | Chantier | Valeur audience | Différenciation | Taille | Risque | Dépend de |
+|---|---|---|---|---|---|---|---|
+| 1 | S0 | Cadre, rubriques, charte | M | B | S | légal | vos réponses §6 |
+| 2 | S1 | Accueil vivant + sauvegarde base | H | M | M | faible | S0 |
+| 3 | S2 | Revue de presse licite | H | B | M | licences sources | S1 |
+| 4 | P1 | Prix : fondations + données officielles + « Chiffres du jour » | H | H | M | extraction PDF | S1 |
+| 5 | S3 | Météo Afrique de l'Ouest | H | H | S | licence si pub | S1 |
+| 6 | S4 | Contributeurs (brouillons + relecture) | M | H | M | **légal élevé** | S0 (charte) |
+| 7 | P2 | Prix : contributions citoyennes + contrôle qualité | H | **très H** | L | qualité des données, légal | P1, S4 |
+| 8 | S7 | Distribution : PWA, WhatsApp, newsletter, RSS | H | M | M | faible | S1 |
+| 9 | S5 | Bouton « Écouter » fr/en | M | H | S | faible | — |
+| 10 | P3 | Prix : graphiques dans articles, « Panier de la ménagère », données ouvertes | H | H | M | faible | P2 |
+| 11 | S6 | Langues (anglais, puis langues locales par des locuteurs) | M | **très H** | L | validation humaine | locuteurs |
+| 12 | M1 | Appels d'offres et marchés publics | M | H | M | sources/licences | S2 |
+| 13 | S8 | Widgets : nécrologie, emplois, prière, sondage | M | B | M | faible | S1 |
+| 14 | P4 | Signalements sur carte (carburant, embouteillages, électricité) | M | H | L | **modération, rumeurs** | P2 |
+| 15 | M2 | Cours des matières premières minières | B | M | S | licence données | P1 |
+
+**Pourquoi cet ordre** : l'accueil et la revue de presse règlent d'abord le « site vide ». Les prix officiels (P1) donnent vite des chiffres crédibles sans dépendre de personne. Les contributions externes (S4, P2) viennent ensuite, car elles exigent la charte et la modération. Les langues locales (S6) avancent **en parallèle** dès que des locuteurs sont disponibles, car elles ne dépendent pas de moi.
+
+**Deux pistes** : *Technique* (moi, en cycles « go ») et *Humaine* (vous : charte à valider par un juriste, liste de sources, locuteurs pulaar/maninka/soussou, premiers contributeurs de prix, chaîne WhatsApp).
+
+**Règle de fonctionnement** : un sprint à la fois ; critère de réussite vérifié en production avant de passer au suivant ; compte rendu court ; mise à jour de `HANDOFF_AGENT.md` à la fin de chaque sprint.
+
 ## 6. Décisions à prendre (valeurs par défaut si vous ne tranchez pas)
 
 1. **Statut légal** : Kaloum24 est-il déclaré (procureur / HAC) et qui est le directeur de publication ? *Défaut : je prépare les mentions légales avec un champ à compléter, rien d'inventé.*
 2. **Monétisation** (publicité, sponsors) prévue à court terme ? *Défaut : on suppose que oui, donc météo à prévoir en licence commerciale.*
 3. **Ouverture externe** : *Défaut : seulement après S4 (charte + relecture), jamais de publication directe.*
+4. **Volet Prix** (voir `PLAN_OBSERVATOIRE_PRIX.md` §12) : nom (*défaut : « Baromètre des prix », pas « Bourse »*), sens de « fréquentation de zones », produits de départ, qui valide les relevés (*défaut : vous*), partenariat éventuel avec SIMPRIX.
 
 ## 7. Risques
 

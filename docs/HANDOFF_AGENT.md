@@ -107,4 +107,6 @@ Import d'articles versionné (`publier_articles`, appelé par `build.sh`, non bl
 
 ## 9. Documents
 
+**Planification** : `docs/PLAN_EVOLUTION.md` (étude des références, propositions, backlog priorisé et sprints S0–S8) et `docs/PLAN_OBSERVATOIRE_PRIX.md` (volet Prix, sprints P1–P4). Ce sont les documents de pilotage : suivre l'ordre du backlog (§5 bis), un sprint à la fois.
+
 `docs/v2/` (architecture, plan de migration, plan de tests, feuille de route : historique du prototype), `PLAN_PULAAR.md`, `PLAN_REDACTION.md`, `GUIDE_REDACTION.md`, `docs/RECOVERY_RENDER_DATABASE_2026-10-31.md` (sur sa branche), catalogue de ressources Pulaar (`catalogue_ressources_pulaar.md`).
