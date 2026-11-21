@@ -1,0 +1,9 @@
+{% load wagtailimages_tags %}
+<figure class="art-figure">
+    {% image value.image width-1000 format-webp as photo %}
+    <img src="{{ photo.url }}" width="{{ photo.width }}" height="{{ photo.height }}" loading="lazy"
+         alt="{% firstof value.image_alt_text photo.alt %}">
+    {% if value.caption or value.credit %}
+        <figcaption>{{ value.caption }}{% if value.credit %} <span class="art-credit">{{ value.credit }}</span>{% endif %}</figcaption>
+    {% endif %}
+</figure>

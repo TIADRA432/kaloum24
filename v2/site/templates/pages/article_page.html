@@ -2,18 +2,21 @@
 {% extends "base_page.html" %}
 {% load wagtailcore_tags wagtailimages_tags static %}
 
+{% block extra_css %}
+    <link rel="stylesheet" type="text/css" href="{% static 'news/article.css' %}">
+{% endblock %}
+
 {% block content %}
 {% block breadcrumbs %}
     {% include "navigation/breadcrumbs.html" %}
 {% endblock %}
 <div class="site-padding site-container gap-10 pt-20 md:pt-28 tall:md:pt-40 pb-10 md:pb-20 flex flex-col lg:flex-row">
     <div class="max-w-[872px]">
-        <p class="text-sm md:text-base text-grey-700 dark:text-grey-200 font-codepro pt-0 pb-10">
-            <span class="text-sm md:text-base text-mackerel-300 font-medium uppercase">
-                {{ page.topic }}
-            </span>{% include "icons/slash.html" with class="inline fill-current w-4 h-4" %}{% include "icons/slash.html" with class="inline -ml-1 fill-current w-4 h-4" %}<span class="text-sm md:text-base text-grey-700 dark:text-grey-200">
-                {{ page.display_date }}
-            </span>
+        <p class="art-meta text-sm md:text-base text-grey-700 dark:text-grey-200 font-codepro pt-0 pb-10">
+            <span class="text-sm md:text-base text-mackerel-300 font-medium uppercase">{{ page.topic }}</span>
+            <span>{{ page.display_date }}</span>
+            {% if page.dateline %}<span class="art-dateline">{{ page.dateline }}</span>{% endif %}
+            <span>{{ page.reading_time }}&nbsp;min de lecture</span>
         </p>
         <h1 class="font-serif4 font-bold text-4xl lg:text-7xl">
             {{ page.title }}
@@ -63,13 +66,22 @@
 
 
     </div>
-    {% if page.image.0.value.caption %}
-        <p class="text-sm leading-6 py-5">{{ page.image.0.value.caption }}</p>
+    {% if page.image.0.value.caption or page.image.0.value.credit %}
+        <p class="text-sm leading-6 py-5">{{ page.image.0.value.caption }}{% if page.image.0.value.credit %} <span class="art-credit">{{ page.image.0.value.credit }}</span>{% endif %}</p>
     {% endif %}
 </div>
 {% endif %}
 
 {% include_block page.body %}
+
+{% if page.sources %}
+<div class="site-padding site-container">
+    <section class="art-sources" aria-labelledby="sources-titre">
+        <h2 id="sources-titre">Sources</h2>
+        <div class="rich-text">{{ page.sources|richtext }}</div>
+    </section>
+</div>
+{% endif %}
 
 {% include "components/related-pages.html" %}
 

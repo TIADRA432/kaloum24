@@ -1,3 +1,4 @@
+from .article import ArticleBody, ArticleBoxBlock, ArticleImageBlock, ArticleQuoteBlock
 from .content import (
     AccordionBlock,
     AccordionItemBlock,
@@ -26,6 +27,10 @@ from .layout import (
 )
 
 __all__ = [
+    "ArticleBody",
+    "ArticleBoxBlock",
+    "ArticleImageBlock",
+    "ArticleQuoteBlock",
     "AccordionBlock",
     "AccordionItemBlock",
     "ArticlePageLinkBlock",

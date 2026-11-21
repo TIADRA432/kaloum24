@@ -62,12 +62,56 @@ class Command(BaseCommand):
         )
         groupe.permissions.set(perms)
 
+        self._roles(NewsListingPage.objects.first())
         try:
             self._placeholder()
         except Exception as exc:  # le stockage ne doit jamais bloquer un déploiement
             self.stderr.write(f"Image par défaut non restaurée : {exc}")
         self._admin()
         self.stdout.write("Initialisation Kaloum24 terminée.")
+
+    def _groupe(self, ancien, nouveau):
+        """Renomme un groupe Wagtail d'origine en français. Renvoie (groupe, neuf) ;
+        « neuf » vaut True seulement la première fois : on ne réécrit jamais des
+        droits que l'administrateur aurait ajustés depuis."""
+        if Group.objects.filter(name=nouveau).exists():
+            return Group.objects.get(name=nouveau), False
+        groupe = Group.objects.filter(name=ancien).first()
+        if groupe:
+            groupe.name = nouveau
+            groupe.save()
+            return groupe, True
+        return Group.objects.create(name=nouveau), True
+
+    def _roles(self, listing):
+        """Deux rôles de rédaction, limités à la rubrique « Actualités » :
+        Rédacteurs (écrivent et soumettent) et Relecteurs (relisent et publient)."""
+        from wagtail.models import GroupPagePermission, GroupApprovalTask, Task, Workflow
+
+        if listing is None:
+            return
+        redacteurs, r_neuf = self._groupe("Editors", "Rédacteurs")
+        relecteurs, l_neuf = self._groupe("Moderators", "Relecteurs")
+
+        def droit(code):
+            return Permission.objects.get(content_type__app_label="wagtailcore",
+                                          content_type__model="page", codename=code)
+
+        if r_neuf or l_neuf:
+            for groupe, codes in ((redacteurs, ["add_page", "change_page"]),
+                                  (relecteurs, ["add_page", "change_page", "publish_page",
+                                                "lock_page", "unlock_page"])):
+                GroupPagePermission.objects.filter(group=groupe, page__depth=1).delete()  # fin des droits sur tout le site
+                for code in codes:
+                    GroupPagePermission.objects.get_or_create(group=groupe, page=listing, permission=droit(code))
+            for groupe in (redacteurs, relecteurs):
+                groupe.permissions.add(*Permission.objects.filter(
+                    content_type__app_label="wagtailadmin", codename="access_admin"))
+
+            Workflow.objects.filter(name="Moderators approval").update(name="Relecture éditoriale")
+            for tache in Task.objects.filter(name="Moderators approval"):
+                tache.name = "Relecture par un relecteur"
+                tache.save()
 
     def _placeholder(self):
         """Recopie l'image par défaut dans le stockage si son fichier a disparu

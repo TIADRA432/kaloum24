@@ -29,6 +29,7 @@ class CaptionedImageBlock(blocks.StructBlock):
         help_text="If left blank, the image's global alt text will be used.",
     )
     caption = blocks.CharBlock(required=False)
+    credit = blocks.CharBlock(required=False, label="Crédit photo")
 
     class Meta:
         icon = "image"
