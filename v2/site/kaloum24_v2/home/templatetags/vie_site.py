@@ -66,3 +66,16 @@ def chiffres_du_jour():
         return sortie
     except Exception:
         return []
+
+
+@register.simple_tag
+def illustrations():
+    """Photos libres de droits (Wikimedia Commons) avec auteur, licence et lien : credits.json à côté des images."""
+    import json
+    from pathlib import Path
+
+    try:
+        chemin = Path(__file__).resolve().parents[1] / "static" / "home" / "illustrations" / "credits.json"
+        return json.loads(chemin.read_text(encoding="utf-8"))
+    except Exception:
+        return []

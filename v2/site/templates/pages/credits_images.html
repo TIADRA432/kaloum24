@@ -1,0 +1,17 @@
+{% extends "base_page.html" %}
+{% load static vie_site %}
+{% block title %}Crédits des images{% endblock title %}
+{% block content %}
+<div class="site-padding site-container acc">
+    <h1 class="rp-titre">Crédits des images</h1>
+    <p class="rp-intro">Les photographies d'illustration de Kaloum24 sont publiées sous licences libres sur Wikimedia Commons. Chaque auteur est cité ; le lien mène à la fiche d'origine, avec le texte de la licence. Les miniatures de la revue de presse appartiennent à leurs médias et restent hébergées chez eux.</p>
+    {% illustrations as photos %}
+    <ul class="gi-credits">
+        {% for p in photos %}
+        <li><img src="{% static 'home/illustrations/' %}{{ p.fichier }}" alt="{{ p.legende }}" loading="lazy" width="160" height="110">
+            <div><b>{{ p.legende }}</b><br>Photo : {{ p.auteur }} · {{ p.licence }} · <a href="{{ p.page }}" rel="noopener">fiche Wikimedia Commons</a></div></li>
+        {% endfor %}
+    </ul>
+    <p class="rp-credit">Météo : MET Norway (CC BY 4.0). Prix : Programme alimentaire mondial, via HDX (CC BY-IGO). Polices : Unbounded et Charis SIL (licence OFL).</p>
+</div>
+{% endblock %}

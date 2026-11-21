@@ -20,11 +20,14 @@
     {% if page_obj %}
     <ul class="rp-liste">
         {% for a in page_obj %}
-        <li class="rp-item">
+        <li class="rp-item{% if a.image and a.source.images %} rp-avec-img{% endif %}">
+            {% if a.image and a.source.images %}<a class="rp-img" href="{{ a.lien }}" rel="noopener nofollow" target="_blank" tabindex="-1" aria-hidden="true"><img src="{{ a.image }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.closest('.rp-item').classList.remove('rp-avec-img');this.parentNode.remove()"><span>Image : {{ a.source.nom }}</span></a>{% endif %}
+            <div class="rp-corps">
             <span class="rp-source">{{ a.source.nom }}</span>
             <h2><a href="{{ a.lien }}" rel="noopener nofollow" target="_blank">{{ a.titre }}</a></h2>
             {% if a.extrait %}<p>{{ a.extrait }}</p>{% endif %}
             <span class="acc-date">{{ a.publie_le|date:"j F Y, H\hi" }}</span>
+            </div>
         </li>
         {% endfor %}
     </ul>

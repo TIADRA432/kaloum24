@@ -186,3 +186,38 @@ footer.site-container .text-black{color:var(--k24-sable)!important}
 .px-courbe{width:100%;height:auto}.px-legende{font-size:.9rem;margin:.4rem 0 0;color:var(--k24-texte)}
 .px-marches{list-style:none;padding:0;max-width:46rem;margin:0 0 2rem}
 .px-marches li{display:flex;justify-content:space-between;padding:.7rem 0;border-bottom:1px solid #d9d4c7}
+
+/* Revue de presse : miniatures (images restées chez l'éditeur, crédit visible) */
+.rp-avec-img{display:grid;grid-template-columns:minmax(150px,230px) 1fr;gap:1.2rem;align-items:start}
+.rp-img{display:block;position:relative;aspect-ratio:16/10;overflow:hidden;background:var(--k24-sable);border-bottom:4px solid var(--k24-ocre)}
+.rp-img img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s}
+.rp-item:hover .rp-img img{transform:scale(1.05)}
+.rp-img span{position:absolute;left:0;bottom:0;right:0;font:400 .72rem var(--k24-corps);color:#fff;background:linear-gradient(transparent,rgba(14,20,51,.85));padding:1rem .5rem .3rem}
+@media(max-width:600px){.rp-avec-img{grid-template-columns:1fr}}
+
+/* La Guinée en images (photos libres, crédits visibles) */
+.gi{padding:3.5rem 0 3rem;background:var(--k24-fond);position:relative;overflow:hidden}
+.gi::before{content:"";position:absolute;left:0;right:0;top:0;height:14px;background:repeating-linear-gradient(90deg,var(--k24-ocre) 0 14px,var(--k24-creme) 14px 18px,var(--k24-indigo) 18px 32px,var(--k24-creme) 32px 36px);animation:k24-derive 40s linear infinite}
+@keyframes k24-derive{to{background-position:360px 0}}
+.gi-titre{font:600 clamp(1.6rem,4vw,2.6rem) var(--k24-display);color:var(--k24-indigo);width:min(1100px,90vw);margin:0 auto 1.6rem}
+.dark .gi-titre{color:var(--k24-creme)}
+.gi-grille{width:min(1100px,90vw);margin:0 auto;display:grid;grid-template-columns:repeat(6,1fr);grid-auto-rows:clamp(120px,17vw,210px);gap:.9rem}
+.gi-fig{margin:0;position:relative;overflow:hidden;background:var(--k24-nuit)}
+.gi-fig--1{grid-column:1/5;grid-row:1/3}.gi-fig--2{grid-column:5/7;grid-row:1/2}.gi-fig--3{grid-column:5/7;grid-row:2/3}.gi-fig--4{grid-column:1/7;grid-row:3/4}
+.gi-fig img{width:100%;height:100%;object-fit:cover;display:block;transform:scale(1.08);transition:transform 1.2s ease}
+.gi-fig:hover img{transform:scale(1.15)}
+.gi-fig figcaption{position:absolute;left:0;right:0;bottom:0;padding:1.6rem .8rem .55rem;color:#fff;font:400 .95rem var(--k24-corps);background:linear-gradient(transparent,rgba(14,20,51,.9))}
+.gi-fig figcaption small{display:block;font-size:.72rem;opacity:.85}
+@supports (animation-timeline:view()){.gi-fig img{animation:gi-par linear both;animation-timeline:view();animation-range:cover}@keyframes gi-par{from{transform:scale(1.18) translateY(-6%)}to{transform:scale(1.18) translateY(6%)}}}
+@media(max-width:640px){.gi-grille{grid-template-columns:1fr 1fr}.gi-fig--1{grid-column:1/3;grid-row:auto}.gi-fig--2,.gi-fig--3{grid-column:auto;grid-row:auto}.gi-fig--4{grid-column:1/3;grid-row:auto}}
+.gi-lien{width:min(1100px,90vw);margin:1rem auto 0;font-size:.95rem}
+.gi-credits{list-style:none;padding:0;display:grid;gap:1rem;max-width:46rem;margin:1.5rem 0}
+.gi-credits li{display:flex;gap:1rem;align-items:center}.gi-credits img{object-fit:cover;flex:none}
+
+/* Arrière-plans vivants : bulles-médaillons qui montent, bandes qui dérivent */
+.i-lettres .i-bulle{position:absolute;bottom:-120px;width:90px;height:90px;background:var(--k24-ocre);opacity:.28;z-index:0;-webkit-mask:url("medaillon.svg") center/contain no-repeat;mask:url("medaillon.svg") center/contain no-repeat;animation:k24-monte 18s linear infinite}
+.i-bulle--1{left:22%}.i-bulle--2{left:52%;width:60px;height:60px;animation-duration:24s;animation-delay:-8s;background:var(--k24-indigo)}.i-bulle--3{left:80%;width:120px;height:120px;animation-duration:30s;animation-delay:-15s}
+@keyframes k24-monte{to{transform:translateY(-110vh) rotate(180deg)}}
+.vie-barre{background-image:linear-gradient(90deg,transparent 0,rgba(224,138,46,.12) 50%,transparent 100%);background-size:300px 100%;animation:k24-balaye 12s linear infinite}
+@keyframes k24-balaye{from{background-position:-300px 0}to{background-position:100vw 0}}
+@media(prefers-reduced-motion:reduce){.gi::before,.i-bulle,.vie-barre{animation:none!important}.gi-fig img{animation:none!important;transform:none!important}}

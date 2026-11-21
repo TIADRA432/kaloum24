@@ -221,6 +221,7 @@ class SourcePresse(models.Model):
     flux = models.URLField("flux RSS", help_text="Adresse du flux RSS public.")
     actif = models.BooleanField("actif", default=True, help_text="Décocher pour arrêter la reprise de cette source.")
     note = models.CharField("note", max_length=240, blank=True, help_text="Licence, accord, remarque interne.")
+    images = models.BooleanField("afficher les miniatures", default=True, help_text="Les images restent chez l'éditeur (lien direct, rien n'est copié). Décocher pour les masquer.")
     derniere_collecte = models.DateTimeField("dernière collecte", null=True, blank=True, editable=False)
     derniere_erreur = models.CharField("dernière erreur", max_length=240, blank=True, editable=False)
 
@@ -240,6 +241,7 @@ class ArticlePresse(models.Model):
     titre = models.CharField("titre", max_length=300)
     extrait = models.CharField("extrait", max_length=420, blank=True)
     lien = models.URLField("lien d'origine", max_length=600, unique=True)
+    image = models.URLField("image (lien chez l'éditeur)", max_length=600, blank=True)
     publie_le = models.DateTimeField("publié le")
     visible = models.BooleanField("visible", default=True, help_text="Décocher pour retirer un titre du site.")
 

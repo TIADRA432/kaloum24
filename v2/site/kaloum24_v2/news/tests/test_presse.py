@@ -21,7 +21,7 @@ class PresseTests(TestCase):
     def test_lecture_extrait_et_entites(self):
         entrees = presse.lire_flux(FLUX.encode())
         self.assertEqual(len(entrees), 1)
-        titre, extrait, lien, _ = entrees[0]
+        titre, extrait, lien, _, image = entrees[0]
         self.assertEqual(titre, "Titre été")
         self.assertLessEqual(len(extrait), 400)
         self.assertTrue(extrait.endswith("…"))
@@ -47,3 +47,15 @@ class PresseTests(TestCase):
         self.src.actif = False
         self.src.save()
         self.assertNotContains(self.client.get(reverse("revue_de_presse")), "Un titre")
+
+
+class ImageTests(TestCase):
+    def test_extraction_image(self):
+        flux = """<?xml version="1.0"?><rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel>
+<item><title>A</title><link>https://e.test/a</link><media:thumbnail url="https://e.test/img/a.webp"/></item>
+<item><title>B</title><link>https://e.test/b</link><description>&lt;p&gt;&lt;img src="https://e.test/b.jpg" /&gt;Texte&lt;/p&gt;</description></item>
+<item><title>C</title><link>https://e.test/c</link><description>&lt;img src="http://e.test/non-https.jpg"&gt;</description></item>
+<item><title>D</title><link>https://e.test/d</link><description>&lt;img src="https://secure.gravatar.com/x.jpg"&gt;</description></item>
+</channel></rss>"""
+        imgs = [e[4] for e in presse.lire_flux(flux.encode())]
+        self.assertEqual(imgs, ["https://e.test/img/a.webp", "https://e.test/b.jpg", "", ""])

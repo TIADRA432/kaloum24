@@ -27,7 +27,29 @@ CONSERVER = 400  # nombre maximal de titres gardés en base
 DELAI = 30 * 60  # secondes entre deux collectes (collecte « paresseuse » à la visite)
 VERROU = "presse:verrou"
 
-NS = {"dc": "http://purl.org/dc/elements/1.1/", "content": "http://purl.org/rss/1.0/modules/content/"}
+NS = {"dc": "http://purl.org/dc/elements/1.1/", "content": "http://purl.org/rss/1.0/modules/content/",
+      "media": "http://search.yahoo.com/mrss/"}
+RE_IMG = re.compile(r"""<img[^>]+src=["']([^"']+)["']""", re.I)
+
+
+def trouver_image(item):
+    """Lien de l'image d'illustration indiquée dans le flux (media, enclosure ou 1re balise img). Jamais copiée."""
+    candidats = []
+    for balise in ("media:thumbnail", "media:content"):
+        for el in item.findall(balise, NS):
+            candidats.append(el.get("url"))
+    for el in item.findall("enclosure"):
+        if (el.get("type") or "").startswith("image"):
+            candidats.append(el.get("url"))
+    for brut in (item.findtext("content:encoded", namespaces=NS), item.findtext("description")):
+        m = RE_IMG.search(html.unescape(brut or ""))
+        if m:
+            candidats.append(m.group(1))
+    for c in candidats:
+        c = (c or "").strip()
+        if c.startswith("https://") and len(c) <= 600 and not re.search(r"(gravatar|avatar|emoji|pixel|logo|favicon|spacer)", c, re.I):
+            return c
+    return ""
 
 
 def nettoyer(texte):
@@ -47,7 +69,7 @@ def couper(texte, maxi=EXTRAIT_MAX):
 
 
 def lire_flux(contenu):
-    """Retourne [(titre, extrait, lien, datetime)] depuis un flux RSS 2.0 (octets)."""
+    """Retourne [(titre, extrait, lien, datetime, image)] depuis un flux RSS 2.0 (octets)."""
     texte = contenu.decode("utf-8", "replace") if isinstance(contenu, bytes) else contenu
     # certains flux (ex. Guinéenews) emploient des entités HTML (&eacute;) invalides en XML
     texte = re.sub(r"&([A-Za-z][A-Za-z0-9]*);",
@@ -68,7 +90,7 @@ def lire_flux(contenu):
                 quand = quand.replace(tzinfo=dt_tz.utc)
         except (TypeError, ValueError):
             quand = timezone.now()
-        sortie.append((titre[:300], extrait, lien[:600], quand))
+        sortie.append((titre[:300], extrait, lien[:600], quand, trouver_image(item)))
     return sortie
 
 
@@ -88,9 +110,12 @@ def collecter_source(source):
         log.warning("Revue de presse: %s ignorée (%s)", source.nom, source.derniere_erreur)
         return 0
     nouveaux = 0
-    for titre, extrait, lien, quand in entrees[:40]:
-        _, cree = ArticlePresse.objects.get_or_create(
-            lien=lien, defaults={"source": source, "titre": titre, "extrait": extrait, "publie_le": quand})
+    for titre, extrait, lien, quand, image in entrees[:40]:
+        obj, cree = ArticlePresse.objects.get_or_create(
+            lien=lien, defaults={"source": source, "titre": titre, "extrait": extrait, "publie_le": quand, "image": image})
+        if not cree and image and not obj.image:
+            obj.image = image
+            obj.save(update_fields=["image"])
         nouveaux += cree
     source.derniere_collecte, source.derniere_erreur = timezone.now(), ""
     source.save(update_fields=["derniere_collecte", "derniere_erreur"])

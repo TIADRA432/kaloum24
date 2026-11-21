@@ -1,0 +1,16 @@
+{% load static vie_site %}
+{% illustrations as photos %}
+{% if photos %}
+<section class="gi" aria-label="La Guinée en images">
+    <h2 class="gi-titre">La Guinée en images</h2>
+    <div class="gi-grille">
+        {% for p in photos %}
+        <figure class="gi-fig gi-fig--{{ forloop.counter }}">
+            <img src="{% static 'home/illustrations/' %}{{ p.fichier }}" alt="{{ p.legende }}" loading="lazy" decoding="async">
+            <figcaption>{{ p.legende }}<small>Photo : {{ p.auteur }} · {{ p.licence }}</small></figcaption>
+        </figure>
+        {% endfor %}
+    </div>
+    <p class="gi-lien"><a href="{% url 'credits_images' %}">Crédits des images</a></p>
+</section>
+{% endif %}
