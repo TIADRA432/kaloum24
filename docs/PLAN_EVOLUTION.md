@@ -52,6 +52,8 @@ Limites de cette étude : l'accueil de Guinéenews a été lu tronqué (météo,
 
 **K. Communauté** — comptes lecteurs, commentaires modérés, réactions (C1), forum à sections (C2), blogs écartés pour l'instant (C3). Voir `PLAN_COMMUNAUTE.md`.
 
+**L. Outils pratiques (idée du propriétaire, 2026-11-21, NON planifiée — à rappeler plus tard)** — passer de « lire » à « faire » : calculateurs et petits services utiles aux lecteurs. Exemple cité : **convertisseur de devises** (GNF, FCFA XOF/XAF, autres monnaies de la sous-région) avec cours du jour. Autres pistes à étudier au fil de l'eau : calculs pratiques, recherches utiles. Contraintes connues : le cours de référence de la BCRG est quotidien (PDF), pas en direct → afficher « cours du jour » avec date et source ; sourcer chaque taux ; pas de conseil financier. À rapprocher de P1 (taux de change) et S8 (widgets). **Action pour moi : rappeler cette idée au propriétaire à la fin de P1 ou de S3.**
+
 **J. Appels d'offres et marchés publics** — rubrique de service (sprint M1).
 
 **H. Widgets utiles (au choix, après le cœur)** — nécrologie / avis de décès et offres d'emploi (très présents chez les références), horaires de prière, sondage du jour, « chiffre du jour », taux de change GNF (source officielle à identifier), résultats sportifs.
