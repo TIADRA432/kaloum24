@@ -61,4 +61,21 @@ Direction retenue : **indigo + ocre sur crème**, inspirée des photos de réfé
 - Signature : médaillon concentrique (`medaillon.svg`, masque CSS) dans le logo (rotation lente) et le hero ; bande tissée ocre/indigo sous l'en-tête.
 - Mode sombre : fond nuit indigo, liens ocre clair.
 - Accessibilité : focus visible ocre, `prefers-reduced-motion` respecté.
-- Reste à faire : pages article, dictionnaire `/pulaar/` (kit Tiadra), pied de page, contrôle de contraste complet, vue mobile.
+- Fait ensuite : pages article, pied de page, mobile, recherche en français, teintes du gabarit remplacées. Reste : listes par rubrique, dictionnaire `/pulaar/`, Safari, et la diversification par page (voir « Une charte, plusieurs ambiances »).
+
+## Principe : une charte, plusieurs ambiances (demande du propriétaire, 2026-11-21)
+
+Le propriétaire veut une **hyperdiversification** : chaque type de page a son propre décor et ses propres éléments, au lieu d'un seul habillage répété. Se fait **au fil du temps**, page type par page type. Non planifié en sprint pour l'instant.
+
+**Règle** : ce qui reste commun = les tokens `--k24-*` (couleurs, polices, contrastes, accessibilité, mouvement réduit). Ce qui change par page = motif, composition, mouvement, illustration. Chaque ambiance est un fichier CSS (+ JS léger) chargé **uniquement** sur sa page (poids maîtrisé pour les connexions lentes).
+
+| Page type | Ambiance proposée (à valider) | État |
+|---|---|---|
+| Accueil | Le seuil (cercles), étoffes par rubrique, lettres du pulaar | **fait** |
+| Article | Lecture calme, barre de progression | base faite, à enrichir |
+| Liste / rubrique | À décider : une ambiance par rubrique (motif et teinte dominante propres) | à faire |
+| Dictionnaire pulaar | Charte Tiadra + motifs peuls, sur validation des locuteurs | à faire |
+| Météo, Prix, Revue de presse | Une identité par service (données lisibles d'abord) | à faire |
+| Pages cadre (À propos, mentions) | Sobre | à faire |
+
+**Contraintes** : pas d'imitation de motifs réels sans source ; aucun sens inventé ; poids de page surveillé ; contraste ≥ 4,5 ; respect de « mouvement réduit ».
