@@ -121,3 +121,10 @@ class TopicFeedTests(LatestArticlesFeedTests):
     def test_page_liste_des_flux(self):
         r = self.client.get("/flux-rss/")
         self.assertContains(r, "/news/feed/technology/")
+
+
+class TopicFeedAccentTests(TestCase):
+    def test_rubrique_au_slug_accentue(self):
+        ArticleTopic.objects.create(title="Économie", slug="économie")
+        self.assertEqual(self.client.get("/flux-rss/").status_code, 200)
+        self.assertEqual(self.client.get("/news/feed/économie/").status_code, 200)

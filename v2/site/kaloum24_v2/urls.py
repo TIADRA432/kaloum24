@@ -34,7 +34,7 @@ urlpatterns = [
     path("revue-de-presse/", presse_views.revue, name="revue_de_presse"),
     path("search/", search_views.search, name="search"),
     path("news/feed/", LatestArticlesFeed(), name="news_feed"),
-    path("news/feed/<slug:slug>/", TopicArticlesFeed(), name="news_feed_topic"),
+    path("news/feed/<str:slug>/", TopicArticlesFeed(), name="news_feed_topic"),
     path("flux-rss/", home_views.flux_rss, name="flux_rss"),
 ]
 
