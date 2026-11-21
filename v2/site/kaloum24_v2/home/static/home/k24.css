@@ -218,6 +218,7 @@ footer.site-container .text-black{color:var(--k24-sable)!important}
 .i-lettres .i-bulle{position:absolute;bottom:-120px;width:90px;height:90px;background:var(--k24-ocre);opacity:.28;z-index:0;-webkit-mask:url("medaillon.svg") center/contain no-repeat;mask:url("medaillon.svg") center/contain no-repeat;animation:k24-monte 18s linear infinite}
 .i-bulle--1{left:22%}.i-bulle--2{left:52%;width:60px;height:60px;animation-duration:24s;animation-delay:-8s;background:var(--k24-indigo)}.i-bulle--3{left:80%;width:120px;height:120px;animation-duration:30s;animation-delay:-15s}
 @keyframes k24-monte{to{transform:translateY(-110vh) rotate(180deg)}}
-.vie-barre{background-image:linear-gradient(90deg,transparent 0,rgba(224,138,46,.12) 50%,transparent 100%);background-size:300px 100%;animation:k24-balaye 12s linear infinite}
-@keyframes k24-balaye{from{background-position:-300px 0}to{background-position:100vw 0}}
 @media(prefers-reduced-motion:reduce){.gi::before,.i-bulle,.vie-barre{animation:none!important}.gi-fig img{animation:none!important;transform:none!important}}
+
+.px-carte{position:relative;padding-right:5rem}.px-ico{position:absolute;right:.8rem;top:.8rem;color:var(--k24-indigo);opacity:.95}.dark .px-ico{color:var(--k24-creme)}
+.px-nom--ico{display:flex;align-items:center;gap:.7rem}.px-ligne .px-ico{position:static;width:40px;height:40px;flex:none;color:var(--k24-indigo)}.dark .px-ligne .px-ico{color:var(--k24-creme)}

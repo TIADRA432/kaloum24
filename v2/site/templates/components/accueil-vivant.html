@@ -103,6 +103,7 @@
     <div class="px-grille">
         {% for c in chiffres %}
         <a class="px-carte" href="{% url 'prix_produit' c.produit.pk %}">
+            {% icone_produit c.produit %}
             <span class="px-nom">{{ c.produit.nom }}</span>
             <b class="px-valeur">{{ c.prix|floatformat:"0g" }} <small>GNF/{{ c.produit.unite }}</small></b>
             {% if c.v12 is not None %}<span class="px-var {% if c.v12 > 0 %}px-hausse{% elif c.v12 < 0 %}px-baisse{% endif %}">{% if c.v12 > 0 %}+{% endif %}{{ c.v12 }} % sur 1 an</span>{% endif %}

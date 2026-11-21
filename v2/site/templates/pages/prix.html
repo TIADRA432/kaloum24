@@ -1,5 +1,5 @@
 {% extends "base_page.html" %}
-{% load static %}
+{% load static vie_site %}
 {% block title %}Prix des denrées{% endblock title %}
 {% block content %}
 <div class="k24-rub k24-rub--1" aria-hidden="true"><span>Prix</span></div>
@@ -9,7 +9,7 @@
     <div class="px-tableau" role="table" aria-label="Prix des denrées">
         {% for l in lignes %}
         <a class="px-ligne" href="{% url 'prix_produit' l.produit.pk %}">
-            <span class="px-nom">{{ l.produit.nom }}</span>
+            <span class="px-nom px-nom--ico">{% icone_produit l.produit %}{{ l.produit.nom }}</span>
             <b class="px-valeur">{{ l.prix|floatformat:"0g" }} <small>GNF/{{ l.produit.unite }}</small></b>
             <span class="px-var {% if l.v12 and l.v12 > 0 %}px-hausse{% elif l.v12 and l.v12 < 0 %}px-baisse{% endif %}">{% if l.v12 is not None %}{% if l.v12 > 0 %}+{% endif %}{{ l.v12 }} % sur 1 an{% else %}—{% endif %}</span>
         </a>

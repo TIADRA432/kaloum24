@@ -25,7 +25,7 @@ PRODUITS = {
     "Eggplants": ("Aubergines", "kg", 13, False), "Beans (niebe, white)": ("Niébé (haricot blanc)", "kg", 14, False),
     "Groundnuts (shelled)": ("Arachides décortiquées", "kg", 15, False), "Fish": ("Poisson frais", "kg", 16, False),
     "Fish (dry)": ("Poisson séché", "kg", 17, False), "Meat (beef)": ("Viande de bœuf", "kg", 18, False),
-    "Chili (red, dry raw)": ("Piment rouge sec", "kg", 19, False), "Salt": ("Sel", "kg", 20, False),
+    "Chili (red, dry raw)": ("Piment rouge sec", "kg", 19, False), "Salt": ("Sel", "kg", 20, True),
 }
 DEPUIS = 36  # mois conservés
 
@@ -58,6 +58,9 @@ class Command(BaseCommand):
         produits = {}
         for code, (nom, unite, ordre, une) in PRODUITS.items():
             p, cree = Produit.objects.get_or_create(code=code, defaults={"nom": nom, "unite": unite, "ordre": ordre, "a_la_une": une})
+            if not cree and p.a_la_une != une:
+                p.a_la_une = une
+                p.save(update_fields=["a_la_une"])
             produits[code] = p
         lieux, a_creer = {}, {}
         existants = set(Observation.objects.filter(date__gte=limite).values_list("produit_id", "lieu_id", "date"))
