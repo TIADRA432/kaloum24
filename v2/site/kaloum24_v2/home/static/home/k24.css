@@ -115,3 +115,33 @@ footer.site-container h2{font-family:var(--k24-display)}
 .rp-pages,.rp-credit,.rp-vide{margin:1.5rem 0;font-size:.95rem}
 .rp-credit{opacity:.8;max-width:44rem}
 .rp-intro{margin-bottom:1.5rem}
+
+/* En-tête toujours visible */
+header.site-container{position:sticky;top:0;z-index:50;padding-top:.9rem!important;padding-bottom:.9rem!important}
+header.site-container .header-logo{font-size:1.6rem!important}
+.vie-barre{position:relative;z-index:51}
+header.site-container [data-mobile-menu-content]{z-index:55}
+
+/* Pied de page */
+.pied-k24{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:2.5rem;margin-bottom:3rem}
+.pied-k24__nom{font:600 1.8rem var(--k24-display);margin:0 0 .6rem}
+.pied-k24 h2{font:600 .95rem var(--k24-display);color:var(--k24-ocre)!important;margin:0 0 .9rem}
+.pied-k24 ul{list-style:none;padding:0;margin:0;display:grid;gap:.55rem}
+.pied-k24 a{text-decoration:underline;text-underline-offset:4px}
+.pied-k24 p{margin:0;line-height:1.6}
+footer.site-container .opacity-60{opacity:.85!important}
+footer.site-container .text-black{color:var(--k24-sable)!important}
+@media(max-width:760px){.pied-k24{grid-template-columns:1fr 1fr}.pied-k24__marque{grid-column:1/-1}}
+
+/* Lisibilité : étiquettes en minuscules, texte plus aéré */
+.acc-nav{text-transform:none!important;letter-spacing:0!important;gap:.6rem!important}
+.acc-nav a{font-size:.95rem!important;padding:.5rem 1rem!important;min-height:44px;display:inline-flex;align-items:center}
+.acc-titre{letter-spacing:.02em!important;font-size:1.05rem!important}
+.rp-liste{gap:0!important;max-width:46rem!important}
+.rp-item{padding:1.5rem 0 1.5rem 1.2rem!important;border-bottom:1px solid #d9d4c7;border-left-width:5px}
+.dark .rp-item{border-bottom-color:#2b3a7a}
+.rp-item h2,.rp-item h3{font-size:1.3rem!important;line-height:1.3!important;margin:.35rem 0 .6rem!important}
+.rp-item p{font-size:1.08rem;line-height:1.7;max-width:42rem}
+.rp-source{font-size:.85rem!important;text-transform:none;letter-spacing:0}
+.rp-intro{font-size:1.1rem;line-height:1.7}
+.acc-date{font-size:.9rem;opacity:.85}

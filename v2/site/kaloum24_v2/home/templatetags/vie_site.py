@@ -29,3 +29,17 @@ def bandeau_vivant():
 def meteo_villes():
     from kaloum24_v2.home.meteo import meteo
     return meteo()
+
+
+@register.simple_tag
+def pied_liens():
+    """Pages cadre publiées (À propos, Mentions légales, Charte…) pour le pied de page : apparaissent seules à leur publication."""
+    from wagtail.models import Site
+
+    from kaloum24_v2.standardpages.models import StandardPage
+
+    try:
+        racine = Site.objects.get(is_default_site=True).root_page
+        return list(StandardPage.objects.child_of(racine).live().order_by("path"))
+    except Exception:  # jamais d'erreur 500 pour un pied de page
+        return []

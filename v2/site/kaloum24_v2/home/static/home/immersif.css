@@ -1,6 +1,6 @@
 /* Accueil immersif (S0b) — le seuil, les étoffes, les lettres. Motifs originaux. */
 .i-hero{height:360vh;position:relative;margin-top:18px}
-.i-stage{position:sticky;top:0;height:100vh;overflow:hidden;background:var(--k24-nuit)}
+.i-stage{position:sticky;top:var(--k24-hh,86px);height:calc(100vh - var(--k24-hh,86px));overflow:hidden;background:var(--k24-nuit)}
 .i-stage::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,#26357c 0,var(--k24-nuit) 62%)}
 .i-med{--m:min(92vmin,820px);position:absolute;left:50%;top:50%;width:var(--m);height:var(--m);margin:calc(var(--m)/-2) 0 0 calc(var(--m)/-2);overflow:visible}
 .i-med .r{transform-box:fill-box;transform-origin:center;fill:none;stroke:var(--k24-ocre);will-change:transform,opacity}

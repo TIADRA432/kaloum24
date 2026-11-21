@@ -1,4 +1,7 @@
 (function(){
+var hd=document.querySelector("header.site-container");
+function mesure(){if(hd)document.documentElement.style.setProperty("--k24-hh",hd.offsetHeight+"px")}
+mesure();addEventListener("resize",mesure);
 var hero=document.querySelector(".i-hero");if(!hero)return;
 if(matchMedia("(prefers-reduced-motion:reduce)").matches)return;
 var iris=hero.querySelector(".i-iris"),wm=hero.querySelector(".i-wm"),hint=hero.querySelector(".i-hint"),

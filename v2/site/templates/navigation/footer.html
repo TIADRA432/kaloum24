@@ -1,5 +1,5 @@
 
-{% load wagtailcore_tags wagtailsettings_tags static %}
+{% load wagtailcore_tags wagtailsettings_tags static vie_site %}
 {% wagtail_site as current_site %}
 
 
@@ -8,6 +8,36 @@
 </div>
 
 <footer class="site-padding site-container w-full py-20">
+    <div class="pied-k24">
+        <div class="pied-k24__marque">
+            <p class="pied-k24__nom">Kaloum24</p>
+            <p>L'actualité de Guinée et d'Afrique de l'Ouest, rédigée à Conakry.</p>
+        </div>
+        <nav aria-label="Pied de page">
+            <h2>Lire</h2>
+            <ul>
+                <li><a href="/actualites/">Actualités</a></li>
+                <li><a href="{% url 'revue_de_presse' %}">Revue de presse</a></li>
+                <li><a href="/pulaar/">Dictionnaire pulaar</a></li>
+                <li><a href="{% url 'search' %}">Rechercher</a></li>
+                <li><a href="/news/feed/">Flux RSS</a></li>
+            </ul>
+        </nav>
+        {% pied_liens as cadres %}
+        {% if cadres %}
+        <nav aria-label="Informations">
+            <h2>Informations</h2>
+            <ul>{% for c in cadres %}<li><a href="{% pageurl c %}">{{ c.title }}</a></li>{% endfor %}</ul>
+        </nav>
+        {% endif %}
+        <div>
+            <h2>Sources</h2>
+            <ul>
+                <li><a href="{% url 'revue_de_presse' %}">Médias repris</a></li>
+                <li>Météo : <a href="https://www.met.no/" rel="noopener">MET Norway</a></li>
+            </ul>
+        </div>
+    </div>
     <div class="flex flex-col lg:flex-row gap-20 justify-between">
         {% if settings.navigation.NavigationSettings.footer_navigation %}
         <div class="grid grid-cols-2 gap-20 justify-between">
