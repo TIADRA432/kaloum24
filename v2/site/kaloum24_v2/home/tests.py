@@ -11,9 +11,10 @@ class InitKaloum24Tests(TestCase):
         call_command("init_kaloum24", verbosity=0)
         call_command("init_kaloum24", verbosity=0)
         self.assertEqual(NewsListingPage.objects.count(), 1)
-        self.assertEqual(ArticleTopic.objects.count(), 7)
-        # Aucun article inventé : seules la racine, l'accueil et « Actualités ».
-        self.assertEqual(Page.objects.count(), 3)
+        self.assertEqual(ArticleTopic.objects.count(), 11)
+        # Aucun article inventé : racine, accueil, « Actualités » et 3 pages cadre en brouillon.
+        self.assertEqual(Page.objects.count(), 6)
+        self.assertEqual(Page.objects.filter(live=False).count(), 3)
 
     def test_pages_publiques(self):
         call_command("init_kaloum24", verbosity=0)

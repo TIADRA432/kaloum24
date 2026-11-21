@@ -18,7 +18,8 @@ from kaloum24_v2.home.models import HomePage
 from kaloum24_v2.news.models import NewsListingPage
 from kaloum24_v2.utils.models import ArticleTopic, AuthorSnippet
 
-RUBRIQUES = ["Politique", "Économie", "Société", "Afrique", "Culture", "Sport", "Pulaar"]
+RUBRIQUES = ["Politique", "Économie", "Société", "Afrique", "Culture", "Sport", "Pulaar",
+             "Faits divers", "Régions", "Mines & Énergie", "Opinions & Tribunes"]
 INTRO = "L'actualité de Guinée et d'Afrique de l'Ouest, rédigée à Conakry."
 
 
@@ -55,6 +56,7 @@ class Command(BaseCommand):
         for titre in RUBRIQUES:
             ArticleTopic.objects.get_or_create(title=titre)
         AuthorSnippet.objects.get_or_create(title="Rédaction Kaloum24")
+        self._pages_cadre(home)
 
         groupe, _ = Group.objects.get_or_create(name="Lexicographes Pulaar")
         perms = Permission.objects.filter(content_type__app_label="pulaar") | Permission.objects.filter(
@@ -69,6 +71,23 @@ class Command(BaseCommand):
             self.stderr.write(f"Image par défaut non restaurée : {exc}")
         self._admin()
         self.stdout.write("Initialisation Kaloum24 terminée.")
+
+    def _pages_cadre(self, home):
+        """Charte, mentions légales, à propos : créées UNE fois, en brouillon (non publiées).
+        Jamais réécrites ensuite : l'équipe les complète dans l'administration."""
+        import json
+
+        from kaloum24_v2.standardpages.models import StandardPage
+        from kaloum24_v2.utils.data.pages_cadre import PAGES
+
+        for doc in PAGES:
+            if StandardPage.objects.filter(slug=doc["slug"]).exists():
+                continue
+            page = StandardPage(title=doc["title"], slug=doc["slug"], introduction=doc["introduction"],
+                                body=json.dumps(doc["body"]), live=False)
+            home.add_child(instance=page)
+            page.save_revision()
+            self.stdout.write(f"Brouillon créé : {doc['title']}")
 
     def _groupe(self, ancien, nouveau):
         """Renomme un groupe Wagtail d'origine en français. Renvoie (groupe, neuf) ;
