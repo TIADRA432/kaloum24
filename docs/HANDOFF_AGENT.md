@@ -85,7 +85,9 @@ Sécurité Supabase à faire après le premier `migrate` : activer **RLS** sur t
 
 ## 7. Éditorial (Wagtail)
 
-Groupes natifs **Editors** (rédacteurs) et **Moderators** (relecteurs/publication) + groupe **Lexicographes Pulaar** créé par `init_kaloum24`. Le workflow « Moderators approval » est celui de Wagtail : un rédacteur soumet, un modérateur publie. Rubriques = snippets `ArticleTopic` (Politique, Économie, Société, Afrique, Culture, Sport, Pulaar). Signature par défaut : « Rédaction Kaloum24 ». Dictionnaire : menu admin « Dictionnaire Pulaar » (termes, domaines, sources, propositions ; passer une proposition à « Validée » publie le terme).
+Mis à jour le 2026-11-21. Le corps d'un article (`ArticleBody`, `utils/blocks/article.py`) est une suite de blocs de presse : paragraphe, intertitre, citation, image (légende + crédit), encadré, tableau, vidéo/embed ; les anciens blocs `section`, `cta`, `statistics` restent valides. Champs d'article : lieu (`dateline`), chapô, sources, temps de lecture calculé. Mise en page de lecture : `news/static/news/article.css` (préfixe `.art-`, couleurs héritées du thème). `wagtail.embeds` et `wagtail.contrib.table_block` sont installés.
+
+Rôles (`init_kaloum24`, `_roles`) : les groupes Wagtail d'origine sont **renommés** une seule fois — `Editors` → **Rédacteurs** (ajouter/modifier sous « Actualités », soumettre) et `Moderators` → **Relecteurs** (+ publier, verrouiller) — et leurs droits sur la racine sont retirés. Workflow « Relecture éditoriale ». Les droits ajustés ensuite par un administrateur ne sont jamais réécrits. Groupe supplémentaire **Lexicographes Pulaar**. Rubriques = snippets `ArticleTopic`. Signature par défaut « Rédaction Kaloum24 ». Guide pour l'équipe : `docs/GUIDE_REDACTION_WAGTAIL.md`. Dictionnaire : menu « Dictionnaire Pulaar » (valider une proposition publie le terme, « documenté »).
 
 ## 8. État au 2026-11-20 et reste à faire (par priorité)
 
