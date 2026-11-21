@@ -19,7 +19,7 @@ class VieDuSiteTests(TestCase):
         cache.clear()
 
     def test_bandeau_sur_toutes_les_pages_sans_meteo(self):
-        with mock.patch.object(m, "_telecharger", side_effect=OSError("réseau coupé")):
+        with mock.patch.object(m, "_une_ville", side_effect=OSError("réseau coupé")):
             for url in ("/", "/actualites/"):
                 r = self.client.get(url)
                 self.assertEqual(r.status_code, 200, url)
@@ -39,16 +39,37 @@ class VieDuSiteTests(TestCase):
         with mock.patch.object(m, "_telecharger", return_value=FAUX):
             r = self.client.get("/")
         self.assertContains(r, "29°C")
-        self.assertContains(r, "Open-Meteo.com")
+        self.assertContains(r, "MET Norway")
 
     def test_meteo_cache_et_secours(self):
         with mock.patch.object(m, "_telecharger", return_value=FAUX) as ok:
             m.meteo(); m.meteo()
             self.assertEqual(ok.call_count, 1)
         cache.delete(m.CLE)
-        with mock.patch.object(m, "_telecharger", side_effect=OSError("panne")):
+        with mock.patch.object(m, "_une_ville", side_effect=OSError("panne")):
             self.assertEqual(m.meteo(), FAUX)  # dernière valeur connue
 
     def test_respect_mouvement_reduit(self):
         css = open(__import__("django.contrib.staticfiles.finders", fromlist=["find"]).find("home/vie.css")).read()
         self.assertIn("prefers-reduced-motion", css)
+
+
+class MetNorwayTests(TestCase):
+    def test_symboles(self):
+        self.assertEqual(m._decrire("clearsky_day"), ("Ciel dégagé", "☀️"))
+        self.assertEqual(m._decrire("lightrainshowers_night")[0], "Averses")
+        self.assertEqual(m._decrire("rainandthunder")[0], "Orage")
+        self.assertEqual(m._decrire("heavyrain")[0], "Forte pluie")
+        self.assertEqual(m._decrire(None)[0], "Variable")
+
+    def test_analyse_reponse(self):
+        import io, json as j
+        rep = {"properties": {"timeseries": [{"data": {"instant": {"details": {"air_temperature": 30.1}},
+               "next_1_hours": {"summary": {"symbol_code": "partlycloudy_day"}}}}]}}
+        faux = io.BytesIO(j.dumps(rep).encode())
+        faux.__enter__ = lambda s: s
+        faux.__exit__ = lambda *a: None
+        with mock.patch("urllib.request.urlopen", return_value=faux):
+            v = m._une_ville(("Conakry", 9.5, -13.6))
+        self.assertEqual(v["temperature"], 30)
+        self.assertEqual(v["libelle"], "Partiellement nuageux")

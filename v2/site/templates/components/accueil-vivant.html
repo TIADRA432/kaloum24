@@ -102,7 +102,7 @@
     <div class="acc-meteo">
         {% for v in villes %}<div><span aria-hidden="true">{{ v.symbole }}</span> {{ v.nom }}<b>{{ v.temperature }}°C</b><small>{{ v.libelle }}</small></div>{% endfor %}
     </div>
-    <p class="acc-meteo-credit">Météo : <a href="https://open-meteo.com/">Open-Meteo.com</a> (CC BY 4.0), mise à jour toutes les 3 heures.</p>
+    <p class="acc-meteo-credit">Météo : <a href="https://api.met.no/">MET Norway</a> (CC BY 4.0), mise à jour toutes les 3 heures.</p>
     {% endif %}
 
     {% if mot_du_jour %}
