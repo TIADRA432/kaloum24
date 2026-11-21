@@ -293,7 +293,7 @@ class SystemMessagesSettings(BaseSiteSetting):
             with open(absolute_path, "rb") as f:
                 image_bytes = f.read()
 
-            img_file = ImageFile(BytesIO(image_bytes), name="Placeholder Image")
+            img_file = ImageFile(BytesIO(image_bytes), name="placeholder-image.webp")  # extension : le bucket refuse les fichiers sans type MIME
             im = WillowImage.open(img_file)
             width, height = im.get_size()
 

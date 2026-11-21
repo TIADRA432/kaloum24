@@ -80,3 +80,14 @@ class IndexationTests(TestCase):
         self.assertEqual(r.status_code, 200)
         self.assertContains(r, "/actualites/")
         self.assertContains(r, "/pulaar/terme/aada/")
+
+
+class ImageParDefautCreationTests(TestCase):
+    def test_creation_a_la_volee_porte_une_extension(self):
+        from kaloum24_v2.utils.models import SystemMessagesSettings
+        from wagtail.models import Site
+
+        call_command("init_kaloum24", verbosity=0)
+        reglages = SystemMessagesSettings.for_site(Site.objects.get(is_default_site=True))
+        image = reglages.get_placeholder_image()
+        self.assertTrue(image.file.name.endswith(".webp"), image.file.name)
