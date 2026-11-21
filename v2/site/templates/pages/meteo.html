@@ -13,7 +13,7 @@
     <p class="rp-intro">Températures du moment dans les villes de Guinée et dans la région, du Sénégal au Cameroun. Prévisions de l'institut météorologique norvégien (MET Norway), mises à jour toutes les 3 heures.</p>
     {% for pays, villes in groupes %}
     <h2 class="acc-titre">{{ pays }}</h2>
-    <div class="acc-meteo">
+    <div class="acc-meteo acc-meteo--page">
         {% for v in villes %}<div><span aria-hidden="true">{{ v.symbole }}</span> {{ v.nom }}<b>{{ v.temperature }}°C</b><small>{{ v.libelle }}</small></div>{% endfor %}
     </div>
     {% empty %}<p class="rp-vide">La météo est momentanément indisponible. Réessayez dans quelques minutes.</p>{% endfor %}

@@ -224,3 +224,4 @@ footer.site-container .text-black{color:var(--k24-sable)!important}
 .px-nom--ico{display:flex;align-items:center;gap:.7rem}.px-ligne .px-ico{position:static;width:40px;height:40px;flex:none;color:var(--k24-indigo)}.dark .px-ligne .px-ico{color:var(--k24-creme)}
 .rp-langue{display:inline-block;margin-left:.4rem;padding:0 .45rem;font:600 .8rem var(--k24-corps);background:var(--k24-ocre);color:#1b1b2f;border-radius:2px}
 .acc-meteo em{display:block;font-style:normal;font-size:.8rem;opacity:.7}
+.acc-meteo--page{grid-template-columns:repeat(auto-fill,minmax(10.5rem,12rem));margin-bottom:1.6rem}
