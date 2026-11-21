@@ -162,3 +162,27 @@ footer.site-container .text-black{color:var(--k24-sable)!important}
 .k24-rub--5{background:repeating-linear-gradient(135deg,var(--k24-indigo) 0 18px,var(--k24-ocre) 18px 28px)}
 .k24-rub--5 span{background:var(--k24-nuit);color:var(--k24-creme)}
 .k24-rub + div h1{font-size:clamp(1.6rem,3.4vw,2.4rem)!important;min-width:0!important;word-spacing:normal!important}
+
+/* Prix */
+.px-grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:1rem;margin-bottom:.8rem}
+.px-carte,.px-ligne{display:grid;gap:.25rem;padding:1rem 1.1rem;border:2px solid var(--k24-indigo);background:#F7F3EA;text-decoration:none;color:var(--k24-texte)!important}
+.dark .px-carte,.dark .px-ligne{background:#18214d;border-color:#3a4a94}
+.px-carte:hover,.px-ligne:hover{border-color:var(--k24-ocre);transform:translateY(-2px)}
+.px-nom{font:600 .95rem var(--k24-display);color:var(--k24-indigo)}
+.dark .px-nom{color:var(--k24-creme)}
+.px-valeur{font:600 1.6rem var(--k24-display)}
+.px-valeur small{font:400 .85rem var(--k24-corps);opacity:.85}
+.px-var{font-size:.95rem}
+.px-hausse{color:#9A2B14}.px-baisse{color:#1F6B3A}
+.dark .px-hausse{color:#F2A08A}.dark .px-baisse{color:#8FD8A8}
+.px-note{font-size:.9rem;opacity:.85;margin:.4rem 0 1.6rem}
+.px-tableau{display:grid;gap:.8rem;max-width:46rem;margin:1.5rem 0}
+.px-ligne{grid-template-columns:1.4fr 1fr 1fr;align-items:center}
+@media(max-width:560px){.px-ligne{grid-template-columns:1fr}}
+.px-gros{font:600 clamp(2.2rem,6vw,3.6rem) var(--k24-display);color:var(--k24-indigo);margin:.2rem 0}
+.dark .px-gros{color:var(--k24-creme)}.px-gros small{font:400 1.1rem var(--k24-corps)}
+.px-courbe-bloc{color:var(--k24-indigo);max-width:46rem;margin:1rem 0 2rem;border:2px solid var(--k24-indigo);padding:1rem}
+.dark .px-courbe-bloc{color:var(--k24-ocre);border-color:#3a4a94}
+.px-courbe{width:100%;height:auto}.px-legende{font-size:.9rem;margin:.4rem 0 0;color:var(--k24-texte)}
+.px-marches{list-style:none;padding:0;max-width:46rem;margin:0 0 2rem}
+.px-marches li{display:flex;justify-content:space-between;padding:.7rem 0;border-bottom:1px solid #d9d4c7}

@@ -49,3 +49,20 @@ def pied_liens():
 def ambiance(slug):
     """Numéro d'ambiance (0-5) stable pour une rubrique : même rubrique, même décor."""
     return sum(ord(c) for c in (slug or "tout")) % 6
+
+
+@register.simple_tag
+def chiffres_du_jour():
+    """Prix de quelques denrées de base (médiane des marchés, dernier mois connu) pour l'accueil."""
+    try:
+        from kaloum24_v2.prix import services
+        from kaloum24_v2.prix.models import Produit
+
+        sortie = []
+        for p in Produit.objects.filter(a_la_une=True):
+            r = services.resume(p)
+            if r:
+                sortie.append({"produit": p, **r})
+        return sortie
+    except Exception:
+        return []

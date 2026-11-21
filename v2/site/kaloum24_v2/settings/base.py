@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "kaloum24_v2.navigation",
     "kaloum24_v2.news",
     "kaloum24_v2.pulaar",
+    "kaloum24_v2.prix",
     "kaloum24_v2.search",
     "kaloum24_v2.standardpages",
     "kaloum24_v2.users",

@@ -1,0 +1,19 @@
+{% extends "base_page.html" %}
+{% block title %}{{ produit.nom }} : prix{% endblock title %}
+{% block content %}
+<div class="k24-rub k24-rub--1" aria-hidden="true"><span>Prix</span></div>
+<div class="site-padding site-container acc">
+    <p class="rp-credit"><a href="{% url 'prix' %}">← Tous les prix</a></p>
+    <h1 class="rp-titre">{{ produit.nom }}</h1>
+    <p class="px-gros">{{ r.prix|floatformat:"0g" }} <small>GNF par {{ produit.unite }}</small></p>
+    <p class="rp-intro">Médiane de {{ r.marches }} marché{{ r.marches|pluralize }}, {{ r.date|date:"F Y" }}.
+        {% if r.v1 is not None %}Sur un mois : {% if r.v1 > 0 %}+{% endif %}{{ r.v1 }} %.{% endif %}
+        {% if r.v12 is not None %}Sur un an : {% if r.v12 > 0 %}+{% endif %}{{ r.v12 }} %.{% endif %}</p>
+    {% if courbe %}<div class="px-courbe-bloc">{{ courbe|safe }}<p class="px-legende">{{ r.serie.0.0|date:"F Y" }} → {{ r.date|date:"F Y" }}</p></div>{% endif %}
+    <h2 class="acc-titre">Par marché, {{ r.date|date:"F Y" }}</h2>
+    <ul class="px-marches">
+        {% for o in marches %}<li><span>{{ o.lieu.nom }}</span><b>{{ o.prix|floatformat:"0g" }} GNF</b></li>{% endfor %}
+    </ul>
+    <p class="rp-credit">Source : Programme alimentaire mondial (PAM), via HDX, licence CC BY-IGO. Données retraitées par Kaloum24. Les prix peuvent différer des prix plafonds officiels et de ceux payés ailleurs ; indicatif, non contractuel.</p>
+</div>
+{% endblock %}

@@ -25,6 +25,7 @@ urlpatterns = [
     path("admin/", include(wagtailadmin_urls)),
     path("documents/", include(wagtaildocs_urls)),
     path("pulaar/", include("kaloum24_v2.pulaar.urls")),
+    path("prix/", include("kaloum24_v2.prix.urls")),
     path("revue-de-presse/", presse_views.revue, name="revue_de_presse"),
     path("search/", search_views.search, name="search"),
     path("news/feed/", LatestArticlesFeed(), name="news_feed"),
