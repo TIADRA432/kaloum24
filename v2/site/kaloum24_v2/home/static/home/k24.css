@@ -10,7 +10,7 @@
 :root{
   --k24-indigo:#1E2B63; --k24-nuit:#0E1433; --k24-ocre:#E08A2E; --k24-ocre-fonce:#9A4F0B;
   --k24-creme:#F6EEDF; --k24-sable:#E8DAC0; --k24-rouille:#A3442A; --k24-encre:#141A33;
-  --k24-fond:var(--k24-creme); --k24-texte:var(--k24-encre); --k24-lien:var(--k24-indigo);
+  --k24-fond:#FFFFFF; --k24-texte:var(--k24-encre); --k24-lien:var(--k24-indigo);
   --k24-display:"K24 Display","Arial Black",system-ui,sans-serif;
   --k24-corps:"K24 Texte",Georgia,"Times New Roman",serif;
 }
@@ -43,7 +43,7 @@ header.site-container::after{content:"";position:absolute;left:0;right:0;bottom:
 .acc-nav a{background:var(--k24-indigo);color:var(--k24-creme);border-radius:999px;padding:.35rem .9rem;text-decoration:none;font-family:var(--k24-display);font-size:.8rem}
 .acc-nav a:hover{background:var(--k24-ocre);color:var(--k24-nuit)}
 .acc-une{border-left:8px solid var(--k24-ocre);padding-left:1rem}
-.acc-breves,.acc-meteo,.acc-mot{background:var(--k24-sable);border:2px solid var(--k24-indigo);border-radius:4px}
+.acc-breves,.acc-meteo,.acc-mot{background:#F7F3EA;border:2px solid var(--k24-indigo);border-radius:4px}
 .dark .acc-breves,.dark .acc-meteo,.dark .acc-mot{background:#18214d;border-color:#3a4a94}
 .acc-mot{background:var(--k24-indigo);color:var(--k24-creme);position:relative;overflow:hidden}
 .acc-mot::after{content:"";position:absolute;right:-40px;top:-40px;width:180px;height:180px;background:var(--k24-ocre);opacity:.35;-webkit-mask:url("medaillon.svg") center/contain no-repeat;mask:url("medaillon.svg") center/contain no-repeat}
@@ -52,12 +52,13 @@ header.site-container::after{content:"";position:absolute;left:0;right:0;bottom:
 @media (prefers-reduced-motion:reduce){.header-logo::before{animation:none}}
 
 /* Hero d'accueil : indigo, médaillon ocre, titre en Unbounded */
-.k24-hero{background:var(--k24-indigo);color:var(--k24-creme);margin-top:18px;padding:3.5rem 0 3rem;position:relative;overflow:hidden}
+.k24-hero{background:var(--k24-fond);color:var(--k24-indigo);margin-top:18px;padding:3.5rem 0 3rem;position:relative;overflow:hidden}
 .k24-hero__in{position:relative}
 .k24-hero__titre{font-size:clamp(2.2rem,6vw,4.2rem);margin:0 0 1rem;max-width:14ch}
-.k24-hero__texte{max-width:34rem;font-size:1.2rem;color:var(--k24-sable)}
+.k24-hero__texte{max-width:34rem;font-size:1.2rem;color:var(--k24-texte)}
+.dark .k24-hero{color:var(--k24-creme)}
 .k24-hero__texte p{margin:0}
-.k24-hero__medaillon{position:absolute;right:-60px;top:-40px;width:min(46vw,340px);aspect-ratio:1;background:var(--k24-ocre);opacity:.9;
+.k24-hero__medaillon{position:absolute;right:2rem;top:-10px;width:min(34vw,250px);aspect-ratio:1;background:var(--k24-ocre);opacity:.85;
   -webkit-mask:url("medaillon.svg") center/contain no-repeat;mask:url("medaillon.svg") center/contain no-repeat;animation:k24-tourne 90s linear infinite}
 @media (prefers-reduced-motion:reduce){.k24-hero__medaillon{animation:none}}
 .acc{padding-top:2rem}
