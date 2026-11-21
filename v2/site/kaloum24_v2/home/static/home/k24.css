@@ -1,0 +1,64 @@
+/* Kaloum24 — identité visuelle (S0b). Motifs originaux, inspirés de l'artisanat ouest-africain
+   (cercles concentriques sculptés, indigo tissé, bandes de couverture, vannerie). Aucune reproduction. */
+@font-face{font-family:"K24 Display";src:url("fonts/unbounded-600.woff2") format("woff2");font-weight:600;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"K24 Display";src:url("fonts/unbounded-ext-600.woff2") format("woff2");font-weight:600;font-display:swap;unicode-range:U+0181,U+0186,U+018A,U+0190,U+0198-019D,U+01B3-01B4,U+014A-014B,U+0253-0254,U+0257,U+025B,U+0272,U+0300-036F}
+@font-face{font-family:"K24 Texte";src:url("fonts/charis-400.woff2") format("woff2");font-weight:400;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"K24 Texte";src:url("fonts/charis-700.woff2") format("woff2");font-weight:700;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"K24 Texte";src:url("fonts/charis-ext-400.woff2") format("woff2");font-weight:400;font-display:swap;unicode-range:U+0181,U+0186,U+018A,U+0190,U+0198-019D,U+01B3-01B4,U+014A-014B,U+0253-0254,U+0257,U+025B,U+0272,U+0300-036F}
+@font-face{font-family:"K24 Texte";src:url("fonts/charis-ext-700.woff2") format("woff2");font-weight:700;font-display:swap;unicode-range:U+0181,U+0186,U+018A,U+0190,U+0198-019D,U+01B3-01B4,U+014A-014B,U+0253-0254,U+0257,U+025B,U+0272,U+0300-036F}
+
+:root{
+  --k24-indigo:#1E2B63; --k24-nuit:#0E1433; --k24-ocre:#E08A2E; --k24-ocre-fonce:#9A4F0B;
+  --k24-creme:#F6EEDF; --k24-sable:#E8DAC0; --k24-rouille:#A3442A; --k24-encre:#141A33;
+  --k24-fond:var(--k24-creme); --k24-texte:var(--k24-encre); --k24-lien:var(--k24-indigo);
+  --k24-display:"K24 Display","Arial Black",system-ui,sans-serif;
+  --k24-corps:"K24 Texte",Georgia,"Times New Roman",serif;
+}
+.dark{--k24-fond:var(--k24-nuit);--k24-texte:#EFE6D2;--k24-lien:#F2B36B}
+
+body{background:var(--k24-fond);color:var(--k24-texte);font-family:var(--k24-corps);line-height:1.65}
+h1,h2,h3,.acc-titre,.acc-rubrique{font-family:var(--k24-display);font-weight:600;letter-spacing:-.01em;line-height:1.2}
+a{color:var(--k24-lien)}
+:focus-visible{outline:3px solid var(--k24-ocre);outline-offset:3px}
+
+/* En-tête : bandeau indigo, médaillon, nom en Unbounded */
+header.site-container{position:relative;max-width:none;background:var(--k24-indigo);color:var(--k24-creme);padding-top:1.25rem!important;padding-bottom:1.25rem!important;border-bottom:6px solid var(--k24-ocre)}
+header.site-container a,header.site-container button{color:var(--k24-creme)}
+.header-logo{font-family:var(--k24-display)!important;font-weight:600!important;letter-spacing:.02em;text-transform:none!important;font-size:1.9rem!important;display:inline-flex;align-items:center;gap:.7rem;color:var(--k24-creme)!important;background:none!important;-webkit-text-fill-color:currentColor!important}
+.header-logo::before{content:"";width:2.4rem;height:2.4rem;flex:none;background:var(--k24-ocre);-webkit-mask:url("medaillon.svg") center/contain no-repeat;mask:url("medaillon.svg") center/contain no-repeat;animation:k24-tourne 40s linear infinite}
+@keyframes k24-tourne{to{transform:rotate(360deg)}}
+
+/* Bande tissée sous l'en-tête (motif original : chevrons + rayures indigo/ocre) */
+header.site-container::after{content:"";position:absolute;left:0;right:0;bottom:-18px;height:12px;
+  background:repeating-linear-gradient(90deg,var(--k24-ocre) 0 14px,var(--k24-creme) 14px 18px,var(--k24-indigo) 18px 32px,var(--k24-creme) 32px 36px);opacity:.95}
+
+/* Bandeau flash en nuit indigo */
+.vie-barre{background:var(--k24-nuit)!important;color:var(--k24-creme)!important;border-bottom:1px solid #2b3a7a}
+.vie-etiquette,.vie-flash .vie-etiquette{background:var(--k24-ocre)!important;color:var(--k24-nuit)!important;font-family:var(--k24-display)}
+
+/* Accueil */
+.acc{font-family:var(--k24-corps)}
+.acc-rubrique{color:var(--k24-indigo);border-bottom:4px solid var(--k24-ocre);display:inline-block;padding-bottom:.2rem}
+.dark .acc-rubrique{color:var(--k24-creme)}
+.acc-nav a{background:var(--k24-indigo);color:var(--k24-creme);border-radius:999px;padding:.35rem .9rem;text-decoration:none;font-family:var(--k24-display);font-size:.8rem}
+.acc-nav a:hover{background:var(--k24-ocre);color:var(--k24-nuit)}
+.acc-une{border-left:8px solid var(--k24-ocre);padding-left:1rem}
+.acc-breves,.acc-meteo,.acc-mot{background:var(--k24-sable);border:2px solid var(--k24-indigo);border-radius:4px}
+.dark .acc-breves,.dark .acc-meteo,.dark .acc-mot{background:#18214d;border-color:#3a4a94}
+.acc-mot{background:var(--k24-indigo);color:var(--k24-creme);position:relative;overflow:hidden}
+.acc-mot::after{content:"";position:absolute;right:-40px;top:-40px;width:180px;height:180px;background:var(--k24-ocre);opacity:.35;-webkit-mask:url("medaillon.svg") center/contain no-repeat;mask:url("medaillon.svg") center/contain no-repeat}
+.acc-mot a{color:var(--k24-creme)}
+
+@media (prefers-reduced-motion:reduce){.header-logo::before{animation:none}}
+
+/* Hero d'accueil : indigo, médaillon ocre, titre en Unbounded */
+.k24-hero{background:var(--k24-indigo);color:var(--k24-creme);margin-top:18px;padding:3.5rem 0 3rem;position:relative;overflow:hidden}
+.k24-hero__in{position:relative}
+.k24-hero__titre{font-size:clamp(2.2rem,6vw,4.2rem);margin:0 0 1rem;max-width:14ch}
+.k24-hero__texte{max-width:34rem;font-size:1.2rem;color:var(--k24-sable)}
+.k24-hero__texte p{margin:0}
+.k24-hero__medaillon{position:absolute;right:-60px;top:-40px;width:min(46vw,340px);aspect-ratio:1;background:var(--k24-ocre);opacity:.9;
+  -webkit-mask:url("medaillon.svg") center/contain no-repeat;mask:url("medaillon.svg") center/contain no-repeat;animation:k24-tourne 90s linear infinite}
+@media (prefers-reduced-motion:reduce){.k24-hero__medaillon{animation:none}}
+.acc{padding-top:2rem}
+.acc > *{animation-fill-mode:both}
