@@ -211,3 +211,43 @@ class Breve(models.Model):
 
     def __str__(self):
         return self.texte[:60]
+
+
+class SourcePresse(models.Model):
+    """Un média dont on reprend les titres (extrait court + lien vers l'original)."""
+
+    nom = models.CharField("nom", max_length=120)
+    site = models.URLField("site", help_text="Adresse du site du média.")
+    flux = models.URLField("flux RSS", help_text="Adresse du flux RSS public.")
+    actif = models.BooleanField("actif", default=True, help_text="Décocher pour arrêter la reprise de cette source.")
+    note = models.CharField("note", max_length=240, blank=True, help_text="Licence, accord, remarque interne.")
+    derniere_collecte = models.DateTimeField("dernière collecte", null=True, blank=True, editable=False)
+    derniere_erreur = models.CharField("dernière erreur", max_length=240, blank=True, editable=False)
+
+    class Meta:
+        ordering = ["nom"]
+        verbose_name = "source de presse"
+        verbose_name_plural = "sources de presse"
+
+    def __str__(self):
+        return self.nom
+
+
+class ArticlePresse(models.Model):
+    """Titre repris d'un média : titre + extrait de 400 caractères au plus + lien d'origine. Jamais le texte complet."""
+
+    source = models.ForeignKey(SourcePresse, on_delete=models.CASCADE, related_name="articles")
+    titre = models.CharField("titre", max_length=300)
+    extrait = models.CharField("extrait", max_length=420, blank=True)
+    lien = models.URLField("lien d'origine", max_length=600, unique=True)
+    publie_le = models.DateTimeField("publié le")
+    visible = models.BooleanField("visible", default=True, help_text="Décocher pour retirer un titre du site.")
+
+    class Meta:
+        ordering = ["-publie_le"]
+        verbose_name = "titre de presse"
+        verbose_name_plural = "titres de presse"
+        indexes = [models.Index(fields=["-publie_le"])]
+
+    def __str__(self):
+        return self.titre[:80]

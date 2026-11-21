@@ -3,6 +3,8 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
 
+from kaloum24_v2.news import views_presse as presse_views
+
 from wagtail.admin import urls as wagtailadmin_urls
 from wagtail import urls as wagtail_urls
 from wagtail.contrib.sitemaps.views import sitemap
@@ -23,6 +25,7 @@ urlpatterns = [
     path("admin/", include(wagtailadmin_urls)),
     path("documents/", include(wagtaildocs_urls)),
     path("pulaar/", include("kaloum24_v2.pulaar.urls")),
+    path("revue-de-presse/", presse_views.revue, name="revue_de_presse"),
     path("search/", search_views.search, name="search"),
     path("news/feed/", LatestArticlesFeed(), name="news_feed"),
 ]

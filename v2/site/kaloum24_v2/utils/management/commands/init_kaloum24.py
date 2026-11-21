@@ -18,6 +18,18 @@ from kaloum24_v2.home.models import HomePage
 from kaloum24_v2.news.models import NewsListingPage
 from kaloum24_v2.utils.models import ArticleTopic, AuthorSnippet
 
+SOURCES_PRESSE = [  # nom, site, flux, actif, note
+    ("Guinéenews", "https://guineenews.org", "https://guineenews.org/feed/", True, "Flux RSS public ; extrait + lien."),
+    ("Mosaïque Guinée", "https://mosaiqueguinee.com", "https://mosaiqueguinee.com/feed/", True, "Flux RSS public ; extrait + lien."),
+    ("Guinée360", "https://www.guinee360.com", "https://www.guinee360.com/feed/", True, "Flux RSS public ; extrait + lien."),
+    ("Vision Guinée", "https://www.visionguinee.info", "https://www.visionguinee.info/feed/", True, "Flux RSS public ; extrait + lien."),
+    ("Guinée Matin", "https://guineematin.com", "https://guineematin.com/feed/", True, "Flux RSS public ; extrait + lien."),
+    ("Le Jour Guinée", "https://www.lejourguinee.com", "https://www.lejourguinee.com/feed/", True, "Flux RSS public ; extrait + lien."),
+    ("Le Révélateur 224", "https://www.lerevelateur224.com", "https://www.lerevelateur224.com/feed/", True, "Flux RSS public ; extrait + lien."),
+    ("RFI Afrique", "https://www.rfi.fr/fr/afrique/", "https://www.rfi.fr/fr/afrique/rss", False,
+     "DÉSACTIVÉ : conditions de réutilisation des flux RFI à vérifier (usage commercial). Activer seulement après accord."),
+]
+
 RUBRIQUES = ["Politique", "Économie", "Société", "Afrique", "Culture", "Sport", "Pulaar",
              "Faits divers", "Régions", "Mines & Énergie", "Opinions & Tribunes"]
 INTRO = "L'actualité de Guinée et d'Afrique de l'Ouest, rédigée à Conakry."
@@ -57,6 +69,7 @@ class Command(BaseCommand):
             ArticleTopic.objects.get_or_create(title=titre)
         AuthorSnippet.objects.get_or_create(title="Rédaction Kaloum24")
         self._pages_cadre(home)
+        self._sources_presse()
 
         groupe, _ = Group.objects.get_or_create(name="Lexicographes Pulaar")
         perms = Permission.objects.filter(content_type__app_label="pulaar") | Permission.objects.filter(
@@ -176,3 +189,10 @@ class Command(BaseCommand):
             return
         User.objects.create_superuser(nom, os.environ.get("ADMIN_EMAIL", ""), mot_de_passe)
         self.stdout.write(f"Superutilisateur « {nom} » créé.")
+
+    def _sources_presse(self):
+        """Sources de départ (flux RSS publics testés le 2026-11-21). Créées une seule fois ; modifiables dans l'admin."""
+        from kaloum24_v2.news.models import SourcePresse
+
+        for nom, site, flux, actif, note in SOURCES_PRESSE:
+            SourcePresse.objects.get_or_create(flux=flux, defaults={"nom": nom, "site": site, "actif": actif, "note": note})

@@ -65,6 +65,10 @@ class HomePage(BasePage):
                 par_rubrique.append({"rubrique": rubrique, "articles": items})
         context["par_rubrique"] = par_rubrique
         context["mot_du_jour"] = mot_du_jour()
+        from kaloum24_v2.news import presse
+
+        presse.rafraichir_si_perime()
+        context["revue"] = presse.derniers(limite=6, par_source=2)
         from kaloum24_v2.news.models import NewsListingPage
 
         context["listing"] = NewsListingPage.objects.live().first()

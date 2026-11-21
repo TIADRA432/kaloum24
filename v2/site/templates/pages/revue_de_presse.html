@@ -1,0 +1,44 @@
+{% extends "base_page.html" %}
+{% load static %}
+
+{% block title %}Revue de presse{% endblock title %}
+
+{% block extra_css %}
+    <link rel="stylesheet" type="text/css" href="{% static 'home/accueil.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="site-padding site-container acc">
+    <h1 class="rp-titre">Revue de presse</h1>
+    <p class="rp-intro">Les titres de la presse guinéenne, repris avec un court extrait et un lien vers l'article d'origine. Kaloum24 ne republie pas les articles : cliquez pour lire chez l'éditeur.</p>
+
+    <nav class="acc-nav" aria-label="Sources">
+        <a href="{% url 'revue_de_presse' %}"{% if not source_choisie %} aria-current="page"{% endif %}>Toutes</a>
+        {% for s in sources %}<a href="?source={{ s.pk }}"{% if source_choisie == s.pk|stringformat:"s" %} aria-current="page"{% endif %}>{{ s.nom }}</a>{% endfor %}
+    </nav>
+
+    {% if page_obj %}
+    <ul class="rp-liste">
+        {% for a in page_obj %}
+        <li class="rp-item">
+            <span class="rp-source">{{ a.source.nom }}</span>
+            <h2><a href="{{ a.lien }}" rel="noopener nofollow" target="_blank">{{ a.titre }}</a></h2>
+            {% if a.extrait %}<p>{{ a.extrait }}</p>{% endif %}
+            <span class="acc-date">{{ a.publie_le|date:"j F Y, H\hi" }}</span>
+        </li>
+        {% endfor %}
+    </ul>
+    {% if page_obj.paginator.num_pages > 1 %}
+    <p class="rp-pages">
+        {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}{% if source_choisie %}&source={{ source_choisie }}{% endif %}">← Plus récents</a>{% endif %}
+        Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
+        {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}{% if source_choisie %}&source={{ source_choisie }}{% endif %}">Plus anciens →</a>{% endif %}
+    </p>
+    {% endif %}
+    {% else %}
+    <p class="rp-vide">Aucun titre pour le moment. La collecte se lance à la prochaine visite ; revenez dans quelques minutes.</p>
+    {% endif %}
+
+    <p class="rp-credit">Chaque titre appartient à son média et renvoie vers lui. Un média qui souhaite le retrait de ses titres peut nous écrire : la source sera désactivée.</p>
+</div>
+{% endblock %}

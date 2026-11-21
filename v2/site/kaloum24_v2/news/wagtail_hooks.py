@@ -2,7 +2,7 @@ from wagtail import hooks
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet
 
-from .models import Breve
+from .models import ArticlePresse, Breve, SourcePresse
 
 
 
@@ -23,3 +23,28 @@ class BreveViewSet(SnippetViewSet):
 
 
 register_snippet(BreveViewSet)
+
+
+class SourcePresseViewSet(SnippetViewSet):
+    model = SourcePresse
+    icon = "site"
+    menu_label = "Sources de presse"
+    menu_order = 220
+    add_to_admin_menu = True
+    list_display = ["nom", "actif", "derniere_collecte", "derniere_erreur"]
+    list_filter = ["actif"]
+
+
+class ArticlePresseViewSet(SnippetViewSet):
+    model = ArticlePresse
+    icon = "doc-full"
+    menu_label = "Titres de presse"
+    menu_order = 230
+    add_to_admin_menu = True
+    list_display = ["titre", "source", "publie_le", "visible"]
+    list_filter = ["visible", "source"]
+    search_fields = ["titre"]
+
+
+register_snippet(SourcePresseViewSet)
+register_snippet(ArticlePresseViewSet)

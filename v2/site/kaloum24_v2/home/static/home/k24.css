@@ -98,3 +98,20 @@ footer.site-container h2{font-family:var(--k24-display)}
 .dark .text-mackerel-300,.dark .text-mackerel-400{color:var(--k24-ocre)!important}
 .dark .bg-mackerel-300,.dark .bg-mackerel-400{background-color:var(--k24-ocre)!important;color:var(--k24-nuit)!important}
 .dark .border-mackerel-300{border-color:var(--k24-ocre)!important}
+
+/* Revue de presse */
+.rp-titre{font-family:var(--k24-display);color:var(--k24-indigo);font-size:clamp(2rem,5vw,3.4rem);margin:2.5rem 0 .5rem}
+.dark .rp-titre{color:var(--k24-creme)}
+.rp-intro{max-width:44rem;font-size:1.15rem}
+.rp-liste{list-style:none;padding:0;margin:2rem 0;display:grid;gap:1.4rem;max-width:56rem}
+.rp-item{border-left:6px solid var(--k24-ocre);padding:.2rem 0 .2rem 1.1rem}
+.rp-item h2,.rp-item h3{font-family:var(--k24-display);font-size:1.15rem;line-height:1.25;margin:.2rem 0}
+.rp-item h2 a,.rp-item h3 a{color:var(--k24-indigo)}
+.dark .rp-item h2 a,.rp-item h3 a{color:var(--k24-creme)}
+.rp-item p{margin:.4rem 0}
+.rp-source{font:600 .78rem var(--k24-display);color:var(--k24-ocre-fonce)}
+.dark .rp-source{color:var(--k24-ocre)}
+.acc-nav a[aria-current=page]{background:var(--k24-ocre);color:var(--k24-nuit)}
+.rp-pages,.rp-credit,.rp-vide{margin:1.5rem 0;font-size:.95rem}
+.rp-credit{opacity:.8;max-width:44rem}
+.rp-intro{margin-bottom:1.5rem}

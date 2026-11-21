@@ -1,6 +1,6 @@
 {% load wagtailcore_tags wagtailimages_tags vie_site %}
 {% meteo_villes as villes %}
-{% if une or breves or par_rubrique or mot_du_jour or villes %}
+{% if une or breves or par_rubrique or mot_du_jour or villes or revue %}
 <div class="site-padding site-container acc">
 
     {% if par_rubrique and listing %}
@@ -96,6 +96,18 @@
         </div>
     </section>
     {% endfor %}
+
+    {% if revue %}
+    <h2 class="acc-titre">Revue de presse</h2>
+    <ul class="rp-liste">
+        {% for a in revue %}
+        <li class="rp-item"><span class="rp-source">{{ a.source.nom }}</span>
+            <h3><a href="{{ a.lien }}" rel="noopener nofollow" target="_blank">{{ a.titre }}</a></h3>
+        </li>
+        {% endfor %}
+    </ul>
+    <p><a href="{% url 'revue_de_presse' %}">Toute la revue de presse</a></p>
+    {% endif %}
 
     {% if villes %}
     <h2 class="acc-titre">Météo en Afrique de l'Ouest</h2>
