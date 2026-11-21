@@ -71,3 +71,27 @@ class LangueTests(TestCase):
         r = self.client.get("/revue-de-presse/")
         self.assertContains(r, 'lang="ff"')
         self.assertContains(r, "Fulfulde")
+
+
+class ImagePageTests(TestCase):
+    def test_og_image_extraite(self):
+        class R:
+            def __enter__(s): return s
+            def __exit__(s, *a): return False
+            def read(s, n): return b'<html><head><meta property="og:image" content="https://exemple.gn/photo.jpg" /></head>'
+
+        with mock.patch("urllib.request.urlopen", return_value=R()):
+            self.assertEqual(presse.image_de_page("https://exemple.gn/a"), "https://exemple.gn/photo.jpg")
+
+    def test_og_image_refuse_logo_et_http(self):
+        class R:
+            def __enter__(s): return s
+            def __exit__(s, *a): return False
+            def read(s, n): return b'<meta property="og:image" content="http://exemple.gn/logo.png">'
+
+        with mock.patch("urllib.request.urlopen", return_value=R()):
+            self.assertEqual(presse.image_de_page("https://exemple.gn/a"), "")
+
+    def test_panne_reseau_silencieuse(self):
+        with mock.patch("urllib.request.urlopen", side_effect=OSError("boom")):
+            self.assertEqual(presse.image_de_page("https://exemple.gn/a"), "")

@@ -100,6 +100,25 @@ def telecharger(url):
         return r.read(3_000_000)
 
 
+RE_OG = re.compile(r"""<meta[^>]+property=["']og:image(?::secure_url)?["'][^>]*content=["']([^"']+)["']|<meta[^>]+content=["']([^"']+)["'][^>]*property=["']og:image["']""", re.I)
+IMAGES_PAGE_MAX = 8  # pages d'articles lues au plus par collecte et par média : on reste discret
+
+
+def image_de_page(lien):
+    """Image d'illustration (og:image) déclarée par la page de l'article, quand le flux n'en donne pas. Jamais copiée."""
+    try:
+        req = urllib.request.Request(lien, headers={"User-Agent": AGENT, "Accept": "text/html"})
+        with urllib.request.urlopen(req, timeout=5) as r:  # noqa: S310
+            debut = r.read(150_000).decode("utf-8", "ignore")
+    except Exception:
+        return ""
+    m = RE_OG.search(debut)
+    c = html.unescape((m.group(1) or m.group(2)) if m else "").strip()
+    if c.startswith("https://") and len(c) <= 600 and not re.search(r"(gravatar|avatar|emoji|pixel|logo|favicon|spacer)", c, re.I):
+        return c
+    return ""
+
+
 def collecter_source(source):
     """Retourne le nombre de nouveaux titres ; consigne l'erreur sans jamais lever."""
     try:
@@ -109,8 +128,11 @@ def collecter_source(source):
         source.save(update_fields=["derniere_erreur"])
         log.warning("Revue de presse: %s ignorée (%s)", source.nom, source.derniere_erreur)
         return 0
-    nouveaux = 0
+    nouveaux, lues = 0, 0
     for titre, extrait, lien, quand, image in entrees[:40]:
+        if not image and source.images and lues < IMAGES_PAGE_MAX and not ArticlePresse.objects.filter(lien=lien).exists():
+            lues += 1
+            image = image_de_page(lien)
         obj, cree = ArticlePresse.objects.get_or_create(
             lien=lien, defaults={"source": source, "titre": titre, "extrait": extrait, "publie_le": quand, "image": image})
         if not cree and image and not obj.image:
