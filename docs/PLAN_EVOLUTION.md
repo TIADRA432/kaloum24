@@ -63,6 +63,7 @@ Chaque sprint = plan → construction → tests → déploiement → vérificati
 | Sprint | Contenu | Critère de réussite (vérifié en production) | Vous |
 |---|---|---|---|
 | **S0 — Cadre** (court) | Décisions §6, rubriques définitives, charte éditoriale (brouillon), mentions légales | Rubriques créées ; charte et mentions publiées en brouillon | Répondre aux 3 questions §6 |
+| **S0b — Charte graphique** | Audit du visuel actuel, palette, polices, logo, composants (boutons, cartes, bandeau, étiquettes), ton, règles d'accessibilité ; page interne « Charte graphique » + variables CSS uniques ; application à l'accueil, au bandeau et aux articles | Un seul jeu de variables CSS ; contraste AA vérifié ; accueil, article et bandeau conformes ; document de charte publié dans le dépôt | Choisir parmi 2–3 propositions ; fournir un logo s'il existe |
 | **S1 — Accueil vivant + sauvegarde** | Modèle d'accueil (une, **brèves / flash info**, derniers articles, blocs par rubrique, mot du jour pulaar, pied de page), menu des rubriques, images en WebP avec chargement différé, sauvegarde `pg_dump` planifiée | Accueil rempli avec les articles existants ; 200 partout ; sauvegarde restaurable testée | Aucun |
 | **S2 — Revue de presse** | Agrégateur RSS licite (extrait + lien), page « Revue de presse », bloc d'accueil | ≥ 5 sources, doublons évités, extraits ≤ 400 car., lien d'origine | Valider la liste de sources |
 | **S3 — Météo** | Service + cache + bandeau d'accueil + page `/meteo/` | 10 villes affichées, attribution présente, panne API sans erreur 500 | Dire si monétisation prévue |
@@ -72,6 +73,26 @@ Chaque sprint = plan → construction → tests → déploiement → vérificati
 | **S7 — Distribution** | PWA, partage WhatsApp **avec aperçu soigné (OpenGraph : miniature + titre)**, newsletter, RSS par rubrique, budget de poids | Installable ; page d'accueil sous le budget fixé | Créer la chaîne WhatsApp |
 | **S8 — Widgets** | Nécrologie, emplois, prière, sondage… selon vos priorités | Un widget à la fois, chacun sourcé | Choisir lesquels |
 
+## 5 ter. Charte graphique (ajout du 2026-11-21, à faire tôt)
+
+Demande du propriétaire : définir une vraie identité visuelle (polices, couleurs, logo…) comme **base** du visuel. Le logo actuel (le nom « KALOUM24 » en texte) est **conservé** pour l'instant ; la charte peut le faire évoluer plus tard.
+
+**Constat (code au 2026-11-21)** : palette héritée du modèle Wagtail « news-template » (bleu-vert *mackerel* `#26899E`, `#96D7E5`, `#1A2A2E`, gris), polices Source Serif 4 (titres), Source Sans 3, Source Code Pro. Ce n'est donc **pas** une identité Kaloum24, c'est celle du gabarit. Ajouts récents provisoires : rouge `#c8102e` de l'étiquette « Flash info », reflet du logo, couleurs héritées (`currentColor`). La charte Tiadra Consortium (bordeaux/or, Roboto Slab/Montserrat) reste **cantonnée à `/pulaar/`** et n'est pas reprise.
+
+**Contenu de la charte** :
+1. **Principes** : sérieux et lisible d'abord (c'est un média), chaleureux ensuite ; lisible sur petit écran et faible débit ; identité guinéenne sans cliché.
+2. **Couleurs** : 1 couleur de marque, 1 d'accent, 1 couleur « urgence » (flash info), neutres, états (succès/erreur) ; versions clair et sombre ; contraste **WCAG AA** vérifié.
+3. **Typographie** : 1 police de titres, 1 de texte, 1 de chiffres si besoin ; polices libres, auto-hébergées (poids de page) ; prise en charge des lettres ɓ ɗ ŋ ƴ (obligatoire) et, plus tard, de l'Adlam (Noto Sans Adlam).
+4. **Logo** : garder le texte actuel ; décliner : version horizontale, icône carrée (favicon, WhatsApp, PWA), version monochrome ; zones de protection ; usages interdits.
+5. **Composants** : bandeau d'info, cartes d'article, étiquettes (Rédaction/Tribune/Contribution/Décryptage), boutons, formulaires, alertes.
+6. **Mouvement** : ce qui peut bouger (flash info, reflet, apparitions), durées, et la règle « mouvement réduit ».
+7. **Ton** : voix éditoriale, exemples de titres, vocabulaire (« Flash info », « À la une »…).
+8. **Mise en œuvre** : un seul fichier de variables CSS (`--k24-*`), remplacement des couleurs en dur, page interne `/charte-graphique/` réservée à l'équipe, document `docs/CHARTE_GRAPHIQUE.md`.
+
+**Méthode** : je propose **2 ou 3 directions** (palette + polices + exemples réels d'écran), tu choisis, puis j'applique et je vérifie en production. Je n'invente ni logo ni marque : un logo/pictogramme n'est conçu que sur ta demande, et tout logo existant est repris tel quel.
+
+**À fournir si tu l'as** : couleurs ou logos déjà utilisés (Facebook, WhatsApp, cartes), préférences (sobre/vif, couleurs du drapeau ou non), exemples de sites que tu aimes.
+
 ## 5 bis. Backlog unifié et priorisé (mis à jour le 2026-11-21)
 
 Le volet **Prix** (détails dans `PLAN_OBSERVATOIRE_PRIX.md`) et deux nouvelles pistes s'ajoutent aux sprints S0–S8. Taille : **S** = 1 cycle « go », **M** = 2–3, **L** = 4 ou plus. Valeurs : H = élevée, M = moyenne, B = basse.
@@ -79,23 +100,24 @@ Le volet **Prix** (détails dans `PLAN_OBSERVATOIRE_PRIX.md`) et deux nouvelles 
 | Ordre | Id | Chantier | Valeur audience | Différenciation | Taille | Risque | Dépend de |
 |---|---|---|---|---|---|---|---|
 | 1 | S0 | Cadre, rubriques, charte (+ charte de la communauté) | M | B | S | légal | vos réponses §6 |
-| 2 | S1 | Accueil vivant + brèves + sauvegarde base | H | M | M | faible | S0 |
-| 3 | S2 | Revue de presse licite | H | B | M | licences sources | S1 |
-| 4 | P1 | Prix : fondations + données officielles + « Chiffres du jour » | H | H | M | extraction PDF | S1 |
-| 5 | S3 | Météo Afrique de l'Ouest | H | H | S | licence si pub | S1 |
-| 6 | S4 | Contributeurs (brouillons, étiquettes, fiche auteur) | M | H | M | **légal élevé** | S0 (charte) |
-| 7 | C1 | Communauté : comptes lecteurs, commentaires modérés, réactions | H | M | M | **modération, données perso** | S4 |
-| 8 | P2 | Prix : contributions citoyennes + contrôle qualité | H | **très H** | L | qualité des données, légal | P1, C1 |
-| 9 | S7 | Distribution : PWA, WhatsApp, newsletter, RSS | H | M | M | faible | S1 |
-| 10 | S5 | « Écouter » fr/en + champ « Version audio » | M | H | S | faible | — |
-| 11 | P3 | Prix : graphiques dans articles, « Panier de la ménagère », données ouvertes | H | H | M | faible | P2 |
-| 12 | S6 | Langues (anglais, puis langues locales, liens de traduction, Adlam) | M | **très H** | L | validation humaine | locuteurs |
-| 13 | C2 | **Forum** (sections, sujets, messages, modération par section) | H | H | L | **modération lourde, légal** | C1, S7, audience |
-| 14 | M1 | Appels d'offres et marchés publics | M | H | M | sources/licences | S2 |
-| 15 | S8 | Widgets : nécrologie, emplois, prière, sondage | M | B | M | faible | S1 |
-| 16 | P4 | Signalements sur carte (carburant, embouteillages, électricité) | M | H | L | **modération, rumeurs** | P2 |
-| 17 | M2 | Cours des matières premières minières | B | M | S | licence données | P1 |
-| 18 | C3 | Blogs d'utilisateurs (non planifié ; profil public d'abord) | B | M | L | modération | C2 |
+| 2 | S0b | **Charte graphique** (couleurs, polices, logo, composants, ton) : base de tout le visuel | H | H | M | faible (décisions de goût) | S0 |
+| 3 | S1 | Accueil vivant + brèves + sauvegarde base | H | M | M | faible | S0 |
+| 4 | S2 | Revue de presse licite | H | B | M | licences sources | S1 |
+| 5 | P1 | Prix : fondations + données officielles + « Chiffres du jour » | H | H | M | extraction PDF | S1 |
+| 6 | S3 | Météo Afrique de l'Ouest | H | H | S | licence si pub | S1 |
+| 7 | S4 | Contributeurs (brouillons, étiquettes, fiche auteur) | M | H | M | **légal élevé** | S0 (charte) |
+| 8 | C1 | Communauté : comptes lecteurs, commentaires modérés, réactions | H | M | M | **modération, données perso** | S4 |
+| 9 | P2 | Prix : contributions citoyennes + contrôle qualité | H | **très H** | L | qualité des données, légal | P1, C1 |
+| 10 | S7 | Distribution : PWA, WhatsApp, newsletter, RSS | H | M | M | faible | S1 |
+| 11 | S5 | « Écouter » fr/en + champ « Version audio » | M | H | S | faible | — |
+| 12 | P3 | Prix : graphiques dans articles, « Panier de la ménagère », données ouvertes | H | H | M | faible | P2 |
+| 13 | S6 | Langues (anglais, puis langues locales, liens de traduction, Adlam) | M | **très H** | L | validation humaine | locuteurs |
+| 14 | C2 | **Forum** (sections, sujets, messages, modération par section) | H | H | L | **modération lourde, légal** | C1, S7, audience |
+| 15 | M1 | Appels d'offres et marchés publics | M | H | M | sources/licences | S2 |
+| 16 | S8 | Widgets : nécrologie, emplois, prière, sondage | M | B | M | faible | S1 |
+| 17 | P4 | Signalements sur carte (carburant, embouteillages, électricité) | M | H | L | **modération, rumeurs** | P2 |
+| 18 | M2 | Cours des matières premières minières | B | M | S | licence données | P1 |
+| 19 | C3 | Blogs d'utilisateurs (non planifié ; profil public d'abord) | B | M | L | modération | C2 |
 
 **Nouveau (communauté)** : détails dans `PLAN_COMMUNAUTE.md`. Les commentaires (C1) viennent juste après les contributeurs, car ils reposent sur la même charte et la même modération ; le forum (C2) attend une audience et des modérateurs formés.
 
@@ -112,6 +134,8 @@ Le volet **Prix** (détails dans `PLAN_OBSERVATOIRE_PRIX.md`) et deux nouvelles 
 3. **Ouverture externe** : *Défaut : seulement après S4 (charte + relecture), jamais de publication directe.*
 4. **Communauté** (voir `PLAN_COMMUNAUTE.md` §8) : modération préalable des commentaires au début, qui modère, anonymat des invités. *Défaut : modération préalable, vous + une personne, e-mail vérifié exigé pour les comptes.*
 5. **Volet Prix** (voir `PLAN_OBSERVATOIRE_PRIX.md` §12) : nom (*défaut : « Baromètre des prix », pas « Bourse »*), sens de « fréquentation de zones », produits de départ, qui valide les relevés (*défaut : vous*), partenariat éventuel avec SIMPRIX.
+
+6. **Charte graphique** (§5 ter) : direction (sobre / chaleureuse / vive), usage ou non des couleurs du drapeau guinéen, logo à conserver ou à décliner. *Défaut : 3 propositions présentées avant tout changement, logo textuel actuel conservé.*
 
 ## 6 bis. Intégration de l'analyse de Gemini (2026-11-21)
 

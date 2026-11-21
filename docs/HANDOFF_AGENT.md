@@ -114,6 +114,8 @@ Import d'articles versionné (`publier_articles`, appelé par `build.sh`, non bl
 
 | S1b Site vivant | **fait** (2026-11-21) | Barre d'info sur toutes les pages sauf `/pulaar/` (charte Tiadra à part) : date/heure de Conakry (JS, `home/vie.js`), flash info défilant (brèves en ligne, puis titres des derniers articles ; message neutre si rien), météo Conakry ; bloc météo 7 villes sur l'accueil ; logo qui scintille ; apparitions douces. CSS `home/vie.css` ; tout est neutralisé par `prefers-reduced-motion`. Météo : `home/meteo.py`, **MET Norway** (User-Agent identifiant obligatoire, cache 3 h, secours 24 h, jamais d'erreur 500). Piège : Open-Meteo renvoie 429 depuis Render. Balise : `{% bandeau_vivant %}` dans `base_page.html`. |
 
+**À venir, demandé par le propriétaire (2026-11-21)** : **S0b Charte graphique** (PLAN_EVOLUTION §5 ter), à faire avant tout nouveau chantier visuel. Les couleurs et polices actuelles viennent du gabarit Wagtail ; le rouge du flash info (`#c8102e`) est provisoire.
+
 ## 8 bis. Chantiers en cours (verrous)
 
 Ajouter une ligne avant de commencer, la retirer à la fin (voir `AGENTS.md` §6).

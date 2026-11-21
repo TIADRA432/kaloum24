@@ -45,7 +45,7 @@ Kaloum24 = portail d'actualités guinéen en français + dictionnaire Pulaar. La
 
 **Planifier → construire → tester → déployer → vérifier en production.**
 
-1. *Planifier* : prendre le prochain item du backlog (`PLAN_EVOLUTION` §5 bis, ordre S0, S1, S2, P1, S3, S4, C1, P2, S7, S5, P3, S6, C2, M1, S8, P4, M2, C3). Vérifier ses dépendances et ses critères de réussite.
+1. *Planifier* : prendre le prochain item du backlog (`PLAN_EVOLUTION` §5 bis, ordre S0, S0b, S1, S2, P1, S3, S4, C1, P2, S7, S5, P3, S6, C2, M1, S8, P4, M2, C3). Vérifier ses dépendances et ses critères de réussite.
 2. *Construire* : branche dédiée (§6), changements minimaux, nouvelle app Django pour une nouvelle fonction.
 3. *Tester* : `cd v2/site && DJANGO_SETTINGS_MODULE=kaloum24_v2.settings.test python manage.py test kaloum24_v2` et `python manage.py makemigrations --check --dry-run`. Ajouter les tests du nouveau code.
 4. *Déployer* : merge/push sur `feat/kaloum24-v2-render`, puis `trigger_deploy` (l'auto-déploiement est peu fiable) et suivre `get_deploy`.
