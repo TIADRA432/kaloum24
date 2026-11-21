@@ -59,7 +59,8 @@ class Command(BaseCommand):
         for code, (nom, unite, ordre, une) in PRODUITS.items():
             p, cree = Produit.objects.get_or_create(code=code, defaults={"nom": nom, "unite": unite, "ordre": ordre, "a_la_une": une})
             produits[code] = p
-        lieux, nouveaux = {}, 0
+        lieux, a_creer = {}, {}
+        existants = set(Observation.objects.filter(date__gte=limite).values_list("produit_id", "lieu_id", "date"))
         for ligne in csv.DictReader(io.StringIO(contenu)):
             if ligne["date"].startswith("#") or ligne["commodity"] not in produits:
                 continue
@@ -71,7 +72,8 @@ class Command(BaseCommand):
             nom_marche = ligne["market"]
             if nom_marche not in lieux:
                 lieux[nom_marche], _ = Lieu.objects.get_or_create(nom=nom_marche, defaults={"region": ligne["admin1"]})
-            _, cree = Observation.objects.get_or_create(
-                produit=produits[ligne["commodity"]], lieu=lieux[nom_marche], date=d, defaults={"prix": ligne["price"]})
-            nouveaux += cree
-        return nouveaux
+            cle = (produits[ligne["commodity"]].pk, lieux[nom_marche].pk, d)
+            if cle not in existants and cle not in a_creer:
+                a_creer[cle] = Observation(produit=produits[ligne["commodity"]], lieu=lieux[nom_marche], date=d, prix=ligne["price"])
+        Observation.objects.bulk_create(a_creer.values(), batch_size=1000, ignore_conflicts=True)
+        return len(a_creer)
