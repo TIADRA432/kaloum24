@@ -1,6 +1,6 @@
 # Kaloum24 — Charte graphique (S0b) : état et choix en attente
 
-> Statut : **3 directions proposées, aucune appliquée.** Le propriétaire choisit ; l'application ne commence qu'après son « go ». Aperçu interactif : `kaloum24-charte-3-directions.html` (envoyé au propriétaire ; régénérable). Aucun secret ici.
+> Statut : **direction « indigo + ocre » (inspirée des références africaines de Samba) appliquée le 2026-11-21 — voir « Implémentation S0b » en bas.** Les 3 directions A/B/C ci-dessous sont l'historique. Aucun secret ici.
 
 ## 1. Constat (vérifié dans le code et en production, 2026-11-21)
 
@@ -51,3 +51,14 @@ Détails complets dans l'aperçu HTML.
 3. Application : bandeau, accueil, cartes, article, étiquettes (Rédaction / Tribune / Contribution / Décryptage), boutons, formulaires. Gabarit `/pulaar/` inchangé (charte Tiadra).
 4. Tests : présence des `@font-face`, contraste, rendu des quatre lettres ; vérification en production sur téléphone.
 5. Mettre à jour ce document avec la direction retenue et les jetons définitifs.
+
+## Implémentation S0b (déployée le 2026-11-21)
+
+Direction retenue : **indigo + ocre sur crème**, inspirée des photos de référence de Samba (cercles concentriques sculptés, indigo tissé, bandes de couvertures, vannerie). Les photos ne sont pas reproduites : motifs refaits à la main en SVG/CSS.
+
+- Tokens `--k24-*` dans `kaloum24_v2/home/static/home/k24.css` : indigo #1E2B63, nuit #0E1433, ocre #E08A2E (ocre foncé #9A4F0B pour texte), crème #F6EEDF, sable #E8DAC0, rouille #A3442A, encre #141A33.
+- Polices auto-hébergées (woff2, `home/static/home/fonts/`) : **Unbounded 600** (titres, nav) et **Charis SIL 400/700** (texte). Sous-ensemble latin-ext limité aux lettres ɓ ɗ ŋ ƴ ɲ ɛ ɔ ƙ + diacritiques : vérifié en production.
+- Signature : médaillon concentrique (`medaillon.svg`, masque CSS) dans le logo (rotation lente) et le hero ; bande tissée ocre/indigo sous l'en-tête.
+- Mode sombre : fond nuit indigo, liens ocre clair.
+- Accessibilité : focus visible ocre, `prefers-reduced-motion` respecté.
+- Reste à faire : pages article, dictionnaire `/pulaar/` (kit Tiadra), pied de page, contrôle de contraste complet, vue mobile.
