@@ -115,6 +115,8 @@ Ajouter une ligne avant de commencer, la retirer à la fin (voir `AGENTS.md` §6
 
 ## 9. Documents
 
+**Confluence** (miroir de lecture, espace personnel de Samba, page racine « Kaloum24 » : planning, décisions et risques, technique, charte agents, runbooks, volets produit). Le dépôt fait foi.
+
 **Entrée agents** : `AGENTS.md` (règles, rôles, cycle, collaboration). **Technique** : `docs/ARCHITECTURE_TECHNIQUE.md`.
 
 **Planification** : `docs/PLAN_EVOLUTION.md` (étude des références, propositions, backlog priorisé et sprints S0–S8) `docs/PLAN_OBSERVATOIRE_PRIX.md` (volet Prix, P1–P4) et `docs/PLAN_COMMUNAUTE.md` (commentaires, comptes, forum : C1–C3). Ce sont les documents de pilotage : suivre l'ordre du backlog (§5 bis), un sprint à la fois.
