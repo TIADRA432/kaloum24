@@ -2,6 +2,10 @@
 {% extends "base_page.html" %}
 {% load wagtailcore_tags wagtailimages_tags static %}
 
+{% block extra_css %}
+    <link rel="stylesheet" type="text/css" href="{% static 'home/accueil.css' %}">
+{% endblock %}
+
 {% block content %}
     <div class="site-padding site-container">
         <div class="relative max-w-[872px] pt-32 tall:pt-40 pb-40 md:pb-60">
@@ -39,6 +43,8 @@
             {% endif %}
         </div>
     </div>
+
+    {% include "components/accueil-vivant.html" %}
 
     {% include_block page.body %}
 

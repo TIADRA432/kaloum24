@@ -1,0 +1,108 @@
+{% load wagtailcore_tags wagtailimages_tags %}
+{% if une or breves or par_rubrique or mot_du_jour %}
+<div class="site-padding site-container acc">
+
+    {% if par_rubrique and listing %}
+    <nav class="acc-nav" aria-label="Rubriques">
+        {% for bloc in par_rubrique %}<a href="{% pageurl listing %}?topic={{ bloc.rubrique.slug }}">{{ bloc.rubrique.title }}</a>{% endfor %}
+    </nav>
+    {% endif %}
+
+    {% if une %}
+    <h2 class="acc-titre">À la une</h2>
+    <div class="acc-grille">
+        <article class="acc-une">
+            {% if une.listing_image %}
+                {% image une.listing_image fill-960x540 as img_une %}
+                <img class="acc-image" src="{{ img_une.url }}" width="{{ img_une.width }}" height="{{ img_une.height }}" alt="{{ img_une.alt }}">
+            {% endif %}
+            <span class="acc-rubrique">{{ une.topic }}</span>
+            <h3><a href="{% pageurl une %}">{% firstof une.listing_title une.title %}</a></h3>
+            <p>{% firstof une.listing_summary une.plain_introduction %}</p>
+            <span class="acc-date">{{ une.display_date }}</span>
+        </article>
+        <div>
+            {% if breves %}
+            <div class="acc-breves">
+                <h2 class="acc-titre">Flash info</h2>
+                <ul class="acc-liste">
+                    {% for b in breves %}
+                    <li>
+                        <span class="acc-heure">{{ b.publie_le|date:"H\hi" }}</span>{{ b.texte }}
+                        {% if b.source or b.lien %}
+                            <div class="acc-source">
+                                {% if b.lien %}<a href="{{ b.lien }}" rel="noopener nofollow">{% firstof b.source "Source" %}</a>{% else %}{{ b.source }}{% endif %}
+                            </div>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% elif secondaires %}
+            <ul class="acc-liste">
+                {% for a in secondaires %}
+                <li><span class="acc-rubrique">{{ a.topic }}</span>
+                    <h3><a href="{% pageurl a %}">{% firstof a.listing_title a.title %}</a></h3>
+                    <span class="acc-date">{{ a.display_date }}</span></li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+    </div>
+    {% elif breves %}
+    <h2 class="acc-titre">Flash info</h2>
+    <div class="acc-breves acc-rub-bloc">
+        <ul class="acc-liste">
+            {% for b in breves %}
+            <li><span class="acc-heure">{{ b.publie_le|date:"H\hi" }}</span>{{ b.texte }}
+                {% if b.source or b.lien %}<div class="acc-source">{% if b.lien %}<a href="{{ b.lien }}" rel="noopener nofollow">{% firstof b.source "Source" %}</a>{% else %}{{ b.source }}{% endif %}</div>{% endif %}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if breves and secondaires %}
+    <h2 class="acc-titre">Aussi à la une</h2>
+    <ul class="acc-liste acc-rub-bloc">
+        {% for a in secondaires %}
+        <li><span class="acc-rubrique">{{ a.topic }}</span>
+            <h3><a href="{% pageurl a %}">{% firstof a.listing_title a.title %}</a></h3>
+            <span class="acc-date">{{ a.display_date }}</span></li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if dernieres %}
+    <h2 class="acc-titre">Dernières nouvelles</h2>
+    <ul class="acc-liste acc-rub-bloc">
+        {% for a in dernieres %}
+        <li><span class="acc-rubrique">{{ a.topic }}</span> <span class="acc-date">· {{ a.display_date }}</span>
+            <h3><a href="{% pageurl a %}">{% firstof a.listing_title a.title %}</a></h3></li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% for bloc in par_rubrique %}
+    <section class="acc-rub-bloc">
+        <h2 class="acc-titre">{{ bloc.rubrique.title }}</h2>
+        <div class="acc-cols">
+            {% for a in bloc.articles %}
+            <article>
+                <h3 class="acc-liste"><a href="{% pageurl a %}">{% firstof a.listing_title a.title %}</a></h3>
+                <span class="acc-date">{{ a.display_date }}</span>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+    {% endfor %}
+
+    {% if mot_du_jour %}
+    <section class="acc-mot" aria-labelledby="mot-du-jour">
+        <h2 class="acc-titre" id="mot-du-jour">Mot du jour en Pulaar</h2>
+        <div class="acc-mot-lemme" lang="ff"><a href="{% url 'pulaar:terme' mot_du_jour.terme.slug %}">{{ mot_du_jour.terme.lemma }}</a></div>
+        {% if mot_du_jour.definition %}<p class="acc-mot-def">{{ mot_du_jour.definition.text }}</p>{% endif %}
+        <p class="acc-mot-meta">Source : {{ mot_du_jour.terme.source.name }} · {{ mot_du_jour.terme.get_status_display }} · <a href="{% url 'pulaar:accueil' %}">Dictionnaire Pulaar</a></p>
+    </section>
+    {% endif %}
+</div>
+{% endif %}

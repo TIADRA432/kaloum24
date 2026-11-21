@@ -1,0 +1,69 @@
+name: Sauvegarde de la base Kaloum24
+
+# Export quotidien de la base Supabase (schéma public), chiffré, puis TEST DE RESTAURATION
+# sur un PostgreSQL éphémère. Secrets à créer par le propriétaire dans
+# Settings > Secrets and variables > Actions :
+#   SUPABASE_DB_URL      chaîne « Session pooler » (port 5432) de la base
+#   BACKUP_PASSPHRASE    phrase secrète de chiffrement (à conserver ailleurs !)
+# ATTENTION : si le dépôt est public, l'archive n'est pas conservée (seul le test de restauration tourne).
+# Aucun secret n'apparaît dans ce fichier.
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sauvegarde:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env: {POSTGRES_USER: test, POSTGRES_PASSWORD: test, POSTGRES_DB: restore}
+        ports: ['5433:5432']
+        options: >-
+          --health-cmd "pg_isready -U test" --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - name: Vérifier les secrets
+        env:
+          URL: ${{ secrets.SUPABASE_DB_URL }}
+          PASS: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          test -n "$URL" || { echo "::error::Secret SUPABASE_DB_URL absent"; exit 1; }
+          test -n "$PASS" || { echo "::error::Secret BACKUP_PASSPHRASE absent"; exit 1; }
+      - name: Export (pg_dump 17, format custom)
+        env:
+          URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          docker run --rm --network host -e URL postgres:17 sh -c \
+            'pg_dump "$URL" --schema=public --no-owner --no-acl --format=custom' > kaloum24.dump
+          ls -l kaloum24.dump
+      - name: Test de restauration
+        run: |
+          docker run --rm --network host -i -e PGPASSWORD=test postgres:17 \
+            pg_restore --no-owner --no-acl -h localhost -p 5433 -U test -d restore < kaloum24.dump
+          T=$(docker run --rm --network host -e PGPASSWORD=test postgres:17 psql -h localhost -p 5433 -U test -d restore -Atc "select count(*) from information_schema.tables where table_schema='public'")
+          P=$(docker run --rm --network host -e PGPASSWORD=test postgres:17 psql -h localhost -p 5433 -U test -d restore -Atc "select count(*) from wagtailcore_page")
+          echo "Tables restaurées : $T ; pages Wagtail : $P"
+          test "$T" -ge 50 && test "$P" -ge 1
+      - name: Avertissement dépôt public
+        if: ${{ !github.event.repository.private }}
+        run: echo "::warning::Dépôt public : la sauvegarde n'est PAS conservée (une archive y serait téléchargeable). Passer le dépôt en privé ou brancher un stockage privé."
+      - name: Chiffrer
+        if: ${{ github.event.repository.private }}
+        env:
+          PASS: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          gpg --batch --yes --passphrase "$PASS" --pinentry-mode loopback --symmetric --cipher-algo AES256 \
+            -o "kaloum24-$(date -u +%Y%m%d).dump.gpg" kaloum24.dump
+          rm kaloum24.dump
+      - uses: actions/upload-artifact@v4
+        if: ${{ github.event.repository.private }}
+        with:
+          name: sauvegarde-base
+          path: kaloum24-*.dump.gpg
+          retention-days: 30

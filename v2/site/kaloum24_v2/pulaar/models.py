@@ -147,3 +147,19 @@ class PulaarProposal(models.Model):
             if texte.strip():
                 PulaarDefinition.objects.create(term=terme, lang=langue, text=texte.strip())
         return terme
+
+
+def mot_du_jour(jour=None):
+    """Un terme du dictionnaire, le même toute la journée (rotation déterministe).
+    Donnée réelle et sourcée : renvoie None si le dictionnaire est vide."""
+    from datetime import date
+
+    jour = jour or date.today()
+    total = PulaarTerm.objects.count()
+    if not total:
+        return None
+    terme = (PulaarTerm.objects.select_related("source", "domain")
+             .prefetch_related("definitions").order_by("pk")[jour.toordinal() % total])
+    definition = next((d for d in terme.definitions.all() if d.lang == "fr"), None) or next(
+        iter(terme.definitions.all()), None)
+    return {"terme": terme, "definition": definition}

@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 from django.db.models.functions import Coalesce
 from django.utils.formats import date_format
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
@@ -192,3 +193,21 @@ class NewsListingPage(BasePage):
         context["matching_topic"] = matching_topic
 
         return context
+
+
+class Breve(models.Model):
+    """Flash info : 1 à 2 phrases horodatées, affichées sur l'accueil. Pas d'article complet."""
+
+    texte = models.CharField("texte", max_length=280, help_text="Une ou deux phrases, 280 caractères au plus.")
+    source = models.CharField("source", max_length=120, blank=True, help_text="Qui a fourni l'information.")
+    lien = models.URLField("lien", blank=True, help_text="Lien vers la source ou l'article complet (facultatif).")
+    publie_le = models.DateTimeField("publiée le", default=timezone.now)
+    en_ligne = models.BooleanField("en ligne", default=True)
+
+    class Meta:
+        ordering = ["-publie_le"]
+        verbose_name = "brève"
+        verbose_name_plural = "brèves"
+
+    def __str__(self):
+        return self.texte[:60]
