@@ -9,3 +9,4 @@ python manage.py collectstatic --noinput
 python manage.py migrate --noinput
 python manage.py init_kaloum24
 python manage.py seed_pulaar
+python manage.py publier_articles || echo "publier_articles : échec ignoré, le site reste en ligne"
