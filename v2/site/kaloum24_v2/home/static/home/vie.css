@@ -18,8 +18,7 @@
 .vie-meteo-txt { opacity: 0.75; }
 @media (max-width: 760px) { .vie-barre { flex-wrap: wrap; gap: 0.35rem 0.75rem; } .vie-horloge .vie-date, .vie-meteo-txt, .vie-fuseau { display: none; } .vie-flash { order: 3; flex-basis: 100%; } }
 
-/* Logo qui scintille : un reflet traverse le nom du site, toutes les quelques secondes. */
-.header-logo { background-image: linear-gradient(110deg, currentColor 0%, currentColor 42%, color-mix(in srgb, currentColor 25%, transparent) 50%, currentColor 58%, currentColor 100%); background-size: 260% 100%; -webkit-background-clip: text; background-clip: text; color: transparent !important; -webkit-text-fill-color: transparent; animation: vie-reflet 6s ease-in-out infinite; }
+/* Logo : le reflet précédent (texte transparent + dégradé en currentColor) rendait le nom invisible ; retiré en attendant la charte (S0b). */
 
 /* Apparition douce des blocs d'accueil, survol des titres */
 .acc > * { animation: vie-entree 0.6s ease both; }
@@ -43,5 +42,4 @@
     .vie-piste { animation: none; padding-left: 0; }
     .vie-defile { overflow-x: auto; }
     .vie-point, .acc > *, .acc-image, .acc-liste li { animation: none !important; transition: none !important; }
-    .header-logo { animation: none; background: none; color: inherit !important; -webkit-text-fill-color: currentColor; }
 }
