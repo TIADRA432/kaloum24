@@ -89,7 +89,7 @@ Groupes natifs **Editors** (rédacteurs) et **Moderators** (relecteurs/publicati
 
 ## 8. État au 2026-11-20 et reste à faire (par priorité)
 
-**En ligne** : service Render `kaloum24-wagtail` (id `srv-dc0cgf3ncjis739esfv0`, branche `feat/kaloum24-v2-render`, https://kaloum24-wagtail.onrender.com), base Supabase migrée (74 tables), `init_kaloum24` et `seed_pulaar` exécutés, `/`, `/actualites/`, `/pulaar/`, `/admin/login/`, `/healthz` répondent 200, `SEO_NOINDEX=true` (retirer au lancement). L'ancien service Flask `kaloum24` (adresse `kaloum24.onrender.com`) plante toujours : à suspendre ou à rediriger.
+**En ligne** : service Render `kaloum24` (id `srv-dc0e0je7bikc73f8sokg`, branche `feat/kaloum24-v2-render`, https://kaloum24.onrender.com ; l'ancien service Flask a été supprimé et le service provisoire `kaloum24-wagtail` doit l'être aussi), base Supabase migrée (74 tables), `init_kaloum24` et `seed_pulaar` exécutés, `/`, `/actualites/`, `/pulaar/`, `/admin/login/`, `/healthz` répondent 200, indexation ouverte (`SEO_NOINDEX=false`), `robots.txt` et `sitemap.xml` en place (à déclarer dans Google Search Console). Le déploiement automatique sur push ne se déclenche pas toujours : utiliser `trigger_deploy`.
 **RLS** : activée sur les 74 tables (migration `enable_rls_on_all_public_tables`) + déclencheur d'événement `kaloum24_auto_rls` qui l'active sur les futures tables. L'avertissement Supabase « RLS enabled, no policy » (INFO) est voulu : aucun accès via l'API REST.
 
 1. Connexion admin à vérifier par le propriétaire (compte `samba`), puis supprimer `ADMIN_PASSWORD` de Render. Health check à régler sur `/healthz` au dashboard.
