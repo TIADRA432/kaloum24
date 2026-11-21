@@ -225,3 +225,6 @@ footer.site-container .text-black{color:var(--k24-sable)!important}
 .rp-langue{display:inline-block;margin-left:.4rem;padding:0 .45rem;font:600 .8rem var(--k24-corps);background:var(--k24-ocre);color:#1b1b2f;border-radius:2px}
 .acc-meteo em{display:block;font-style:normal;font-size:.8rem;opacity:.7}
 .acc-meteo--page{grid-template-columns:repeat(auto-fill,minmax(10.5rem,12rem));margin-bottom:1.6rem}
+.acc-meteo--page,.dark .acc-meteo--page{background:none;border:0;gap:.8rem}
+.acc-meteo--page>div{background:#F7F3EA;border:2px solid var(--k24-indigo);border-radius:4px}
+.dark .acc-meteo--page>div{background:#18214d;border-color:#3a4a94}
