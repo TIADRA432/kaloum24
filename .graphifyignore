@@ -3,3 +3,9 @@ static/vendor/
 .venv-audit/
 .graphify-ci/
 graphify-out/
+# V2 : migrations générées, statiques compilés, dépendances npm, fichiers de données
+v2/site/**/migrations/
+v2/site/**/static/
+v2/site/static_src/
+v2/site/node_modules/
+v2/site/**/data/

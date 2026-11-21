@@ -1,5 +1,7 @@
 # Graphify pour Kaloum24
 
+> Mis à jour le 2026-11-21 : le graphe couvre désormais **la V1 (Flask, racine) et la V2 (Wagtail/Django, `v2/site/`)**. Les migrations, statiques compilés, dépendances npm et fichiers de données de la V2 sont exclus (`.graphifyignore`). Vérifié : 1 091 nœuds, 2 145 relations, 101 communautés (apps `presse`, `prix`, `vie_site`, `meteo`, `pulaar`, `init_kaloum24`… présentes). Aucune clé, aucun appel d'IA.
+
 Graphify est une dépendance de développement, séparée du serveur Flask et
 épinglée dans `requirements-graphify.txt`.
 

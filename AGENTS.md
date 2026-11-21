@@ -74,9 +74,9 @@ Français, court, franc. Dire ce qui est fait, ce qui ne l'est pas, et ce qui re
 
 ---
 
-# Navigation du code (Graphify, V1)
+# Navigation du code (Graphify, V1 + V2)
 
-Avant une question d'architecture, utiliser `graphify query "question"` si
+Chaque push fait construire le graphe par GitHub Actions (onglet Actions → Graphify → Artifacts : `graph.html`, `GRAPH_REPORT.md`). Avant une question d'architecture, utiliser `graphify query "question"` si
 `graphify-out/graph.json` existe et correspond au checkout courant. Vérifier
 `graphify-out/provenance.json` ; un graphe ne remplace pas la lecture du code.
 
