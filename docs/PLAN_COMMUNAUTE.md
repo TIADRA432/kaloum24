@@ -14,7 +14,7 @@
 
 Forum fondé en 2005 par Seun Osewa, financé par la publicité bannière. D'après les descriptions publiques : structure **hiérarchique de sections et de sous-forums** (politique, éducation, emploi…), équipe de **modérateurs**, points de réputation, règles contre le trolling, la désinformation et la haine, interface sobre et rapide pour mobile. Deux leçons :
 - La **structure claire par sections** est ce qui le rend utilisable (et la section Emploi y est l'une des plus fréquentées).
-- La **modération insuffisante est son talon d'achille** : la presse l'a critiqué pour cela, et <cite index="317-1">Cloudflare l'a un jour coupé pour abus non précisés</cite>. Un forum non modéré met le site entier en danger.
+- La **modération insuffisante est son talon d'achille** : la presse l'a critiqué pour cela, et Cloudflare l'a un jour coupé pour abus non précisés (TechCabal). Un forum non modéré met le site entier en danger.
 
 ## 3. Architecture proposée, en trois paliers
 
@@ -47,7 +47,7 @@ Forum fondé en 2005 par Seun Osewa, financé par la publicité bannière. D'apr
 
 ## 5. Cadre légal, données personnelles, modération
 
-- **Loi guinéenne L/2016/037/AN** (cybersécurité et protection des données personnelles) : <cite index="340-1">les données sensibles comprennent les données relatives aux opinions ou activités religieuses, philosophiques, politiques, syndicales</cite>. Or un forum de discussion révèle des opinions : **ne collecter que le strict nécessaire** (pseudo, e-mail), pas de nom réel ni de numéro obligatoire, politique de confidentialité publiée, suppression de compte possible. L'organisme de protection prévu par la loi n'a pas de voie de plainte publique localisée (source secondaire) ; **validation juridique requise**.
+- **Loi guinéenne L/2016/037/AN** (cybersécurité et protection des données personnelles) : les données sensibles comprennent les données relatives aux opinions ou activités religieuses, philosophiques, politiques, syndicales (DLA Piper). Or un forum de discussion révèle des opinions : **ne collecter que le strict nécessaire** (pseudo, e-mail), pas de nom réel ni de numéro obligatoire, politique de confidentialité publiée, suppression de compte possible. L'organisme de protection prévu par la loi n'a pas de voie de plainte publique localisée (source secondaire) ; **validation juridique requise**.
 - **Responsabilité éditoriale** : la HAC a prévenu que les web médias fautifs relèveraient de la loi sur la cybersécurité. Un site qui héberge des commentaires est exposé aux contenus diffamatoires ou haineux : **modération préalable au début, charte de la communauté, procédure de retrait rapide, journal des décisions**.
 - **Conservation minimale** : adresse IP et e-mail conservés le moins longtemps possible, accessibles à peu de personnes ; durée à fixer avec le juriste.
 - **Contenus interdits** : diffamation, haine, appels à la violence, données personnelles d'autrui, publicité sauvage. Section « Annonces » séparée si besoin.

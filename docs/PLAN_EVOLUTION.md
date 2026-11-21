@@ -1,6 +1,6 @@
 # Kaloum24 — Plan d'évolution (sprints)
 
-> Rédigé le 2026-11-21, enrichi le même jour (volet Prix, backlog unifié §5 bis). Complète `HANDOFF_AGENT.md` (état technique), `GUIDE_REDACTION_WAGTAIL.md` (équipe) et `PLAN_OBSERVATOIRE_PRIX.md` (volet Prix).
+> Rédigé le 2026-11-21, enrichi le même jour (volet Prix, backlog unifié §5 bis). Complète `HANDOFF_AGENT.md` (état technique), `GUIDE_REDACTION_WAGTAIL.md` (équipe) et `PLAN_OBSERVATOIRE_PRIX.md` (volet Prix) et `PLAN_COMMUNAUTE.md` (commentaires, comptes, forum).
 > Règles du projet inchangées : aucun contenu inventé, « IA ≠ autorité linguistique », provenance obligatoire, aucun secret dans le code.
 
 ## 1. Point de départ (constat)
@@ -50,6 +50,8 @@ Limites de cette étude : l'accueil de Guinéenews a été lu tronqué (météo,
 
 **I. Baromètre des prix** — prix réels du marché guinéen (moto, riz, carburant, transport, loyers, bétail…), officiels et citoyens, avec contrôle qualité. Voir `PLAN_OBSERVATOIRE_PRIX.md` (sprints P1–P4).
 
+**K. Communauté** — comptes lecteurs, commentaires modérés, réactions (C1), forum à sections (C2), blogs écartés pour l'instant (C3). Voir `PLAN_COMMUNAUTE.md`.
+
 **J. Appels d'offres et marchés publics** — rubrique de service (sprint M1).
 
 **H. Widgets utiles (au choix, après le cœur)** — nécrologie / avis de décès et offres d'emploi (très présents chez les références), horaires de prière, sondage du jour, « chiffre du jour », taux de change GNF (source officielle à identifier), résultats sportifs.
@@ -76,22 +78,26 @@ Le volet **Prix** (détails dans `PLAN_OBSERVATOIRE_PRIX.md`) et deux nouvelles 
 
 | Ordre | Id | Chantier | Valeur audience | Différenciation | Taille | Risque | Dépend de |
 |---|---|---|---|---|---|---|---|
-| 1 | S0 | Cadre, rubriques, charte | M | B | S | légal | vos réponses §6 |
-| 2 | S1 | Accueil vivant + sauvegarde base | H | M | M | faible | S0 |
+| 1 | S0 | Cadre, rubriques, charte (+ charte de la communauté) | M | B | S | légal | vos réponses §6 |
+| 2 | S1 | Accueil vivant + brèves + sauvegarde base | H | M | M | faible | S0 |
 | 3 | S2 | Revue de presse licite | H | B | M | licences sources | S1 |
 | 4 | P1 | Prix : fondations + données officielles + « Chiffres du jour » | H | H | M | extraction PDF | S1 |
 | 5 | S3 | Météo Afrique de l'Ouest | H | H | S | licence si pub | S1 |
-| 6 | S4 | Contributeurs (brouillons + relecture) | M | H | M | **légal élevé** | S0 (charte) |
-| 7 | P2 | Prix : contributions citoyennes + contrôle qualité | H | **très H** | L | qualité des données, légal | P1, S4 |
-| 8 | S7 | Distribution : PWA, WhatsApp, newsletter, RSS | H | M | M | faible | S1 |
-| 9 | S5 | Bouton « Écouter » fr/en | M | H | S | faible | — |
-| 10 | P3 | Prix : graphiques dans articles, « Panier de la ménagère », données ouvertes | H | H | M | faible | P2 |
-| 11 | S6 | Langues (anglais, puis langues locales par des locuteurs) | M | **très H** | L | validation humaine | locuteurs |
-| 12 | M1 | Appels d'offres et marchés publics | M | H | M | sources/licences | S2 |
-| 13 | S8 | Widgets : nécrologie, emplois, prière, sondage | M | B | M | faible | S1 |
-| 14 | P4 | Signalements sur carte (carburant, embouteillages, électricité) | M | H | L | **modération, rumeurs** | P2 |
-| 15 | M2 | Cours des matières premières minières | B | M | S | licence données | P1 |
-| 16 | S9 | Réactions rapides (« Pertinent / Utile / À débattre »), puis commentaires modérés | H | M | M | **modération et responsabilité légale** | S4, charte |
+| 6 | S4 | Contributeurs (brouillons, étiquettes, fiche auteur) | M | H | M | **légal élevé** | S0 (charte) |
+| 7 | C1 | Communauté : comptes lecteurs, commentaires modérés, réactions | H | M | M | **modération, données perso** | S4 |
+| 8 | P2 | Prix : contributions citoyennes + contrôle qualité | H | **très H** | L | qualité des données, légal | P1, C1 |
+| 9 | S7 | Distribution : PWA, WhatsApp, newsletter, RSS | H | M | M | faible | S1 |
+| 10 | S5 | « Écouter » fr/en + champ « Version audio » | M | H | S | faible | — |
+| 11 | P3 | Prix : graphiques dans articles, « Panier de la ménagère », données ouvertes | H | H | M | faible | P2 |
+| 12 | S6 | Langues (anglais, puis langues locales, liens de traduction, Adlam) | M | **très H** | L | validation humaine | locuteurs |
+| 13 | C2 | **Forum** (sections, sujets, messages, modération par section) | H | H | L | **modération lourde, légal** | C1, S7, audience |
+| 14 | M1 | Appels d'offres et marchés publics | M | H | M | sources/licences | S2 |
+| 15 | S8 | Widgets : nécrologie, emplois, prière, sondage | M | B | M | faible | S1 |
+| 16 | P4 | Signalements sur carte (carburant, embouteillages, électricité) | M | H | L | **modération, rumeurs** | P2 |
+| 17 | M2 | Cours des matières premières minières | B | M | S | licence données | P1 |
+| 18 | C3 | Blogs d'utilisateurs (non planifié ; profil public d'abord) | B | M | L | modération | C2 |
+
+**Nouveau (communauté)** : détails dans `PLAN_COMMUNAUTE.md`. Les commentaires (C1) viennent juste après les contributeurs, car ils reposent sur la même charte et la même modération ; le forum (C2) attend une audience et des modérateurs formés.
 
 **Pourquoi cet ordre** : l'accueil et la revue de presse règlent d'abord le « site vide ». Les prix officiels (P1) donnent vite des chiffres crédibles sans dépendre de personne. Les contributions externes (S4, P2) viennent ensuite, car elles exigent la charte et la modération. Les langues locales (S6) avancent **en parallèle** dès que des locuteurs sont disponibles, car elles ne dépendent pas de moi.
 
@@ -104,13 +110,14 @@ Le volet **Prix** (détails dans `PLAN_OBSERVATOIRE_PRIX.md`) et deux nouvelles 
 1. **Statut légal** : Kaloum24 est-il déclaré (procureur / HAC) et qui est le directeur de publication ? *Défaut : je prépare les mentions légales avec un champ à compléter, rien d'inventé.*
 2. **Monétisation** (publicité, sponsors) prévue à court terme ? *Défaut : on suppose que oui, donc météo à prévoir en licence commerciale.*
 3. **Ouverture externe** : *Défaut : seulement après S4 (charte + relecture), jamais de publication directe.*
-4. **Volet Prix** (voir `PLAN_OBSERVATOIRE_PRIX.md` §12) : nom (*défaut : « Baromètre des prix », pas « Bourse »*), sens de « fréquentation de zones », produits de départ, qui valide les relevés (*défaut : vous*), partenariat éventuel avec SIMPRIX.
+4. **Communauté** (voir `PLAN_COMMUNAUTE.md` §8) : modération préalable des commentaires au début, qui modère, anonymat des invités. *Défaut : modération préalable, vous + une personne, e-mail vérifié exigé pour les comptes.*
+5. **Volet Prix** (voir `PLAN_OBSERVATOIRE_PRIX.md` §12) : nom (*défaut : « Baromètre des prix », pas « Bourse »*), sens de « fréquentation de zones », produits de départ, qui valide les relevés (*défaut : vous*), partenariat éventuel avec SIMPRIX.
 
 ## 6 bis. Intégration de l'analyse de Gemini (2026-11-21)
 
 Votre prompt a aussi été soumis à Gemini. Comparaison avec ce plan, après vérification des points techniques :
 
-**Retenu et ajouté** : colonne « Flash info / Brèves » (S1) ; étiquette « Décryptage » et fiche auteur détaillée (S4) ; liens entre traductions + sélecteur « Lire cet article en » (S6) ; **alphabet Adlam** (S6) ; champ « Version audio » téléversé par l'auteur (S5) ; réactions rapides et commentaires modérés (S9) ; aperçu WhatsApp (OpenGraph), images WebP, chargement différé (S1/S7).
+**Retenu et ajouté** : colonne « Flash info / Brèves » (S1) ; étiquette « Décryptage » et fiche auteur détaillée (S4) ; liens entre traductions + sélecteur « Lire cet article en » (S6) ; **alphabet Adlam** (S6) ; champ « Version audio » téléversé par l'auteur (S5) ; réactions rapides et commentaires modérés (C1) ; aperçu WhatsApp (OpenGraph), images WebP, chargement différé (S1/S7).
 
 **Déjà présent chez nous** : badges Rédaction / Contribution / Opinion, workflow brouillon → relecture → publication (déjà dans Wagtail), météo mise en cache, taux de change (P1), lecture vocale du navigateur, multilingue par article plutôt que traduction automatique, pages légères.
 
