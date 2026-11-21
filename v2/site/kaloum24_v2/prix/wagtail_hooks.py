@@ -1,7 +1,7 @@
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet
 
-from .models import Observation, Produit
+from .models import Observation, Produit, TauxChange
 
 
 class ProduitViewSet(SnippetViewSet):
@@ -23,5 +23,16 @@ class ObservationViewSet(SnippetViewSet):
     list_filter = ["produit", "lieu"]
 
 
+class TauxChangeViewSet(SnippetViewSet):
+    model = TauxChange
+    icon = "doc-full"
+    menu_label = "Cours de change (BCRG)"
+    menu_order = 255
+    add_to_admin_menu = True
+    list_display = ["date", "devise", "cours"]
+    list_filter = ["devise"]
+
+
 register_snippet(ProduitViewSet)
+register_snippet(TauxChangeViewSet)
 register_snippet(ObservationViewSet)

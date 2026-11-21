@@ -1,0 +1,31 @@
+{% extends "base_page.html" %}
+{% load static %}
+
+{% block title %}Convertisseur de devises{% endblock title %}
+
+{% block extra_css %}
+    <link rel="stylesheet" type="text/css" href="{% static 'home/accueil.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="site-padding site-container acc">
+    <h1 class="rp-titre">Convertisseur de devises</h1>
+    <p class="rp-intro">Franc guinéen, franc CFA, euro, dollar et autres devises, au cours de référence de la Banque Centrale de la République de Guinée (BCRG).</p>
+    {% if pret %}
+    <form class="cv-form" method="get" action="{% url 'convertisseur' %}">
+        <label>Montant<input type="text" inputmode="decimal" name="montant" value="{{ montant }}" required></label>
+        <label>De<select name="de">{% for code, nom in devises %}<option value="{{ code }}"{% if code == de %} selected{% endif %}>{{ code }} · {{ nom }}</option>{% endfor %}</select></label>
+        <label>Vers<select name="vers">{% for code, nom in devises %}<option value="{{ code }}"{% if code == vers %} selected{% endif %}>{{ code }} · {{ nom }}</option>{% endfor %}</select></label>
+        <button type="submit">Convertir</button>
+    </form>
+    {% if erreur %}<p class="cv-erreur" role="alert">{{ erreur }}</p>
+    {% elif resultat is not None %}
+    <p class="cv-resultat" aria-live="polite">{{ montant_num|floatformat:"-2g" }} {{ de }} = <b>{{ resultat|floatformat:"2g" }} {{ vers }}</b></p>
+    {% endif %}
+    <p class="px-note">Cours de référence BCRG du {{ jour|date:"j F Y" }}{% if source %} · <a href="{{ source }}" rel="noopener" target="_blank">document officiel (PDF)</a>{% endif %}.
+    Il s'agit d'un cours indicatif de la banque centrale : les bureaux de change et le marché parallèle appliquent d'autres taux. Ce n'est pas un conseil financier.</p>
+    {% else %}
+    <p class="rp-vide">Le cours de référence de la BCRG n'est pas encore disponible. Réessayez dans quelques minutes.</p>
+    {% endif %}
+</div>
+{% endblock %}

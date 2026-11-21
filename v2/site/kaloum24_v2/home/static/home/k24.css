@@ -228,3 +228,9 @@ footer.site-container .text-black{color:var(--k24-sable)!important}
 .acc-meteo--page,.dark .acc-meteo--page{background:none;border:0;gap:.8rem}
 .acc-meteo--page>div{background:#F7F3EA;border:2px solid var(--k24-indigo);border-radius:4px}
 .dark .acc-meteo--page>div{background:#18214d;border-color:#3a4a94}
+.cv-form{display:grid;grid-template-columns:minmax(8rem,1fr) 2fr 2fr auto;gap:.8rem;align-items:end;margin:1.5rem 0;max-width:60rem}
+.cv-form label{display:grid;gap:.3rem;font-weight:600}.cv-form input,.cv-form select{font:inherit;padding:.6rem .7rem;border:2px solid var(--k24-indigo);background:#fff;color:var(--k24-texte);min-width:0}
+.cv-form button{font:600 1rem var(--k24-display);padding:.7rem 1.2rem;background:var(--k24-ocre);color:#1b1b2f;border:2px solid var(--k24-indigo);cursor:pointer}
+.cv-resultat{font-size:clamp(1.4rem,3.5vw,2.1rem);margin:1rem 0}.cv-resultat b{color:var(--k24-indigo)}.dark .cv-resultat b{color:var(--k24-ocre)}
+.cv-erreur{color:#9A2B14;font-weight:600}.dark .cv-erreur{color:#F2A08A}
+@media(max-width:760px){.cv-form{grid-template-columns:1fr}}

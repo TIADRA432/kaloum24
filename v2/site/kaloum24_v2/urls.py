@@ -5,6 +5,7 @@ from django.urls import include, path
 
 from kaloum24_v2.home import views as home_views
 from kaloum24_v2.news import views_presse as presse_views
+from kaloum24_v2.prix import views as prix_views
 
 from wagtail.admin import urls as wagtailadmin_urls
 from wagtail import urls as wagtail_urls
@@ -28,6 +29,7 @@ urlpatterns = [
     path("pulaar/", include("kaloum24_v2.pulaar.urls")),
     path("credits-images/", home_views.credits_images, name="credits_images"),
     path("meteo/", home_views.meteo_page, name="meteo"),
+    path("convertisseur/", prix_views.convertisseur, name="convertisseur"),
     path("prix/", include("kaloum24_v2.prix.urls")),
     path("revue-de-presse/", presse_views.revue, name="revue_de_presse"),
     path("search/", search_views.search, name="search"),

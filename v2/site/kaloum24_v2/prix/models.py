@@ -49,3 +49,21 @@ class Observation(models.Model):
 
     def __str__(self):
         return f"{self.produit} · {self.lieu} · {self.date:%m/%Y}: {self.prix} GNF"
+
+
+class TauxChange(models.Model):
+    """Cours de référence de la BCRG : combien de GNF pour 1 unité de la devise, à une date donnée."""
+
+    date = models.DateField("date du cours")
+    devise = models.CharField("code devise", max_length=5, help_text="USD, EUR, XOF…")
+    cours = models.DecimalField("GNF pour 1 unité", max_digits=14, decimal_places=4)
+    source_url = models.URLField("document source", max_length=300, blank=True)
+
+    class Meta:
+        ordering = ["-date", "devise"]
+        unique_together = [("date", "devise")]
+        verbose_name = "cours de change (BCRG)"
+        verbose_name_plural = "cours de change (BCRG)"
+
+    def __str__(self):
+        return f"{self.devise} {self.date} : {self.cours}"
