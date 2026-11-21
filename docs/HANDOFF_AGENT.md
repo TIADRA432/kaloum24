@@ -105,6 +105,13 @@ Import d'articles versionné (`publier_articles`, appelé par `build.sh`, non bl
 7. Courriels de demande d'autorisation (rédigés, à envoyer par le propriétaire) : DiLAF/LS2N (Chantal Enguehard, univ-nantes.fr) et SIL Dictionaries & Lexicography ; le consentement d'Oumar Bah est nécessaire pour son *Dictionnaire Pular* (Webonary, non libre de droits).
 8. L'audit Graphify (`docs/AUDIT_GRAPHIFY.md`) liste des défauts V1 non corrigés (XSS dans l'aperçu RSS admin, CSRF des paiements, CSP Facebook…) : ne concernent la V2 que si ces fonctions sont reportées.
 
+## 8 ter. Avancement du backlog
+
+| Item | État | Détail |
+|---|---|---|
+| S0 Cadre | **fait** (2026-11-21, vérifié en production) | 11 rubriques ; brouillons non publiés « Charte éditoriale », « Mentions légales », « À propos » (champs `[À COMPLÉTER]` : statut légal, directeur de publication, contacts — rien d'inventé). À publier par le propriétaire après compléments et avis d'un juriste. |
+| S1 Accueil vivant | **fait, sauf 3 points** (2026-11-21) | Accueil : à la une, flash info (snippet `Breve`, menu admin « Brèves »), dernières nouvelles, blocs par rubrique, mot du jour Pulaar (`pulaar.models.mot_du_jour`, rotation quotidienne, source affichée). CSS `home/accueil.css` (préfixe `.acc-`, pas de recompilation Tailwind). Reste : (1) **sauvegarde** : workflow `.github/workflows/sauvegarde-base.yml` écrit mais **non exécuté** — il attend les secrets GitHub `SUPABASE_DB_URL` et `BACKUP_PASSPHRASE` saisis par le propriétaire ; le dépôt étant **public**, l'archive n'est pas conservée tant qu'il n'est pas privé ou qu'un stockage privé n'est pas branché ; (2) droits des groupes Rédacteurs/Relecteurs sur « Brèves » à accorder dans l'admin ; (3) images WebP / chargement différé et lien des pages cadre dans le pied de page, à faire à leur publication. |
+
 ## 8 bis. Chantiers en cours (verrous)
 
 Ajouter une ligne avant de commencer, la retirer à la fin (voir `AGENTS.md` §6).

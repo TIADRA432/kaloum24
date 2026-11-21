@@ -33,8 +33,8 @@ Environnements : production (`settings.render`), local (`dev`), tests (`test`, S
 
 | App | Contenu |
 |---|---|
-| `home` | `HomePage` (introduction, CTA, StoryBlock, pages liées) |
-| `news` | `ArticlePage` (auteur, rubrique, date, lieu, chapô, image, corps `ArticleBody`, sources, temps de lecture), `NewsListingPage`, flux RSS `/news/feed/`, commande `publier_articles`, données `news/data/articles/*.json` |
+| `home` | `HomePage` (introduction, CTA, StoryBlock, pages liées ; contexte « accueil vivant » : une, brèves, rubriques, mot du jour), gabarit `components/accueil-vivant.html`, CSS `home/accueil.css` |
+| `news` | `Breve` (flash info), `ArticlePage` (auteur, rubrique, date, lieu, chapô, image, corps `ArticleBody`, sources, temps de lecture), `NewsListingPage`, flux RSS `/news/feed/`, commande `publier_articles`, données `news/data/articles/*.json` |
 | `standardpages` | `StandardPage`, `IndexPage` |
 | `navigation` | `NavigationSettings` (menu principal et pied de page) |
 | `utils` | blocs (`utils/blocks/`), snippets `AuthorSnippet` et `ArticleTopic`, mixins `SocialFields`/`ListingFields`, commande `init_kaloum24`, rôles et workflow |
@@ -73,7 +73,7 @@ Règle : les secrets sont saisis par le propriétaire dans le tableau de bord Re
 
 | Commande | Effet |
 |---|---|
-| `init_kaloum24` | structure : accueil, arborescence, rubriques, rôles (Rédacteurs, Relecteurs, Lexicographes Pulaar), workflow, image par défaut, compte admin |
+| `init_kaloum24` | structure : accueil, arborescence, 11 rubriques, pages cadre en brouillon (charte, mentions légales, à propos), rôles (Rédacteurs, Relecteurs, Lexicographes Pulaar), workflow, image par défaut, compte admin |
 | `seed_pulaar` | domaines, sources et termes initiaux du dictionnaire |
 | `publier_articles` | publie les articles de `news/data/articles/*.json` **une seule fois** (révision `kaloum24.import`), redirection 301 si le slug change |
 
