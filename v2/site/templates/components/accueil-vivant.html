@@ -1,5 +1,6 @@
-{% load wagtailcore_tags wagtailimages_tags %}
-{% if une or breves or par_rubrique or mot_du_jour %}
+{% load wagtailcore_tags wagtailimages_tags vie_site %}
+{% meteo_villes as villes %}
+{% if une or breves or par_rubrique or mot_du_jour or villes %}
 <div class="site-padding site-container acc">
 
     {% if par_rubrique and listing %}
@@ -95,6 +96,14 @@
         </div>
     </section>
     {% endfor %}
+
+    {% if villes %}
+    <h2 class="acc-titre">Météo en Afrique de l'Ouest</h2>
+    <div class="acc-meteo">
+        {% for v in villes %}<div><span aria-hidden="true">{{ v.symbole }}</span> {{ v.nom }}<b>{{ v.temperature }}°C</b><small>{{ v.libelle }}</small></div>{% endfor %}
+    </div>
+    <p class="acc-meteo-credit">Météo : <a href="https://open-meteo.com/">Open-Meteo.com</a> (CC BY 4.0), mise à jour toutes les 3 heures.</p>
+    {% endif %}
 
     {% if mot_du_jour %}
     <section class="acc-mot" aria-labelledby="mot-du-jour">

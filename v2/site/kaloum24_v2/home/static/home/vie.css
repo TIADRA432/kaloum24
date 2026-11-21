@@ -1,0 +1,47 @@
+/* Vie du site : barre d'info, flash défilant, logo qui scintille, apparitions douces.
+   Préfixe .vie- ; tout est neutralisé si l'utilisateur demande moins d'animations. */
+.vie-barre { display: flex; align-items: center; gap: 1rem; padding: 0.5rem 1.25rem; font-size: 0.875rem; background: color-mix(in srgb, currentColor 8%, transparent); border-bottom: 1px solid color-mix(in srgb, currentColor 20%, transparent); }
+.vie-horloge { display: flex; align-items: baseline; gap: 0.5rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.vie-date { text-transform: capitalize; opacity: 0.8; }
+.vie-heure { font-weight: 700; }
+.vie-fuseau { opacity: 0.6; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.vie-flash { display: flex; align-items: center; flex: 1 1 auto; min-width: 0; gap: 0.75rem; }
+.vie-etiquette { display: inline-flex; align-items: center; gap: 0.4rem; flex: none; padding: 0.15rem 0.6rem; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: #fff; background: #c8102e; border-radius: 2px; }
+.vie-point { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: #fff; animation: vie-pouls 1.4s ease-in-out infinite; }
+.vie-defile { overflow: hidden; flex: 1 1 auto; min-width: 0; mask-image: linear-gradient(90deg, transparent, #000 2%, #000 98%, transparent); -webkit-mask-image: linear-gradient(90deg, transparent, #000 2%, #000 98%, transparent); }
+.vie-piste { display: inline-flex; gap: 3rem; margin: 0; padding: 0 0 0 100%; list-style: none; white-space: nowrap; animation: vie-defile var(--vie-duree, 40s) linear infinite; }
+.vie-defile:hover .vie-piste, .vie-defile:focus-within .vie-piste { animation-play-state: paused; }
+.vie-piste li b { font-variant-numeric: tabular-nums; margin-right: 0.25rem; }
+.vie-piste li em { font-style: normal; font-weight: 700; opacity: 0.7; margin-right: 0.25rem; }
+.vie-piste a { text-decoration: underline; text-underline-offset: 3px; }
+.vie-meteo { flex: none; white-space: nowrap; }
+.vie-meteo-txt { opacity: 0.75; }
+@media (max-width: 760px) { .vie-barre { flex-wrap: wrap; gap: 0.35rem 0.75rem; } .vie-horloge .vie-date, .vie-meteo-txt, .vie-fuseau { display: none; } .vie-flash { order: 3; flex-basis: 100%; } }
+
+/* Logo qui scintille : un reflet traverse le nom du site, toutes les quelques secondes. */
+.header-logo { background-image: linear-gradient(110deg, currentColor 0%, currentColor 42%, color-mix(in srgb, currentColor 25%, transparent) 50%, currentColor 58%, currentColor 100%); background-size: 260% 100%; -webkit-background-clip: text; background-clip: text; color: transparent !important; -webkit-text-fill-color: transparent; animation: vie-reflet 6s ease-in-out infinite; }
+
+/* Apparition douce des blocs d'accueil, survol des titres */
+.acc > * { animation: vie-entree 0.6s ease both; }
+.acc > *:nth-child(2) { animation-delay: 0.08s; } .acc > *:nth-child(3) { animation-delay: 0.16s; } .acc > *:nth-child(4) { animation-delay: 0.24s; }
+.acc-image { transition: transform 0.6s ease; }
+.acc-une:hover .acc-image { transform: scale(1.03); }
+.acc-liste li { transition: padding-left 0.2s ease; }
+.acc-liste li:hover { padding-left: 0.4rem; }
+.acc-meteo { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr)); margin-bottom: 1rem; }
+.acc-meteo > div { padding: 0.75rem 1rem; border: 1px solid color-mix(in srgb, currentColor 25%, transparent); }
+.acc-meteo b { display: block; font-size: 1.5rem; }
+.acc-meteo small { opacity: 0.75; }
+.acc-meteo-credit { font-size: 0.8125rem; opacity: 0.7; margin-bottom: 3rem; }
+
+@keyframes vie-defile { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+@keyframes vie-pouls { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.35; transform: scale(0.7); } }
+@keyframes vie-reflet { 0%, 55% { background-position: 130% 0; } 100% { background-position: -30% 0; } }
+@keyframes vie-entree { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+    .vie-piste { animation: none; padding-left: 0; }
+    .vie-defile { overflow-x: auto; }
+    .vie-point, .acc > *, .acc-image, .acc-liste li { animation: none !important; transition: none !important; }
+    .header-logo { animation: none; background: none; color: inherit !important; -webkit-text-fill-color: currentColor; }
+}

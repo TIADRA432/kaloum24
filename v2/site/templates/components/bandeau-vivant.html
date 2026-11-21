@@ -1,0 +1,26 @@
+<div class="vie-barre" role="region" aria-label="Informations en continu">
+    <div class="vie-horloge" aria-live="off">
+        <span class="vie-date" data-vie-date></span>
+        <span class="vie-heure" data-vie-heure></span>
+        <span class="vie-fuseau">Conakry</span>
+    </div>
+
+    <div class="vie-flash">
+        <span class="vie-etiquette"><span class="vie-point" aria-hidden="true"></span>Flash info</span>
+        <div class="vie-defile" data-vie-defile>
+            <ul class="vie-piste" style="--vie-duree: {{ duree }}s">
+                {% for it in items %}
+                <li>{% if it.type == "breve" %}<b>{{ it.heure|date:"H\hi" }}</b> {% else %}<em>À lire</em> {% endif %}{% if it.lien %}<a href="{{ it.lien }}">{{ it.texte }}</a>{% else %}{{ it.texte }}{% endif %}</li>
+                {% empty %}
+                <li>Bienvenue sur Kaloum24 — l'actualité de Guinée et d'Afrique de l'Ouest, rédigée à Conakry.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    {% if meteo %}
+    <div class="vie-meteo">
+        {% with m=meteo.0 %}<span aria-hidden="true">{{ m.symbole }}</span> {{ m.nom }} <b>{{ m.temperature }}°C</b> <span class="vie-meteo-txt">{{ m.libelle }}</span>{% endwith %}
+    </div>
+    {% endif %}
+</div>
