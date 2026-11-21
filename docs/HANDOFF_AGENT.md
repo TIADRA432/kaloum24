@@ -83,6 +83,8 @@ Sécurité Supabase à faire après le premier `migrate` : activer **RLS** sur t
 - Wagtail rend une `HomePage` par défaut à la migration : `init_kaloum24` la renomme au lieu d'en créer une autre.
 - Anciennes erreurs V1 utiles : un `server_default` est requis pour tout nouveau champ NOT NULL ; avec Alembic, découvrir les noms de contraintes à l'exécution.
 
+- **Polices** (constaté 2026-11-21) : Source Serif 4 / Source Sans 3 sont déclarées dans `tailwind.config.js` mais **jamais chargées** (seul Source Code Pro a des `@font-face`) ; aucune police du site ne contient ɓ ɗ ŋ ƴ. Voir `docs/CHARTE_GRAPHIQUE.md` (S0b, 3 directions en attente de choix).
+
 ## 7. Éditorial (Wagtail)
 
 Mis à jour le 2026-11-21. Le corps d'un article (`ArticleBody`, `utils/blocks/article.py`) est une suite de blocs de presse : paragraphe, intertitre, citation, image (légende + crédit), encadré, tableau, vidéo/embed ; les anciens blocs `section`, `cta`, `statistics` restent valides. Champs d'article : lieu (`dateline`), chapô, sources, temps de lecture calculé. Mise en page de lecture : `news/static/news/article.css` (préfixe `.art-`, couleurs héritées du thème). `wagtail.embeds` et `wagtail.contrib.table_block` sont installés.
@@ -114,7 +116,7 @@ Import d'articles versionné (`publier_articles`, appelé par `build.sh`, non bl
 
 | S1b Site vivant | **fait** (2026-11-21) | Barre d'info sur toutes les pages sauf `/pulaar/` (charte Tiadra à part) : date/heure de Conakry (JS, `home/vie.js`), flash info défilant (brèves en ligne, puis titres des derniers articles ; message neutre si rien), météo Conakry ; bloc météo 7 villes sur l'accueil ; logo qui scintille ; apparitions douces. CSS `home/vie.css` ; tout est neutralisé par `prefers-reduced-motion`. Météo : `home/meteo.py`, **MET Norway** (User-Agent identifiant obligatoire, cache 3 h, secours 24 h, jamais d'erreur 500). Piège : Open-Meteo renvoie 429 depuis Render. Balise : `{% bandeau_vivant %}` dans `base_page.html`. |
 
-**À venir, demandé par le propriétaire (2026-11-21)** : **S0b Charte graphique** (PLAN_EVOLUTION §5 ter), à faire avant tout nouveau chantier visuel. Les couleurs et polices actuelles viennent du gabarit Wagtail ; le rouge du flash info (`#c8102e`) est provisoire.
+**À venir, demandé par le propriétaire (2026-11-21)** : **S0b Charte graphique** (PLAN_EVOLUTION §5 ter ; état et 3 directions : `docs/CHARTE_GRAPHIQUE.md`), à faire avant tout nouveau chantier visuel. Les couleurs et polices actuelles viennent du gabarit Wagtail ; le rouge du flash info (`#c8102e`) est provisoire.
 
 ## 8 bis. Chantiers en cours (verrous)
 
