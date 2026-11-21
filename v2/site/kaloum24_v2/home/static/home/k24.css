@@ -145,3 +145,20 @@ footer.site-container .text-black{color:var(--k24-sable)!important}
 .rp-source{font-size:.85rem!important;text-transform:none;letter-spacing:0}
 .rp-intro{font-size:1.1rem;line-height:1.7}
 .acc-date{font-size:.9rem;opacity:.85}
+
+/* Listes : une ambiance par rubrique (six décors originaux, attribués de façon stable) */
+.k24-rub{height:clamp(110px,18vw,170px);display:flex;align-items:center;padding:0 max(1.5rem,calc((100vw - 1280px)/2 + 5rem));margin-top:.5rem;position:relative;overflow:hidden}
+.k24-rub span{font:600 clamp(1.8rem,5vw,3.4rem) var(--k24-display);padding:.25rem 1.1rem;letter-spacing:-.01em;position:relative}
+.k24-rub--0{background:repeating-linear-gradient(90deg,var(--k24-indigo) 0 44px,var(--k24-creme) 44px 50px,var(--k24-ocre) 50px 94px,var(--k24-creme) 94px 100px)}
+.k24-rub--0 span{background:var(--k24-indigo);color:var(--k24-creme)}
+.k24-rub--1{background:radial-gradient(circle,var(--k24-ocre) 0 8px,transparent 9px) 0 0/34px 34px,var(--k24-nuit)}
+.k24-rub--1 span{background:var(--k24-nuit);color:var(--k24-creme)}
+.k24-rub--2{background:linear-gradient(135deg,transparent 25%,rgba(255,255,255,.16) 25% 50%,transparent 50% 75%,rgba(255,255,255,.16) 75%) 0 0/56px 56px,var(--k24-rouille)}
+.k24-rub--2 span{background:var(--k24-rouille);color:var(--k24-creme)}
+.k24-rub--3{background:conic-gradient(from 45deg at 50% 50%,var(--k24-ocre) 0 25%,var(--k24-indigo) 0 50%,var(--k24-ocre) 0 75%,var(--k24-indigo) 0) 0 0/48px 48px}
+.k24-rub--3 span{background:var(--k24-creme);color:var(--k24-indigo)}
+.k24-rub--4{background:repeating-radial-gradient(circle at 12% 50%,var(--k24-sable) 0 10px,var(--k24-indigo) 10px 14px,var(--k24-sable) 14px 24px,var(--k24-ocre) 24px 28px)}
+.k24-rub--4 span{background:var(--k24-indigo);color:var(--k24-creme)}
+.k24-rub--5{background:repeating-linear-gradient(135deg,var(--k24-indigo) 0 18px,var(--k24-ocre) 18px 28px)}
+.k24-rub--5 span{background:var(--k24-nuit);color:var(--k24-creme)}
+.k24-rub + div h1{font-size:clamp(1.6rem,3.4vw,2.4rem)!important;min-width:0!important;word-spacing:normal!important}

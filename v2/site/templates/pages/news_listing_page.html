@@ -1,15 +1,16 @@
 
 {% extends "base_page.html" %}
-{% load wagtailcore_tags wagtailimages_tags static %}
+{% load wagtailcore_tags wagtailimages_tags static vie_site %}
 
 {% block content %}
     {% block breadcrumbs %}
         {% include "navigation/breadcrumbs.html" %}
     {% endblock %}
+    <div class="k24-rub k24-rub--{{ matching_topic|ambiance }}" aria-hidden="true"><span>{% if matching_topic %}{% for topic in topics %}{% if matching_topic == topic.slug %}{{ topic.title }}{% endif %}{% endfor %}{% else %}{{ page.title }}{% endif %}</span></div>
     <div class="site-padding site-container">
 
 
-        <div class="flex flex-col md:flex-row md:items-center py-20">
+        <div class="flex flex-col md:flex-row md:items-center py-14">
             <h1 class="font-serif4 [word-spacing:-6px] font-bold text-8xl lg:text-10xl
             md:pr-16
             lg:pr-20

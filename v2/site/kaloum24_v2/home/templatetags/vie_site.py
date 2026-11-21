@@ -43,3 +43,9 @@ def pied_liens():
         return list(StandardPage.objects.child_of(racine).live().order_by("path"))
     except Exception:  # jamais d'erreur 500 pour un pied de page
         return []
+
+
+@register.filter
+def ambiance(slug):
+    """Numéro d'ambiance (0-5) stable pour une rubrique : même rubrique, même décor."""
+    return sum(ord(c) for c in (slug or "tout")) % 6
