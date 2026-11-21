@@ -29,6 +29,8 @@ VERROU = "presse:verrou"
 
 NS = {"dc": "http://purl.org/dc/elements/1.1/", "content": "http://purl.org/rss/1.0/modules/content/",
       "media": "http://search.yahoo.com/mrss/"}
+# Images qui ne sont pas des illustrations (suivi, avatars, logos). « pixel » seul est trop large : « 1200_x_630_pixel.webp » est une vraie photo.
+RE_PAS_ILLUSTRATION = re.compile(r"(gravatar|avatar|emoji|favicon|spacer|logo|[/_.-]pixel\.(gif|png)|1x1\.|tracking)", re.I)
 RE_IMG = re.compile(r"""<img[^>]+src=["']([^"']+)["']""", re.I)
 
 
@@ -47,7 +49,7 @@ def trouver_image(item):
             candidats.append(m.group(1))
     for c in candidats:
         c = (c or "").strip()
-        if c.startswith("https://") and len(c) <= 600 and not re.search(r"(gravatar|avatar|emoji|pixel|logo|favicon|spacer)", c, re.I):
+        if c.startswith("https://") and len(c) <= 600 and not RE_PAS_ILLUSTRATION.search(c):
             return c
     return ""
 
@@ -114,7 +116,7 @@ def image_de_page(lien):
         return ""
     m = RE_OG.search(debut)
     c = html.unescape((m.group(1) or m.group(2)) if m else "").strip()
-    if c.startswith("https://") and len(c) <= 600 and not re.search(r"(gravatar|avatar|emoji|pixel|logo|favicon|spacer)", c, re.I):
+    if c.startswith("https://") and len(c) <= 600 and not RE_PAS_ILLUSTRATION.search(c):
         return c
     return ""
 

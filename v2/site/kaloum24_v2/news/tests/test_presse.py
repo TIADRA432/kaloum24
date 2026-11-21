@@ -95,3 +95,10 @@ class ImagePageTests(TestCase):
     def test_panne_reseau_silencieuse(self):
         with mock.patch("urllib.request.urlopen", side_effect=OSError("boom")):
             self.assertEqual(presse.image_de_page("https://exemple.gn/a"), "")
+
+
+class FiltreImageTests(TestCase):
+    def test_photo_au_nom_pixel_acceptee_mais_pas_le_pixel_de_suivi(self):
+        self.assertIsNone(presse.RE_PAS_ILLUSTRATION.search("https://x.gn/IMG_1200_x_630_pixel.webp"))
+        self.assertTrue(presse.RE_PAS_ILLUSTRATION.search("https://x.gn/pixel.gif"))
+        self.assertTrue(presse.RE_PAS_ILLUSTRATION.search("https://x.gn/logo-site.png"))
