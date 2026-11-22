@@ -36,3 +36,16 @@ class EcouterTests(TestCase):
         self.assertContains(r, "<audio")
         self.assertContains(r, "Version audio")
         self.assertNotContains(r, "data-ecouter-lire")
+
+
+class ImagesRubriqueTests(TestCase):
+    def test_photos_en_bas_de_la_liste_des_actualites(self):
+        from kaloum24_v2.home.models import HomePage
+        from kaloum24_v2.news.models import NewsListingPage
+
+        liste = NewsListingPage(title="Actus", slug="actus-img", introduction="x")
+        HomePage.objects.first().add_child(instance=liste)
+        liste.save_revision().publish()
+        html = self.client.get(liste.url).content.decode()
+        self.assertIn("La Guinée en images", html)
+        self.assertIn("Crédits des images", html)
