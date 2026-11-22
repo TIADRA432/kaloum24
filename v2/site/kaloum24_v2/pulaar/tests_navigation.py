@@ -56,3 +56,20 @@ class NavigationTests(TestCase):
         r = self.client.get(self.url("Zeema")[0])
         self.assertContains(r, 'name="q"')
         self.assertContains(r, "Chercher un autre mot")
+
+
+class AvertissementDroitsTests(TestCase):
+    def test_message_quand_une_source_devient_publique(self):
+        from django.contrib.auth import get_user_model
+        call_command("seed_pulaar", verbosity=0)
+        src = PulaarSource.objects.create(name="Livre", rights_status="to_check")
+        d, nom = PulaarDialect.objects.get(code="fuf"), PulaarPos.objects.get(code="nom")
+        PulaarEntry.objects.create(lemma="Zzz", dialect=d, pos=nom, source=src)
+        get_user_model().objects.create_superuser("adm", "a@b.c", "x")
+        self.client.login(username="adm", password="x")
+        url = f"/admin/snippets/pulaar/pulaarsource/edit/{src.pk}/"
+        base = {"name": "Livre", "url": "", "license": "", "method": "import", "rights_note": "x"}
+        r = self.client.post(url, {**base, "rights_status": "public_domain"}, follow=True)
+        self.assertContains(r, "visibles de tout le monde")
+        r = self.client.post(url, {**base, "rights_status": "to_check"}, follow=True)
+        self.assertContains(r, "ne sont pas visibles du public")

@@ -145,3 +145,23 @@ class ImportMenuItem(MenuItem):
 @hooks.register("register_admin_menu_item")
 def menu_import():
     return ImportMenuItem("Importer un lot (dictionnaire)", reverse("pulaar_import"), icon_name="upload", order=310)
+
+
+def _avertir_droits(request, instance):
+    """Rend visible l'effet d'un changement de droits : une source « publiable » ouvre ses entrées au public."""
+    from django.contrib import messages
+    if isinstance(instance, PulaarSource) and instance.pk:
+        n = instance.entries.count()
+        if instance.is_publishable and n:
+            messages.warning(
+                request,
+                f"Attention : « {instance.name} » est en « {instance.get_rights_status_display()} » — ses {n} entrée(s) "
+                "sont désormais visibles de tout le monde. Repasse en « À vérifier » si l'autorisation de l'auteur "
+                "n'est pas établie.")
+        elif n:
+            messages.info(request, f"Les {n} entrée(s) de cette source ne sont pas visibles du public (droits non établis).")
+
+
+@hooks.register("after_edit_snippet")
+def apres_modification_source(request, instance):
+    _avertir_droits(request, instance)
