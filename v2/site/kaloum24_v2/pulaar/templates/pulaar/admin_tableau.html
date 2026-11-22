@@ -27,6 +27,7 @@
 
   {% if page %}
   <h3>{{ manque_libelle }} — {{ page.paginator.count }} entrée(s)</h3>
+  <p><a class="button button-small button-secondary" href="{% url 'pulaar_tableau_csv' %}?manque={{ manque }}">Exporter cette file (CSV)</a></p>
   <form method="post" action="{% url 'pulaar_tableau_classe' %}">
   {% csrf_token %}
   <input type="hidden" name="manque" value="{{ manque }}"><input type="hidden" name="page" value="{{ page.number }}">

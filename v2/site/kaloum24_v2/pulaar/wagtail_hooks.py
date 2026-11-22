@@ -133,6 +133,7 @@ from . import admin_views  # noqa: E402
 def urls_import():
     return [
         path("dictionnaire-pulaar/tableau/", admin_views.tableau, name="pulaar_tableau"),
+        path("dictionnaire-pulaar/tableau/csv/", admin_views.tableau_csv, name="pulaar_tableau_csv"),
         path("dictionnaire-pulaar/tableau/classe/", admin_views.tableau_classe, name="pulaar_tableau_classe"),
         path("dictionnaire-pulaar/import/", admin_views.import_lot, name="pulaar_import"),
         path("dictionnaire-pulaar/import/<int:pk>/retirer/", admin_views.retirer, name="pulaar_import_retirer"),

@@ -87,3 +87,42 @@ class ClasseEnMasseTests(TestCase):
         r = self.client.get(reverse("pulaar_tableau"), {"manque": "classe"})
         self.assertContains(r, "Appliquer aux mots cochés")
         self.assertContains(r, f'value="{self.e1.pk}"')
+
+
+class FileDouteuxEtCsvTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command("seed_pulaar", verbosity=0)
+        src = PulaarSource.objects.create(name="Libre", rights_status="open_license")
+        d, nom = PulaarDialect.objects.get(code="fuf"), PulaarPos.objects.get(code="nom")
+        for lemma in ["ɓaleejo", "kala jam", "kaLa", "ƊemngaL", "Alpha"]:
+            e = PulaarEntry.objects.create(lemma=lemma, dialect=d, pos=nom, source=src)
+            PulaarSense.objects.create(entry=e, text="déf de " + lemma)
+        get_user_model().objects.create_superuser("adm", "a@b.c", "x")
+        get_user_model().objects.create_user("simple", "s@b.c", "x")
+
+    def test_file_douteux(self):
+        self.client.login(username="adm", password="x")
+        r = self.client.get(reverse("pulaar_tableau"), {"manque": "douteux"})
+        for bon in ["kala jam", "kaLa", "ƊemngaL"]:
+            self.assertContains(r, bon)
+        self.assertNotContains(r, ">ɓaleejo<")
+        self.assertNotContains(r, ">Alpha<")  # majuscule initiale seule : normal
+
+    def test_csv(self):
+        self.client.login(username="adm", password="x")
+        r = self.client.get(reverse("pulaar_tableau_csv"), {"manque": "douteux"})
+        self.assertEqual(r.status_code, 200)
+        self.assertIn("text/csv", r["Content-Type"])
+        texte = r.content.decode("utf-8-sig")
+        self.assertIn("kala jam", texte)
+        self.assertIn("déf de kaLa", texte)
+        self.assertNotIn("Alpha", texte)
+
+    def test_csv_reserve_et_inconnu(self):
+        url = reverse("pulaar_tableau_csv")
+        self.assertNotEqual(self.client.get(url, {"manque": "douteux"}).status_code, 200)
+        self.client.login(username="simple", password="x")
+        self.assertNotEqual(self.client.get(url, {"manque": "douteux"}).status_code, 200)
+        self.client.login(username="adm", password="x")
+        self.assertEqual(self.client.get(url, {"manque": "nimporte"}).status_code, 302)

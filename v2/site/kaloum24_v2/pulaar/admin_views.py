@@ -1,4 +1,5 @@
 """Page d'import des lots dans l'administration Wagtail (réservée aux comptes autorisés)."""
+import csv
 import json
 
 from django.contrib import messages
@@ -6,7 +7,7 @@ from django.contrib.auth.decorators import permission_required
 from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
 from django.db.models import Count, Q
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
@@ -68,6 +69,7 @@ def retirer(request, pk):
 # ---------------------------------------------------------------- tableau de bord du travail ---
 # Chaque filtre = « ce qu'il manque » : la file de travail des équipes.
 MANQUES = {
+    "douteux": ("Lemme douteux (espace ou majuscule interne)", Q(lemma__contains=" ") | Q(lemma__regex=r".[A-ZƁƊƳŊÑ]")),
     "validation": ("À valider par un lexicographe", Q(status=PulaarEntry.DOCUMENTE)),
     "classe": ("Classe grammaticale à préciser", Q(pos__code="a-preciser")),
     "classe_nominale": ("Sans classe nominale", Q(noun_class__isnull=True)),
@@ -145,3 +147,23 @@ def tableau_classe(request):
         messages.warning(request, "Non modifiée(s), une entrée identique existe déjà : " + ", ".join(refusees[:10])
                          + ("…" if len(refusees) > 10 else "") + " — change leur numéro d'homonyme depuis la fiche.")
     return redirect(retour)
+
+
+@permission_required("pulaar.change_pulaarentry", raise_exception=True)
+def tableau_csv(request):
+    """Exporte une file de travail en CSV (pour un relecteur hors ligne)."""
+    manque = request.GET.get("manque", "")
+    if manque not in MANQUES:
+        return redirect(reverse("pulaar_tableau"))
+    qs = (PulaarEntry.objects.filter(MANQUES[manque][1]).distinct()
+          .select_related("dialect", "pos", "source").prefetch_related("senses").order_by("lemma", "homonym_index"))
+    rep = HttpResponse(content_type="text/csv; charset=utf-8")
+    rep["Content-Disposition"] = f'attachment; filename="dictionnaire-pulaar-{manque}.csv"'
+    rep.write("\ufeff")  # BOM : Excel lit correctement l'UTF-8 (ɓ ɗ ŋ ƴ)
+    w = csv.writer(rep)
+    w.writerow(["id", "mot", "n_homonyme", "variete", "classe", "statut", "source", "definition"])
+    for e in qs.iterator(chunk_size=500):
+        sens = next(iter(e.senses.all()), None)
+        w.writerow([e.pk, e.lemma, e.homonym_index, e.dialect.name, e.pos.name_fr, e.status,
+                    e.source.name if e.source_id else "", (sens.text if sens else "")[:300]])
+    return rep
