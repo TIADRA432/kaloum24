@@ -1,0 +1,25 @@
+{% load static %}
+<div class="site-padding site-container pb-6">
+  <section class="k24-ecouter" aria-label="Écouter l'article" data-ecouter>
+    {% if page.audio %}
+      <p class="k24-ecouter__titre">Version audio</p>
+      <audio controls preload="none" src="{{ page.audio.url }}">
+        Votre navigateur ne sait pas lire ce fichier audio. <a href="{{ page.audio.url }}">Télécharger l'audio</a>.
+      </audio>
+    {% else %}
+      <div class="k24-ecouter__barre" hidden>
+        <button type="button" class="k24-ecouter__bouton" data-ecouter-lire aria-pressed="false">Écouter l'article</button>
+        <button type="button" class="k24-ecouter__stop" data-ecouter-stop hidden>Arrêter</button>
+        <label class="k24-ecouter__vitesse">Vitesse
+          <select data-ecouter-vitesse>
+            <option value="0.85">Lente</option>
+            <option value="1" selected>Normale</option>
+            <option value="1.2">Rapide</option>
+          </select>
+        </label>
+      </div>
+      <p class="k24-ecouter__note" hidden data-ecouter-note>Lecture par la voix de votre appareil, en français.</p>
+    {% endif %}
+  </section>
+</div>
+{% if not page.audio %}<script src="{% static 'home/ecouter.js' %}" defer></script>{% endif %}

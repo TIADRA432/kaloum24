@@ -45,6 +45,8 @@
     </div>
 </div>
 
+{% include "components/ecouter.html" %}
+
 {% if page.image %}
 <div class="site-padding site-container pb-10 md:pb-20">
     <div class="bg-mackerel-300 pr-10 overflow-hidden w-full max-h-[350px] md:max-h-[400px] lg:max-h-[640px]">
@@ -76,7 +78,7 @@
 </div>
 {% endif %}
 
-{% include_block page.body %}
+<div id="art-corps">{% include_block page.body %}</div>
 
 {% include "components/partage.html" %}
 

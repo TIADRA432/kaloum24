@@ -58,6 +58,16 @@ class ArticlePage(BasePage):
         verbose_name="Image principale",
     )
     body = StreamField(ArticleBody(), verbose_name="Texte de l'article")
+    audio = models.ForeignKey(
+        "wagtaildocs.Document",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        verbose_name="Version audio",
+        help_text="Fichier audio de l'article (mp3, m4a ou ogg), lu par une vraie voix. "
+        "Sans fichier, le bouton « Écouter » lit le texte avec la voix du navigateur.",
+    )
     sources = RichTextField(
         blank=True,
         features=["bold", "italic", "link", "ul"],
@@ -88,6 +98,7 @@ class ArticlePage(BasePage):
         FieldPanel("introduction"),
         FieldPanel("image"),
         FieldPanel("body"),
+        FieldPanel("audio"),
         FieldPanel("sources"),
         MultiFieldPanel(
             [

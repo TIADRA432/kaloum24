@@ -240,3 +240,15 @@ footer.site-container .text-black{color:var(--k24-sable)!important}
 .k24-partage a:hover,.k24-partage button:hover{background:var(--k24-ocre);color:#1b1b2f!important}
 .dark .k24-partage,.dark .k24-partage a,.dark .k24-partage button{border-color:#3a4a94}.dark .k24-partage a,.dark .k24-partage button{background:#18214d;color:var(--k24-creme)!important}
 .flux-liste{columns:2;max-width:40rem;line-height:2;font-size:1.1rem}
+
+/* Écouter (S5) */
+.k24-ecouter { border-left: 4px solid var(--k24-ocre, #C8872E); padding: .6rem 1rem; background: rgba(30,43,99,.05); max-width: 872px; }
+.k24-ecouter__titre { font-weight: 600; margin: 0 0 .4rem; color: var(--k24-indigo, #1E2B63); }
+.k24-ecouter audio { width: 100%; max-width: 560px; }
+.k24-ecouter__barre { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
+.k24-ecouter__barre[hidden], .k24-ecouter__stop[hidden], .k24-ecouter__note[hidden] { display: none; }
+.k24-ecouter__bouton, .k24-ecouter__stop { font: inherit; font-weight: 600; padding: .5rem 1rem; border: 2px solid var(--k24-indigo, #1E2B63); background: var(--k24-indigo, #1E2B63); color: #fff; cursor: pointer; }
+.k24-ecouter__stop { background: #fff; color: var(--k24-indigo, #1E2B63); }
+.k24-ecouter__bouton:focus-visible, .k24-ecouter__stop:focus-visible, .k24-ecouter select:focus-visible { outline: 3px solid var(--k24-ocre, #C8872E); outline-offset: 2px; }
+.k24-ecouter__vitesse { font-size: .9rem; display: flex; gap: .4rem; align-items: center; }
+.k24-ecouter__note { margin: .4rem 0 0; font-size: .85rem; opacity: .8; }
