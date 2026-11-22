@@ -82,8 +82,12 @@ Le propriétaire veut une **hyperdiversification** : chaque type de page a son p
 | Accueil | Le seuil (cercles), étoffes par rubrique, lettres du pulaar | **fait** |
 | Article | Lecture calme, barre de progression | base faite, à enrichir |
 | Liste / rubrique | À décider : une ambiance par rubrique (motif et teinte dominante propres) | à faire |
-| Dictionnaire pulaar | Charte Tiadra + motifs peuls, sur validation des locuteurs | à faire |
+| Dictionnaire pulaar | Charte Tiadra conservée pour l'interface ; **texte en pulaar en Charis SIL** (2026-11-22, `86612d2`) ; motifs peuls seulement sur validation des locuteurs | **polices faites**, motifs à décider |
 | Météo, Prix, Revue de presse | Une identité par service (données lisibles d'abord) | à faire |
 | Pages cadre (À propos, mentions) | Sobre | à faire |
 
 **Contraintes** : pas d'imitation de motifs réels sans source ; aucun sens inventé ; poids de page surveillé ; contraste ≥ 4,5 ; respect de « mouvement réduit ».
+
+## Dictionnaire `/pulaar/` — police du texte en pulaar (2026-11-22)
+
+Constat : Montserrat et Roboto Slab (charte Tiadra) ne contiennent pas ɓ ɗ ŋ ƴ ; ces lettres s'affichaient dans une police de secours, de forme irrégulière. Correction : `pulaar.css` charge **Charis SIL** (4 fichiers `woff2` dans `pulaar/static/pulaar/fonts/charis/`, mêmes sous-ensembles latin + latin-ext que le reste du site) sous le nom `Charis Pulaar`, appliquée à tout ce qui est balisé `lang="ff"` (mot vedette, définitions, exemples, formes variantes), à la prononciation, à la saisie de recherche et à l'index alphabétique. L'interface, les titres de page et les boutons gardent Montserrat / Roboto Slab. Règle : tout texte pulaar affiché dans `/pulaar/` doit porter `lang="ff"`. Vérifié en production (ɓ de « aaɓnde » rendu en Charis). Limite : l'API (IPA) n'est couverte que pour ɲ ɔ ɛ ; les autres symboles phonétiques demanderont une police API (ex. Charis SIL complet ou Gentium) quand les prononciations seront saisies.
