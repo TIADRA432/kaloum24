@@ -1,7 +1,7 @@
 # Kaloum24 — Passation pour un agent IA
 
 > À lire en entier avant de toucher au code. Aucun secret dans ce fichier : ne jamais en ajouter.
-> Dernière mise à jour : 2026-11-21 (branche `feat/kaloum24-v2-render`).
+> Dernière mise à jour : 2026-11-22 (branche `feat/kaloum24-v2-render`).
 
 ## 1. Le projet en une page
 
@@ -121,6 +121,7 @@ Import d'articles versionné (`publier_articles`, appelé par `build.sh`, non bl
 | S1c Météo monde peul | **fait** (2026-11-21) | 18 villes (Guinée, Sénégal, Mali, Côte d'Ivoire, Ghana, Burkina, Nigéria, Cameroun, Centrafrique) dans `home/meteo.py` (nom, lat, lon, pays ; cache `meteo:v3`). |
 | S3 Météo | **fait** (2026-11-21) | Page `/meteo/` : 18 villes regroupées par pays (`home/views.py::meteo_page`, même service/cache que l'accueil, panne = message, jamais d'erreur 500). Lien dans le pied de page. |
 | L Convertisseur | **fait** (2026-11-21) | `/convertisseur/` (`prix/change.py`, modèle `TauxChange`, commande `importer_change_bcrg` dans `build.sh`, non bloquante). Source : **cours de référence BCRG** (PDF quotidien « Devises contre GNF ») dont l'adresse vient de l'API WordPress publique `bcrg-guinee.org/wp-json/wp/v2/cours_des_devises` ; lecture par `pypdf` ; **seules les adresses `bcrg-guinee.org/wp-content/uploads/` sont suivies** ; tentative horaire en arrière-plan ; en cas d'échec on garde le dernier cours daté. 12 devises dont XOF (XAF = même valeur). Le format des PDF varie (`USD 8 650,97` ou `8839.0137USD`) : `analyser()` gère les deux ; un PDF sans USD/EUR est refusé. Cours **indicatif** (ni marché parallèle ni bureaux de change). Pas encore fait : carburant, dollar au marché parallèle (pas de source officielle). |
+| S7 Distribution | **fait sauf newsletter** (2026-11-21/22) | (1) Aperçu de partage : balises OpenGraph/Twitter/canonique dans `base_page.html` (blocs `og_title`, `og_type`, `og_description` surchargeables ; image = `social_image` > `listing_image` > `home/partage.jpg` 1200×630, 92 Ko). Les pages hors CMS (revue, prix, météo, convertisseur…) définissent `og_title`. (2) Boutons de partage sous les articles (`components/partage.html` : WhatsApp, Facebook, copie du lien ; aucun traqueur). (3) Flux RSS par rubrique `/news/feed/<slug>/` (**`<str:slug>` et non `<slug:>`** : les slugs de rubriques sont accentués — « économie », « régions » ; bug 500 corrigé) + page `/flux-rss/`. (4) PWA : `/manifest.webmanifest`, `/sw.js` (racine, `Cache-Control: no-cache`, cache versionné par `RENDER_GIT_COMMIT`), `/hors-ligne/` ; jamais en cache : `/admin/`, `/django-admin/`, `/search/`, `/documents/` ; 40 pages max ; icônes `home/static/home/icones/` (médaillon indigo/ocre, remplacent celles du gabarit). Vérifié en production avec Playwright (SW actif, page vue lisible hors ligne, page inconnue → « hors ligne »). **Reste** : newsletter (décision du propriétaire : service d'envoi, stockage des abonnés, consentement) ; test d'installation sur téléphone par le propriétaire. |
 
 **À venir, demandé par le propriétaire (2026-11-21)** : **S0b Charte graphique** (PLAN_EVOLUTION §5 ter ; état et 3 directions : `docs/CHARTE_GRAPHIQUE.md`), à faire avant tout nouveau chantier visuel. Les couleurs et polices actuelles viennent du gabarit Wagtail ; le rouge du flash info (`#c8102e`) est provisoire.
 
