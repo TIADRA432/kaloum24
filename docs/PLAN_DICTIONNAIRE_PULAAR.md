@@ -1,0 +1,96 @@
+# Plan — Dictionnaire monolingue Pulaar (logique d'abord)
+
+> Rédigé le 2026-11-22 à la demande du propriétaire. Références fournies par lui : `dictionnaire-pulaar-erd.mermaid` (schéma v5, 9 tables) et `v6_proposition_delta.sql` (proposition v6 du 21/11/2026, 21 tables, **non appliquée**).
+> Principe fixé par le propriétaire : **la logique et les règles d'abord, les données ensuite.** Perdre les 22 termes actuels n'est pas un problème ; un modèle qui ne tient pas les bonnes règles en est un.
+
+## 1. Cible (les décisions D1–D4 de la v6, reprises telles quelles)
+
+- **D1** Le Pulaar est la base : une entrée n'est « validée » que si elle a une définition **en Pulaar**.
+- **D2** Les autres langues sont des **mots de traduction**, jamais des définitions. Chaque traduction peut pointer vers un dictionnaire externe (Wiktionnaire / Wiktionary ou autre) par une adresse **construite à l'affichage** (`modèle avec {term}` + mot encodé). Aucune URL de mot stockée en dur.
+- **D3** Sources premières multiples : la provenance est portée **par définition et par exemple** (source + localisation : page, n° d'entrée), pas seulement par terme. Chaque source a un **statut des droits** (par défaut « à vérifier »).
+- **D4** Tout ce qui vient d'un fichier, d'un texte ou d'une IA entre par une **zone d'import**. L'IA propose, **un humain nommé valide**. Rien n'écrit directement dans le dictionnaire.
+
+## 2. Évaluation de l'existant (app `pulaar`, 1 migration)
+
+| Sujet | Aujourd'hui | Écart avec la cible |
+|---|---|---|
+| Entrée | `PulaarTerm` : lemme, classe grammaticale en texte libre, domaine, source unique, statut documenté/validé | Pas de dialecte, pas d'indice d'homonyme (deux mots écrits pareil fusionnent), pas de numéro de sens, classe grammaticale non contrôlée |
+| Définition | `PulaarDefinition` : champ `lang` (ff/fr/en) | **Contredit D1/D2** : le français y est une définition. Pas de source ni de localisation par définition |
+| Traductions | aucune table | à créer |
+| Dictionnaires externes | aucun | à créer |
+| Sources | `PulaarSource` : nom, lien, licence, méthode ; `PROTECT` | pas de statut de droits ; la licence est un texte libre |
+| Import / IA | `PulaarProposal` (file de modération, une seule définition ff + fr) | pas de lot d'import, pas de texte brut conservé, pas d'auteur « IA / parseur / humain », pas de relecteur nominatif obligatoire |
+| Règle « validé ⇒ définition Pulaar » | absente | à imposer |
+| Morphologie | absente | racines, classes nominales, mutations consonantiques, extensions verbales, voix : à modéliser, **à remplir par un linguiste** |
+| Relations / variantes | absentes | synonymes, dérivés, variantes dialectales |
+| Exemples | absents | à créer, avec source |
+
+Ce qui dépend de l'ancien modèle et sera touché : `mot_du_jour` (accueil), `sitemaps.py`, vues et gabarits `/pulaar/`, `wagtail_hooks.py`, `forms.py` (proposer un mot), `seed_pulaar` + `data/wiktionary.json`, les tests `pulaar/tests.py` et ceux de l'accueil.
+
+## 3. Standards à suivre (ne rien inventer)
+
+| Besoin | Standard | Usage prévu |
+|---|---|---|
+| Échange avec Webonary / FLEx (SIL) | **LIFT** (Lexicon Interchange FormaT, XML) | **Import** de dictionnaires publiés par leurs auteurs → zone d'import ; export LIFT |
+| Publication / archivage scientifique | **TEI Lex-0** (sous-ensemble de TEI Dictionaries) | export optionnel, plus tard |
+| Modèle conceptuel de l'entrée | **LMF (ISO 24613)** / **OntoLex-Lemon** (W3C) | inspiration : entrée lexicale → formes → sens ; pas d'implémentation RDF |
+| Codes de langue et dialecte | **ISO 639-3** (`fuf` Pular de Guinée, `fra`, `eng`, `wol`…), étiquettes **BCP 47** pour l'affichage (`ff`, `fr`) | tables `Dialect`, traductions |
+| Texte | Unicode **NFC** ; vraies lettres ɓ ɗ ŋ ƴ ; recherche tolérante (`ɗ→d`) déjà en place | normalisation à l'enregistrement |
+
+À vérifier avec le propriétaire avant de coder : la liste exacte des étiquettes de dialecte (la v6 utilise `fuf-GN`) ; les codes sont ceux de l'ISO, le suffixe pays est une convention du projet.
+
+Réserve : je n'ai pas relu les spécifications officielles dans cette session ; elles seront relues et citées dans le code avant l'import LIFT.
+
+## 4. Modèle cible (Django, en s'appuyant sur la v6 — pas de SQL brut sur Supabase)
+
+Le SQL v6 suppose des tables `lemmas`, `definitions`… Appliqué tel quel sur la base du site, il casserait les migrations Django. On **porte les règles** en modèles Django.
+
+1. `Dialect` (code, nom, pays) — une ligne par variété ; aucune valeur inventée.
+2. `PartOfSpeech` (code, nom français, nom Pulaar, verbal oui/non) — table, pas du texte libre.
+3. `Entry` (ex-`PulaarTerm`) : `lemma`, `dialect`, `pos`, `homonym_index`, domaine, `status` (brouillon → documenté → validé), unicité `(dialect, lemma, pos, homonym_index)`.
+4. `Sense` (ex-`PulaarDefinition`) : `entry`, `sense_number`, texte **Pulaar uniquement**, `source`, `source_locator`.
+5. `Example` : rattaché à un sens, texte Pulaar + traduction facultative, source + localisation.
+6. `Translation` : `entry` (et sens facultatif), langue ISO 639-3, mot, `external_dictionary` facultatif, source, `is_validated`. Unicité `(entry, langue, mot)`.
+7. `ExternalDictionary` : code, nom, langue, `url_template` contenant `{term}`. **Liste blanche de domaines `https`** ; lien rendu avec le mot encodé, `rel="noopener nofollow"`.
+8. `Source` : + `rights_status` (domaine public / autorisation accordée / en attente / à vérifier / restreint) + note. **Une source non « publiable » n'alimente pas l'affichage public.**
+9. Import : `ImportBatch` (source, fichier, empreinte SHA-256, version du parseur, importé par) et `StagingEntry` (texte brut intact, JSON analysé, `proposed_by` = `parser:` / `ai:<modèle>` / `human:<nom>`, statut en attente / accepté / rejeté / fusionné, relecteur et date obligatoires dès que le statut change, note obligatoire si rejet). Remplace `PulaarProposal` (la page « proposer un mot » alimente cette file).
+10. Plus tard (phase 5, structure seulement) : `Root`, `NounClass`, `VerbalExtension`, `MutationRule`, `EntryRelation`, `DialectalVariant`.
+
+Règles imposées (en code + tests, car SQLite en test ne sait pas faire de déclencheurs) :
+- une entrée ne passe à « validée » que si elle a au moins un sens en Pulaar ;
+- on ne supprime pas le dernier sens d'une entrée validée ;
+- un sens, un exemple ou une traduction sans source est refusé à l'enregistrement par un import ;
+- une proposition « IA » ne peut être acceptée sans relecteur humain nominatif ;
+- commande `verifier_dictionnaire` : liste les violations (entrées validées sans sens, sources sans droits clairs utilisées en public…). Lancée aux tests et en production.
+
+## 5. Phases (une à la fois, comme pour le reste du backlog)
+
+| Phase | Contenu | Besoin du propriétaire |
+|---|---|---|
+| **P0 — Cadrage** | Valider ce plan, la liste des dialectes, la liste des classes grammaticales, le rôle « relecteur » (qui valide ?), la politique de droits | **ses réponses (§6)** |
+| **P1 — Noyau** | `Dialect`, `PartOfSpeech`, `Entry`, `Sense`, `Example`, `Source` + droits ; migrations propres (l'ancien modèle est remplacé, les 22 termes sont re-semés avec leur source) ; admin Wagtail ; adaptation de `/pulaar/`, accueil, sitemap, mot du jour (qui ne propose que des entrées **avec définition Pulaar**) ; tests | — |
+| **P2 — Traductions** | `Translation` + `ExternalDictionary` + affichage des liens ; Wiktionnaire fr/en comme premiers dictionnaires externes | choix des dictionnaires externes |
+| **P3 — Zone d'import** | `ImportBatch` / `StagingEntry`, écran de relecture dans Wagtail (accepter / fusionner / rejeter avec note), la page « proposer un mot » branchée dessus, `verifier_dictionnaire` | — |
+| **P4 — Interchange** | Import **LIFT** (vers la zone d'import), export LIFT/CSV, API JSON en lecture seule | accord du propriétaire d'un dictionnaire avant tout import (Webonary : on prend un export que l'auteur publie, on ne moissonne pas) |
+| **P5 — Morphologie** | Structure des racines, classes nominales, mutations, extensions verbales, relations, variantes | un **linguiste** : le modèle est prêt, le contenu vient de lui |
+| **P6 — Interface de travail** | File « mots à définir en Pulaar » (entrées sans sens), tableau de bord de couverture (entrées / définies / validées / traduites), recherche par dialecte | — |
+
+Chaque phase : modèle → tests → déploiement → vérification en production → mise à jour du HANDOFF.
+
+## 6. Décisions attendues du propriétaire (P0)
+
+1. **Dialectes** : quelles variétés au lancement ? (Fuuta Jaloo seul, ou aussi Fuuta Tooro, etc.) et les codes à utiliser.
+2. **Classes grammaticales** : liste de départ en Pulaar et en français (je ne la remplis pas de mémoire).
+3. **Qui valide ?** Rôle « Lexicographes Pulaar » existant : est-ce le seul groupe habilité à passer une entrée en « validée » ?
+4. **Droits** : par défaut « à vérifier » = rien d'affiché publiquement tant que la source n'est pas passée à « autorisation accordée » ou « domaine public » ? (recommandé : oui)
+5. **Dictionnaires externes** de départ pour les traductions (recommandé : Wiktionnaire fr, Wiktionary en) et langues de traduction à proposer.
+6. **Source de référence** : quel dictionnaire sur Webonary exactement (nom ou lien) et son auteur, pour demander l'autorisation de réutilisation avant tout import.
+7. **Reprise de l'existant** : confirmation qu'on repart propre (les 22 termes actuels sont re-semés avec leur source Wiktionnaire, rien de plus).
+
+## 7. Risques
+
+- **Perdre le fil entre « dictionnaire » et « base de données de recherche »** : le modèle accepte une structure riche (racines, mutations), mais **rien n'est affiché ni rempli sans linguiste**. Une structure vide vaut mieux qu'une donnée approximative.
+- **IA ≠ autorité linguistique** : les propositions IA restent dans la zone d'import et portent la mention de leur origine jusqu'à la validation.
+- **Droits** : un dictionnaire publié en ligne n'est pas pour autant libre de droits (cas du Dictionnaire Pular d'Oumar Bah sur Webonary : consentement requis).
+- **Ordre d'écriture** (piège repéré dans la v6) : un déclencheur interdisant d'insérer une entrée déjà validée oblige à créer l'entrée non validée, puis son sens, puis à la valider. Les imports suivront cet ordre.
+- **Lien externe** : toujours construit par l'application avec le mot encodé, jamais copié d'une saisie libre ; domaines en liste blanche.
