@@ -62,7 +62,7 @@ class Command(BaseCommand):
             PulaarExternalDictionary.objects.get_or_create(
                 code=code, defaults={"name": nom, "language_code": langue, "url_template": modele})
 
-        source, _ = PulaarSource.objects.get_or_create(
+        source, cree = PulaarSource.objects.get_or_create(
             method="wiktionary",
             defaults={
                 "name": "Wiktionary (Category:Fula lemmas)",
@@ -72,6 +72,13 @@ class Command(BaseCommand):
                 "rights_note": "Licence libre CC BY-SA : attribution et partage dans les mêmes conditions.",
             },
         )
+        # Source déjà présente avant l'ajout du statut de droits : elle a reçu « à vérifier ».
+        # La licence de Wiktionary est connue (CC BY-SA) : on ne corrige que ce défaut, jamais
+        # un statut choisi ensuite par un humain.
+        if not cree and source.rights_status == PulaarSource.A_VERIFIER:
+            source.rights_status = PulaarSource.LIBRE
+            source.rights_note = "Licence libre CC BY-SA : attribution et partage dans les mêmes conditions."
+            source.save(update_fields=["rights_status", "rights_note"])
         dialecte = PulaarDialect.objects.get(code="ful")
         classes = {p.code: p for p in PulaarPos.objects.all()}
         entrees = json.loads(DONNEES.read_text(encoding="utf-8"))

@@ -73,6 +73,15 @@ class SeedEtVuesTests(DictionnaireBase):
         self.assertEqual(e.senses.count(), 0)
         self.assertEqual(set(e.translations.values_list("language_code", flat=True)), {"fra", "eng"})
 
+    def test_source_wiktionary_preexistante_a_verifier_devient_libre(self):
+        PulaarSource.objects.filter(method="wiktionary").update(rights_status="to_check")
+        call_command("seed_pulaar", verbosity=0)
+        self.assertEqual(PulaarSource.objects.get(method="wiktionary").rights_status, "open_license")
+        # un statut choisi par un humain n'est jamais réécrit
+        PulaarSource.objects.filter(method="wiktionary").update(rights_status="restricted")
+        call_command("seed_pulaar", verbosity=0)
+        self.assertEqual(PulaarSource.objects.get(method="wiktionary").rights_status, "restricted")
+
     def test_provenance_obligatoire_et_protegee(self):
         with self.assertRaises(ProtectedError):
             self.libre.delete()
