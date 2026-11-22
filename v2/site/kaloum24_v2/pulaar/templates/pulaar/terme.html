@@ -2,10 +2,11 @@
 {% block titre %}{{ terme.lemma }} — Dictionnaire Pulaar{% endblock %}
 
 {% block entete %}
-  <h1>{{ terme.lemma }}</h1>
+  <h1>{{ terme.lemma }}{% if terme.homonym_index > 1 %}<sup>{{ terme.homonym_index }}</sup>{% endif %}</h1>
   <p>
-    {% if terme.part_of_speech %}{{ terme.part_of_speech }} · {% endif %}
-    {% if terme.domain %}<a href="{% url 'pulaar:domaine' terme.domain.slug %}" style="color:var(--tc-or);">{{ terme.domain.name }}</a>{% endif %}
+    {{ terme.pos.name_fr }} · {{ terme.dialect.name }}
+    {% if terme.noun_class %} · classe {{ terme.noun_class.marker }}{% endif %}
+    {% if terme.domain %} · <a href="{% url 'pulaar:domaine' terme.domain.slug %}" style="color:var(--tc-or);">{{ terme.domain.name }}</a>{% endif %}
   </p>
 {% endblock %}
 
@@ -20,9 +21,31 @@
 
 <hr class="tc-separateur">
 
-{% for d in terme.definitions.all %}{% if d.lang == 'ff' %}<h3>Pulaar</h3><p>{{ d.text }}</p>{% endif %}{% endfor %}
-{% for d in terme.definitions.all %}{% if d.lang == 'fr' %}<h3>Français</h3><p>{{ d.text }}</p>{% endif %}{% endfor %}
-{% for d in terme.definitions.all %}{% if d.lang == 'en' %}<h3>English</h3><p>{{ d.text }}</p>{% endif %}{% endfor %}
+<h3>Pulaar</h3>
+{% for s in terme.senses.all %}
+  <p lang="ff">{% if terme.senses.all|length > 1 %}<strong>{{ forloop.counter }}.</strong> {% endif %}{{ s.text }}
+    <span class="tc-carte__meta">— {{ s.effective_source.name }}{% if s.source_locator %}, {{ s.source_locator }}{% endif %}</span></p>
+{% empty %}
+  <p class="tc-vide">Ce mot n'a pas encore de définition en pulaar.
+    <a href="{% url 'pulaar:proposer' %}">Propose-en une.</a></p>
+{% endfor %}
+
+{% if terme.examples.all %}
+<h3>Exemples</h3>
+{% for e in terme.examples.all %}<p lang="ff">{{ e.text }}{% if e.translation %}<br><em>{{ e.translation }}</em>{% endif %}</p>{% endfor %}
+{% endif %}
+
+{% if traductions %}
+<h3>Traductions</h3>
+<p class="tc-carte__meta">Équivalents dans d'autres langues, pas des définitions.</p>
+<ul>
+{% for langue, liste in traductions.items %}
+  <li><strong>{{ langue }}</strong> :
+    {% for tr in liste %}{% if tr.lien %}<a href="{{ tr.lien }}" target="_blank" rel="noopener noreferrer nofollow">{{ tr.term }}</a> <span class="tc-carte__meta">({{ tr.external_dictionary.name }})</span>{% else %}{{ tr.term }}{% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}
+  </li>
+{% endfor %}
+</ul>
+{% endif %}
 
 <hr class="tc-separateur--fin">
 <p class="tc-carte__meta">

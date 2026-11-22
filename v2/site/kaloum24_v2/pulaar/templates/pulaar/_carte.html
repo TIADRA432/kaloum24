@@ -1,8 +1,11 @@
 <div class="tc-carte">
   <div class="tc-carte__meta">
-    {{ t.part_of_speech }}
+    {{ t.pos.name_fr }} · {{ t.dialect.name }}
     {% if t.status == 'validated' %}<span class="tc-pastille tc-pastille--validee">Validé</span>{% else %}<span class="tc-pastille">Documenté</span>{% endif %}
   </div>
-  <h3><a href="{% url 'pulaar:terme' t.slug %}">{{ t.lemma }}</a></h3>
-  {% for d in t.definitions.all %}{% if d.lang == 'fr' %}<p>{{ d.text }}</p>{% endif %}{% endfor %}
+  <h3><a href="{% url 'pulaar:terme' t.slug %}">{{ t.lemma }}{% if t.homonym_index > 1 %}<sup>{{ t.homonym_index }}</sup>{% endif %}</a></h3>
+  {% with premier=t.senses.all.0 %}
+    {% if premier %}<p lang="ff">{{ premier.text }}</p>
+    {% else %}<p class="tc-vide">Définition en pulaar à venir.{% for tr in t.translations.all %}{% if forloop.first %} Traduction : {% endif %}{{ tr.term }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+  {% endwith %}
 </div>

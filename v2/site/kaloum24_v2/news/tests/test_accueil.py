@@ -4,7 +4,8 @@ from django.test import TestCase
 from django.utils import timezone
 
 from kaloum24_v2.news.models import ArticlePage, Breve, NewsListingPage
-from kaloum24_v2.pulaar.models import PulaarDefinition, PulaarSource, PulaarTerm, mot_du_jour
+from django.core.management import call_command
+from kaloum24_v2.pulaar.models import PulaarDialect, PulaarEntry, PulaarPos, PulaarSense, PulaarSource, mot_du_jour
 from kaloum24_v2.utils.models import ArticleTopic, AuthorSnippet
 
 
@@ -48,9 +49,11 @@ class AccueilVivantTests(TestCase):
 
     def test_mot_du_jour_donnee_reelle_et_sourcee(self):
         self.assertIsNone(mot_du_jour())
-        src = PulaarSource.objects.create(name="Source test", method="import_manuel")
-        t = PulaarTerm.objects.create(lemma="jam", source=src)
-        PulaarDefinition.objects.create(term=t, lang="fr", text="paix")
+        call_command("seed_pulaar", verbosity=0)
+        src = PulaarSource.objects.create(name="Source test", method="import_manuel", rights_status="permission_granted")
+        t = PulaarEntry.objects.create(lemma="jam", source=src, dialect=PulaarDialect.objects.get(code="fuf"),
+                                       pos=PulaarPos.objects.get(code="nom"))
+        PulaarSense.objects.create(entry=t, text="Fëw e laaw")
         r = self.client.get("/")
         self.assertContains(r, "Mot du jour en Pulaar")
         self.assertContains(r, "jam")

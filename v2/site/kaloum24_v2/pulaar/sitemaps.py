@@ -1,7 +1,7 @@
 from django.contrib.sitemaps import Sitemap
 from django.urls import reverse
 
-from .models import PulaarTerm
+from .models import PulaarEntry
 
 
 class PulaarSitemap(Sitemap):
@@ -11,7 +11,7 @@ class PulaarSitemap(Sitemap):
     priority = 0.5
 
     def items(self):
-        return ["accueil", *PulaarTerm.objects.order_by("lemma")]
+        return ["accueil", *PulaarEntry.objects.publiques().order_by("lemma")]
 
     def location(self, item):
         if item == "accueil":

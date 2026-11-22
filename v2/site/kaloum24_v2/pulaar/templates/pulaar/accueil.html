@@ -15,6 +15,10 @@
   </p>
   <form class="tc-recherche" method="get" action="{% url 'pulaar:accueil' %}">
     <input type="hidden" name="lang" value="{{ langue_ui }}">
+    {% if dialectes|length > 1 %}<select name="dialecte" aria-label="Variété">
+      <option value="">Toutes les variétés</option>
+      {% for d in dialectes %}<option value="{{ d.code }}"{% if d.code == dialecte %} selected{% endif %}>{{ d.name }}</option>{% endfor %}
+    </select>{% endif %}
     <input type="text" name="q" value="{{ q }}" placeholder="{% t 'chercher' %} — {% t 'mot' %} pulaar {% t 'ou' %} français…">
     <button type="submit">{% t 'chercher' %}</button>
   </form>

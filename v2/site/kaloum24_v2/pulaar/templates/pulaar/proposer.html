@@ -19,13 +19,18 @@
   </div>
   <div class="tc-champ">
     <label for="id_definition_ff">Définition en pulaar</label>
-    <textarea id="id_definition_ff" name="definition_ff" placeholder="Expliquer ce mot en pulaar même — c'est ce qui fait un dictionnaire monolingue.">{{ form.definition_ff.value|default:'' }}</textarea>
+    <textarea id="id_definition_ff" name="definition_ff" required placeholder="Expliquer ce mot en pulaar même — c'est ce qui fait un dictionnaire monolingue.">{{ form.definition_ff.value|default:'' }}</textarea>
+    {% if form.definition_ff.errors %}<p class="tc-note">{{ form.definition_ff.errors.0 }}</p>{% endif %}
   </div>
   <div class="tc-champ">
-    <label for="id_definition_fr">Définition en français</label>
-    <textarea id="id_definition_fr" name="definition_fr">{{ form.definition_fr.value|default:'' }}</textarea>
-    <p class="tc-fil" style="margin-top:0.3rem;">Une des deux définitions suffit — le pulaar seul est
-      parfaitement valable, c'est même l'objectif.</p>
+    <label for="id_translation_fr">Traduction en français (facultatif)</label>
+    <input type="text" id="id_translation_fr" name="translation_fr" value="{{ form.translation_fr.value|default:'' }}">
+    <p class="tc-fil" style="margin-top:0.3rem;">Un ou deux mots français qui correspondent. Ce n'est pas une définition :
+      le dictionnaire explique le pulaar par le pulaar.</p>
+  </div>
+  <div class="tc-champ">
+    <label for="id_dialect">Variété du pulaar (facultatif)</label>
+    {{ form.dialect }}
   </div>
   <div class="tc-champ">
     <label for="id_domain">Domaine (facultatif)</label>
