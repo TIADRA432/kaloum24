@@ -27,6 +27,9 @@ erDiagram
     PulaarSource |o--o{ PulaarExample : "source"
     PulaarSource |o--o{ PulaarTranslation : "source"
     PulaarExternalDictionary |o--o{ PulaarTranslation : "lien externe"
+    PulaarEntry ||--o{ PulaarEntryVariant : "autres formes"
+    PulaarImportBatch |o--o{ PulaarEntry : "lot d'import"
+    PulaarSource ||--o{ PulaarImportBatch : "source du lot"
     PulaarProposal |o--o| PulaarEntry : "publie"
     PulaarDialect |o--o{ PulaarProposal : "variété"
     PulaarPos |o--o{ PulaarProposal : "classe"
@@ -216,9 +219,17 @@ File de relecture des propositions du public. Jamais publiée directement.
 - **22 entrées** issues de Wiktionary (CC BY-SA), rattachées à `ful`, sans définition en pulaar, avec leurs gloses françaises et anglaises enregistrées comme **traductions**.
 - **Classes nominales : aucune** (à remplir depuis une source citée).
 
+## 5 bis. Import par lots (migration 0003)
+
+- **PulaarImportBatch** : source (PROTECT), nom du fichier, empreinte SHA-256, version du parseur, importé par, date, statut (`done`/`removed`), compteurs (entrées créées/ignorées, sens, exemples, variantes), notes (corrections appliquées).
+- **PulaarEntryVariant** : entrée (cascade), forme, note ; unique (entrée, forme). Sert aux formes alternatives du mot vedette (« Aamde: Aamude »).
+- **PulaarEntry.import_batch** : lot d'origine (SET_NULL) ; permet « Retirer le lot ».
+- Import idempotent (clé dialecte + mot + classe + homonyme), entrées en `documented`, droits de la source forcés à `to_check`.
+- **Aperçu équipe** : les entrées non publiques sont visibles des seuls comptes équipe (bandeau « Non public »), le public reçoit 404.
+
 ## 6. Ce qui n'est pas encore modélisé (phases suivantes)
 
-- Zone d'import (lots, empreinte du fichier, texte brut, auteur parseur / IA / humain, relecteur nominatif).
+- Zone d'import : lots faits ; reste le texte brut conservé, l'auteur parseur / IA / humain et le relecteur nominatif.
 - Racines, mutations consonantiques, extensions verbales, voix verbale.
 - Relations entre entrées (synonymes, dérivés) et **variantes dialectales d'un même mot**.
 - **Origine du mot** (hérité du peul ou emprunt) pour mettre en avant les mots authentiques : choix du lexicographe, jamais calculé.

@@ -87,6 +87,23 @@ Chaque phase : modèle → tests → déploiement → vérification en productio
 6. **Source de référence** : quel dictionnaire sur Webonary exactement (nom ou lien) et son auteur, pour demander l'autorisation de réutilisation avant tout import.
 7. **Reprise de l'existant** : confirmation qu'on repart propre (les 22 termes actuels sont re-semés avec leur source Wiktionnaire, rien de plus).
 
+### Réponses du propriétaire (2026-11-22) — décisions prises
+
+1. **Dialectes** : tous, Fuuta Jaloo (`fuf`) en premier, puis les autres dont Fuuta Tooro (`fuc`). Vision « dictionnaire universel » : macro-code `ful` + sous-code ISO 639-3 par entrée.
+2. **Classes nominales** : une vingtaine (~24–26), à remplir depuis une source citée, jamais de mémoire.
+3. **Validation** : le propriétaire valide en tant que lexicographe ; règles légères (seule règle dure : pas de « validé » sans définition en pulaar).
+4. **Droits** : « à vérifier » par défaut ; rien de public tant que la source n'est pas autorisée.
+5. **Dictionnaires externes** : Wiktionnaire fr, Wiktionary en.
+6. **Source de référence** : Webonary https://www.webonary.org/pular/en/ (le site bloque les robots ; le propriétaire dispose d'une copie locale).
+7. **Reprise** : les 22 anciens termes peuvent être abandonnés.
+
+### État d'avancement (2026-11-22)
+
+- **P1 (modèle) et P2 (vues, recherche, liens externes) : faits et en production.**
+- **Import Abuu Sih** (« Saggitorde Mawnde », don de l'auteur) : page d'admin « Importer un lot (dictionnaire) », nettoyage déterministe du mot vedette (version `v6-nettoyage-1`), 10 lots ≈ 16 100 entrées, statut « documentée », source en droits « à vérifier » (forcé côté serveur), invisible au public, aperçu réservé à l'équipe, retrait d'un lot en un clic. Les données ne sont jamais dans le dépôt public.
+- **Bloquant avant ouverture publique** : autorisation écrite d'Abuu Sih (remise orale seulement).
+- À confirmer : dialecte `fuc` (hypothèse), classes grammaticales (déduites par Gemini).
+
 ## 7. Risques
 
 - **Perdre le fil entre « dictionnaire » et « base de données de recherche »** : le modèle accepte une structure riche (racines, mutations), mais **rien n'est affiché ni rempli sans linguiste**. Une structure vide vaut mieux qu'une donnée approximative.
