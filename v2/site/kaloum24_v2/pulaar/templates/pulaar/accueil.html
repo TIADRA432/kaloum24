@@ -13,25 +13,37 @@
     Seuls des locuteurs peuvent combler cet écart —
     <a href="{% url 'pulaar:proposer' %}?lang={{ langue_ui }}" style="color:var(--tc-or);">contribue une définition</a>.
   </p>
-  <form class="tc-recherche" method="get" action="{% url 'pulaar:accueil' %}">
+  <form class="tc-recherche" method="get" action="{% url 'pulaar:accueil' %}" role="search">
     <input type="hidden" name="lang" value="{{ langue_ui }}">
-    {% if dialectes|length > 1 %}<select name="dialecte" aria-label="Variété">
-      <option value="">Toutes les variétés</option>
-      {% for d in dialectes %}<option value="{{ d.code }}"{% if d.code == dialecte %} selected{% endif %}>{{ d.name }}</option>{% endfor %}
-    </select>{% endif %}
-    <input type="text" name="q" value="{{ q }}" placeholder="{% t 'chercher' %} — {% t 'mot' %} pulaar {% t 'ou' %} français…">
+    <input type="search" name="q" value="{{ q }}" aria-label="Chercher un mot" autocomplete="off"
+           placeholder="{% t 'chercher' %} — {% t 'mot' %} pulaar {% t 'ou' %} français…">
     <button type="submit">{% t 'chercher' %}</button>
+    <div class="tc-filtres">
+      {% if dialectes|length > 1 %}<select name="dialecte" aria-label="Variété">
+        <option value="">Toutes les variétés</option>
+        {% for d in dialectes %}<option value="{{ d.code }}"{% if d.code == dialecte %} selected{% endif %}>{{ d.name }}</option>{% endfor %}
+      </select>{% endif %}
+      {% if classes|length > 1 %}<select name="classe" aria-label="Classe grammaticale">
+        <option value="">Toutes les classes</option>
+        {% for c in classes %}<option value="{{ c.code }}"{% if c.code == classe %} selected{% endif %}>{{ c.name_fr }}</option>{% endfor %}
+      </select>{% endif %}
+    </div>
   </form>
+  <p class="tc-aide-recherche">Tu peux taper sans les lettres spéciales : <em>d</em> trouve aussi <em>ɗ</em>, <em>b</em> trouve <em>ɓ</em>, <em>y</em> trouve <em>ƴ</em>.</p>
 {% endblock %}
 
 {% block contenu %}
 {% if apercu_equipe %}<p class="tc-note"><strong>Aperçu équipe.</strong> Tu es connecté à l'administration : tu vois aussi les entrées dont les droits de la source ne sont pas établis. Le public ne les voit pas.</p>{% endif %}
+{% if lettres %}
+<nav class="tc-alphabet" aria-label="Index alphabétique">
+  <a href="?{% if qs_lettre %}{{ qs_lettre }}{% else %}lang={{ langue_ui }}{% endif %}"{% if not lettre and not q %} aria-current="true"{% endif %}>Tout</a>
+  {% for l in lettres %}<a href="?{{ qs_lettre }}{% if qs_lettre %}&{% endif %}lettre={{ l|urlencode }}"{% if l == lettre|upper %} aria-current="true"{% endif %}>{{ l }}</a>{% endfor %}
+</nav>
+{% endif %}
 {% if q %}
-  <h2>Résultats pour « {{ q }} »</h2>
-  {% for t in resultats %}{% include "pulaar/_carte.html" %}
-  {% empty %}
-  <p class="tc-vide">Aucun résultat pour « {{ q }} ». <a href="{% url 'pulaar:proposer' %}">Propose ce mot</a> si tu connais sa définition.</p>
-  {% endfor %}
+  <h2>Résultats pour « {{ q }} » <span class="tc-compteur">({{ nb_resultats }})</span></h2>
+{% elif lettre %}
+  <h2>Mots en « {{ lettre|upper }} » <span class="tc-compteur">({{ nb_resultats }})</span></h2>
 {% else %}
   {% if domaines %}
   <h2>{% t 'domaine' %}s</h2>
@@ -39,19 +51,19 @@
     {% for d in domaines %}<a href="{% url 'pulaar:domaine' d.slug %}">{{ d.name }}</a>{% endfor %}
   </div>
   {% endif %}
-
-  <h2>{% t 'tous_les_termes' %}</h2>
-  {% for t in tous_termes %}{% include "pulaar/_carte.html" %}
-  {% empty %}
-  <p class="tc-vide">Le dictionnaire est encore vide.</p>
-  {% endfor %}
-  {% if page and page.paginator.num_pages > 1 %}
-  <nav class="tc-fil" aria-label="Pages">
-    {% if page.has_previous %}<a href="?page={{ page.previous_page_number }}{% if dialecte %}&dialecte={{ dialecte }}{% endif %}&lang={{ langue_ui }}">← Précédent</a>{% endif %}
-    Page {{ page.number }} sur {{ page.paginator.num_pages }}
-    {% if page.has_next %}<a href="?page={{ page.next_page_number }}{% if dialecte %}&dialecte={{ dialecte }}{% endif %}&lang={{ langue_ui }}">Suivant →</a>{% endif %}
-  </nav>
-  {% endif %}
+  <h2>{% t 'tous_les_termes' %} <span class="tc-compteur">({{ nb_resultats }})</span></h2>
+{% endif %}
+{% for t in resultats %}{% include "pulaar/_carte.html" %}
+{% empty %}
+  {% if q %}<p class="tc-vide">Aucun résultat pour « {{ q }} ». <a href="{% url 'pulaar:proposer' %}">Propose ce mot</a> si tu connais sa définition.</p>
+  {% else %}<p class="tc-vide">Aucune entrée pour ce filtre.</p>{% endif %}
+{% endfor %}
+{% if page and page.paginator.num_pages > 1 %}
+<nav class="tc-fil" aria-label="Pages">
+  {% if page.has_previous %}<a href="?{{ qs }}&page={{ page.previous_page_number }}" rel="prev">← Précédent</a>{% endif %}
+  Page {{ page.number }} sur {{ page.paginator.num_pages }}
+  {% if page.has_next %}<a href="?{{ qs }}&page={{ page.next_page_number }}" rel="next">Suivant →</a>{% endif %}
+</nav>
 {% endif %}
 
 <hr class="tc-separateur--fin">

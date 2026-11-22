@@ -40,3 +40,14 @@ def slug_unique(modele, texte: str, exclude_pk=None, champ: str = "slug") -> str
             return candidat
         candidat = f"{base}-{i}"
         i += 1
+
+
+def cle_recherche(texte: str) -> str:
+    """Forme de comparaison d'un mot : minuscules, sans accents, lettres africaines ramenées à
+    leur équivalent ASCII (ɗ→d, ɓ→b, ŋ→ng, ƴ→y…), espaces simples. Sert à chercher un mot
+    même quand le clavier ne permet pas de taper ses lettres spéciales."""
+    for lettre, remplacement in LETTRES_AFRICAINES.items():
+        texte = texte.replace(lettre, remplacement)
+    texte = unicodedata.normalize("NFKD", texte).encode("ascii", "ignore").decode("ascii").lower()
+    texte = re.sub(r"[^a-z0-9\s]", " ", texte)
+    return re.sub(r"\s+", " ", texte).strip()

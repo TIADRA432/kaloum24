@@ -19,7 +19,7 @@ from .models import (
     PulaarDialect, PulaarEntry, PulaarEntryVariant, PulaarExample, PulaarImportBatch, PulaarNounClass,
     PulaarPos, PulaarSense, PulaarSource,
 )
-from .slug import slugify_pulaar
+from .slug import cle_recherche, slugify_pulaar
 
 PARSER_VERSION = "v6-nettoyage-1"
 TAILLE_LOT = 500
@@ -150,14 +150,14 @@ def importer(data, contenu_brut, nom_fichier, utilisateur=None):
             for e, p in zip(entrees, pile):
                 for i, s in enumerate(p["senses"], 1):
                     sens.append(PulaarSense(entry=e, sort_order=s.get("sort_order", i), text=s["text"].strip(),
-                                            source=source, source_locator=(s.get("source_locator") or "")[:100]))
+                                            text_key=cle_recherche(s["text"].strip()), source=source, source_locator=(s.get("source_locator") or "")[:100]))
                 for i, x in enumerate(p["examples"], 1):
                     exemples.append(PulaarExample(
                         entry=e, sort_order=x.get("sort_order", i), sense_number=x.get("sense_number"),
                         text=x["text"].strip(), translation=(x.get("translation") or "").strip(), source=source,
                         source_locator=(x.get("source_locator") or "")[:100]))
                 for i, v in enumerate(p["variants"], 1):
-                    variantes.append(PulaarEntryVariant(entry=e, sort_order=i, form=v[:200]))
+                    variantes.append(PulaarEntryVariant(entry=e, sort_order=i, form=v[:200], search_key=cle_recherche(v[:200])))
             PulaarSense.objects.bulk_create(sens)
             PulaarExample.objects.bulk_create(exemples)
             PulaarEntryVariant.objects.bulk_create(variantes)
@@ -205,6 +205,7 @@ def importer(data, contenu_brut, nom_fichier, utilisateur=None):
             pile.append({
                 "entree": PulaarEntry(lemma=it["lemma"][:200], slug=slug, dialect=dialecte, pos=pos,
                                       homonym_index=indice, noun_class=classe, source=source,
+                                      search_key=cle_recherche(it["lemma"][:200]),
                                       status=PulaarEntry.DOCUMENTE, import_batch=lot),
                 "senses": texte_sens, "examples": it.get("examples", []),
                 "variants": _unique(it["variants"]),

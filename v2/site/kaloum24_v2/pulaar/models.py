@@ -22,7 +22,7 @@ from modelcluster.models import ClusterableModel
 from wagtail.models import Orderable
 
 from .admin_forms import EntryAdminForm
-from .slug import slug_unique
+from .slug import cle_recherche, slug_unique
 
 SOURCE_COMMUNAUTE = "communaute"
 DIALECTE_PAR_DEFAUT = "fuf"
@@ -256,6 +256,7 @@ class PulaarEntry(ClusterableModel):
     status = models.CharField("statut", max_length=20, choices=STATUTS, default=DOCUMENTE)
     import_batch = models.ForeignKey(PulaarImportBatch, null=True, blank=True, editable=False,
                                      on_delete=models.SET_NULL, related_name="entries")
+    search_key = models.CharField(max_length=220, blank=True, default="", db_index=True, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     objects = EntreeQuerySet.as_manager()
@@ -276,6 +277,7 @@ class PulaarEntry(ClusterableModel):
             raise ValidationError("Une entrée ne peut être validée sans définition en pulaar.")
         if not self.slug:
             self.slug = slug_unique(PulaarEntry, self.lemma, self.pk)
+        self.search_key = cle_recherche(self.lemma)
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -291,6 +293,11 @@ class PulaarSense(Orderable):
                                on_delete=models.PROTECT, related_name="senses",
                                help_text="Vide = même source que l'entrée.")
     source_locator = models.CharField("page / n° d'entrée", max_length=100, blank=True)
+    text_key = models.TextField(blank=True, default="", editable=False)
+
+    def save(self, *args, **kwargs):
+        self.text_key = cle_recherche(self.text)
+        super().save(*args, **kwargs)
 
     class Meta(Orderable.Meta):
         verbose_name = "sens"
@@ -310,6 +317,11 @@ class PulaarEntryVariant(Orderable):
     entry = ParentalKey(PulaarEntry, on_delete=models.CASCADE, related_name="variants")
     form = models.CharField("forme", max_length=200)
     note = models.CharField("note", max_length=200, blank=True)
+    search_key = models.CharField(max_length=220, blank=True, default="", db_index=True, editable=False)
+
+    def save(self, *args, **kwargs):
+        self.search_key = cle_recherche(self.form)
+        super().save(*args, **kwargs)
 
     class Meta(Orderable.Meta):
         verbose_name = "forme variante"

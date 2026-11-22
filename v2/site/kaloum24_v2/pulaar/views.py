@@ -2,16 +2,20 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from django.core.cache import cache
 from django.db.models import Q
+from django.db.models.functions import Substr, Upper
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from urllib.parse import urlencode
 from django.views.decorators.http import require_http_methods
 
 from .forms import ProposalForm
-from .models import PulaarDialect, PulaarDomain, PulaarEntry, PulaarProposal
-from .slug import slugify_pulaar
+from .models import PulaarDialect, PulaarDomain, PulaarEntry, PulaarPos, PulaarProposal
+from .recherche import RAISONS, chercher
+from .slug import cle_recherche, slugify_pulaar
 
 PROPOSITIONS_PAR_HEURE = 5
 PAR_PAGE = 100
+RESULTATS_PAR_PAGE = 30
 
 
 def _apercu(request):
@@ -38,39 +42,59 @@ def _termes(request=None):
             .prefetch_related("senses", "variants", "translations__external_dictionary"))
 
 
+def _lettres(base):
+    """Initiales présentes (A, B, Ɓ, C…), dans l'ordre alphabétique."""
+    initiales = set(base.order_by().annotate(i=Upper(Substr("lemma", 1, 1))).values_list("i", flat=True).distinct())
+    initiales.discard("")
+    return sorted(initiales, key=lambda c: (cle_recherche(c) or c, c))
+
+
+def _qs(request, **sauf):
+    """Paramètres de la requête à conserver dans les liens (sans « page »)."""
+    pr = {k: v for k, v in request.GET.items() if v and k != "page"}
+    pr.update({k: v for k, v in sauf.items() if v})
+    return urlencode(pr)
+
+
 def accueil(request):
     q = request.GET.get("q", "").strip()[:100]
     code_dialecte = request.GET.get("dialecte", "").strip()[:10]
+    code_classe = request.GET.get("classe", "").strip()[:30]
+    lettre = request.GET.get("lettre", "").strip()[:2]
     base = _termes(request)
     if code_dialecte:
         base = base.filter(dialect__code=code_dialecte)
-    resultats = []
-    if q:
-        # Beaucoup de claviers ne permettent pas de taper ɗ, ɓ, ŋ, ƴ : on
-        # cherche TOUJOURS aussi dans le slug, forme translittérée du lemme.
-        resultats = list(
-            base.filter(
-                Q(lemma__icontains=q)
-                | Q(senses__text__icontains=q)
-                | Q(translations__term__icontains=q)
-                | Q(variants__form__icontains=q)
-                | Q(slug__icontains=slugify_pulaar(q))
-            ).distinct()[:30]
-        )
+    if code_classe:
+        base = base.filter(pos__code=code_classe)
     total = base.count()
-    # Couverture monolingue affichée telle quelle, même à 0 : autant montrer
-    # honnêtement la distance restante.
     monolingues = base.filter(senses__isnull=False).distinct().count()
-    # Sans recherche on liste quand même les entrées (page vide = visiteur perdu).
+    lettres = _lettres(base)
     page = None
-    tous = []
-    if not q:
-        page = Paginator(base.order_by("lemma", "homonym_index"), PAR_PAGE).get_page(request.GET.get("page"))
-        tous = list(page)
+    resultats, nb_resultats = [], 0
+    if q:
+        # Résultats classés (mot exact d'abord), paginés, avec la raison du résultat.
+        trouves = chercher(base, q)
+        nb_resultats = len(trouves)
+        page = Paginator(trouves, RESULTATS_PAR_PAGE).get_page(request.GET.get("page"))
+        rangs = dict(page.object_list)
+        par_id = {e.pk: e for e in base.filter(pk__in=rangs)}
+        for pk, rang in page.object_list:
+            e = par_id.get(pk)
+            if e:
+                e.raison = RAISONS[rang]
+                resultats.append(e)
+    else:
+        liste = base.filter(lemma__istartswith=lettre) if lettre else base
+        page = Paginator(liste.order_by("lemma", "homonym_index"), PAR_PAGE).get_page(request.GET.get("page"))
+        resultats = list(page)
+        nb_resultats = page.paginator.count
     return render(request, "pulaar/accueil.html", _ctx(
         request, q=q, resultats=resultats, domaines=PulaarDomain.objects.all(),
         dialectes=PulaarDialect.objects.filter(entries__isnull=False).distinct(), dialecte=code_dialecte,
-        total_termes=total, tous_termes=tous, termes_monolingues=monolingues, page=page,
+        classes=PulaarPos.objects.filter(entries__isnull=False).distinct(), classe=code_classe,
+        lettres=lettres, lettre=lettre, nb_resultats=nb_resultats,
+        total_termes=total, termes_monolingues=monolingues, page=page,
+        qs=_qs(request), qs_lettre=_qs(request, lettre=""),
         apercu_equipe=_apercu(request),
     ))
 

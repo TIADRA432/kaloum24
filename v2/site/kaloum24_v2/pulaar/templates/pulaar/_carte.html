@@ -4,6 +4,7 @@
     {% if not t.source.is_publishable or t.status == 'draft' %}<span class="tc-pastille">Non public</span>{% endif %}
     {% if t.status == 'validated' %}<span class="tc-pastille tc-pastille--validee">Validé</span>{% else %}<span class="tc-pastille">Documenté</span>{% endif %}
   </div>
+  {% if t.raison and t.raison != "mot exact" %}<span class="tc-raison">{{ t.raison }}</span>{% endif %}
   <h3><a href="{% url 'pulaar:terme' t.slug %}">{{ t.lemma }}{% if t.homonym_index > 1 %}<sup>{{ t.homonym_index }}</sup>{% endif %}</a></h3>
   {% with premier=t.senses.all.0 %}
     {% if premier %}<p lang="ff">{{ premier.text }}</p>

@@ -129,3 +129,15 @@
 .tc-domaines a { background: var(--tc-blanc); border: 1px solid var(--tc-sable); color: var(--tc-bordeaux);
   padding: 0.4rem 0.9rem; border-radius: 3px; text-decoration: none; font-size: 0.85rem; font-weight: 600; }
 .tc-domaines a:hover { border-color: var(--tc-or); background: var(--tc-ivoire); }
+
+/* Recherche : filtres, aide, alphabet, compteur, raison du résultat */
+.tc-recherche { flex-wrap: wrap; }
+.tc-recherche .tc-filtres { flex-basis: 100%; display: flex; gap: .5rem; margin-top: .6rem; flex-wrap: wrap; }
+.tc-recherche .tc-filtres select { flex: 0 1 auto; padding: .4rem .5rem; border: 1px solid var(--tc-or); background: var(--tc-blanc); color: inherit; }
+.tc-aide-recherche { font-size: .8rem; margin: .5rem 0 0; opacity: .85; }
+.tc-alphabet { display: flex; flex-wrap: wrap; gap: .3rem; margin: 0 0 1.2rem; }
+.tc-alphabet a { min-width: 2.2rem; min-height: 2.2rem; display: inline-flex; align-items: center; justify-content: center;
+  padding: 0 .5rem; border: 1px solid var(--tc-or); text-decoration: none; color: inherit; border-radius: 2px; }
+.tc-alphabet a:hover, .tc-alphabet a[aria-current] { background: var(--tc-or); color: var(--tc-blanc); }
+.tc-compteur { font-weight: 400; font-size: .85em; opacity: .7; }
+.tc-raison { float: right; font-size: .75rem; opacity: .7; font-style: italic; }
