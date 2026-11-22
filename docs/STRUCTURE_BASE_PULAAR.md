@@ -227,6 +227,13 @@ File de relecture des propositions du public. Jamais publiée directement.
 - Import idempotent (clé dialecte + mot + classe + homonyme), entrées en `documented`, droits de la source forcés à `to_check`.
 - **Aperçu équipe** : les entrées non publiques sont visibles des seuls comptes équipe (bandeau « Non public »), le public reçoit 404.
 
+## 5 ter. Recherche et enrichissements (migrations 0004 et 0005, 2026-11-22)
+
+- **Clés de recherche** (calculées à l'enregistrement et à l'import, remplies par la migration) : `PulaarEntry.search_key`, `PulaarEntryVariant.search_key`, `PulaarSense.text_key` = minuscules, sans accents, ɓ→b ɗ→d ƴ→y ŋ→ng. Fonction `slug.cle_recherche`.
+- **Classement** (`recherche.py`) : mot exact, commence par, contient, forme variante, définition, traduction (plein texte plafonné à 300, écarté pour 1–2 lettres). Résultats paginés par 30 avec la raison affichée ; filtres variété et classe ; index alphabétique (`?lettre=`).
+- **Champs facultatifs, rien d'affiché tant qu'ils sont vides** : `PulaarPronunciation` (API, variété), `PulaarAudio` (document Wagtail, locuteur, **public seulement si consentement coché**), `PulaarImage` (image Wagtail, légende, crédit, **public seulement si droits vérifiés**), `PulaarRelation` (synonyme, contraire, dérivé, même famille, pluriel, singulier, voir aussi ; affichée dans les deux sens, jamais vers une entrée non visible), et sur l'entrée : `origin` (hérité / emprunt / inconnu, choix du lexicographe), `origin_language`, `etymology`, `usage_note`.
+- Stockage média Supabase : types audio (mp3, m4a, aac, ogg, wav, webm, flac) autorisés le 2026-11-22 (ils étaient refusés, y compris pour la version audio des articles) ; limite 10 Mo par fichier inchangée.
+
 ## 6. Ce qui n'est pas encore modélisé (phases suivantes)
 
 - Zone d'import : lots faits ; reste le texte brut conservé, l'auteur parseur / IA / humain et le relecteur nominatif.
