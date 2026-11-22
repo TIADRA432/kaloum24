@@ -22,7 +22,14 @@
 {% endblock %}
 
 {% block contenu %}
-<p class="tc-fil"><a href="{% url 'pulaar:accueil' %}">← Retour à la recherche</a></p>
+<nav class="tc-navmot" aria-label="Navigation dans le dictionnaire">
+  <a href="{% url 'pulaar:accueil' %}{% if retour %}?{{ retour }}{% else %}?lang={{ langue_ui }}{% endif %}" class="tc-navmot__retour">← {% if retour %}Retour aux résultats{% else %}Retour au dictionnaire{% endif %}</a>
+  <form class="tc-navmot__recherche" method="get" action="{% url 'pulaar:accueil' %}" role="search">
+    <input type="hidden" name="lang" value="{{ langue_ui }}">
+    <input type="search" name="q" aria-label="Chercher un autre mot" placeholder="Chercher un autre mot" autocomplete="off">
+    <button type="submit">Chercher</button>
+  </form>
+</nav>
 {% if non_public %}<p class="tc-note"><strong>Non public.</strong> Aperçu réservé à l'équipe : les droits de réutilisation de la source ({{ terme.source.get_rights_status_display|lower }}) ne sont pas établis.</p>{% endif %}
 
 {% if terme.status == 'validated' %}
@@ -87,6 +94,13 @@
     {% for e in entrees %}<a href="{% url 'pulaar:terme' e.slug %}" lang="ff">{{ e.lemma }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}</li>
 {% endfor %}
 </ul>
+{% endif %}
+
+{% if mot_avant or mot_apres %}
+<nav class="tc-voisins" aria-label="Mots voisins dans l'ordre alphabétique">
+  {% if mot_avant %}<a href="{% url 'pulaar:terme' mot_avant.slug %}{% if retour %}?depuis={{ retour|urlencode:'' }}{% endif %}" rel="prev" lang="ff">← {{ mot_avant.lemma }}</a>{% else %}<span></span>{% endif %}
+  {% if mot_apres %}<a href="{% url 'pulaar:terme' mot_apres.slug %}{% if retour %}?depuis={{ retour|urlencode:'' }}{% endif %}" rel="next" lang="ff">{{ mot_apres.lemma }} →</a>{% endif %}
+</nav>
 {% endif %}
 
 <hr class="tc-separateur--fin">

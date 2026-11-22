@@ -5,7 +5,7 @@ from django.db.models import Q
 from django.db.models.functions import Substr, Upper
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from urllib.parse import urlencode
+from urllib.parse import parse_qsl, urlencode
 from django.views.decorators.http import require_http_methods
 
 from .forms import ProposalForm
@@ -50,6 +50,26 @@ def _lettres(base):
     initiales = set(base.order_by().annotate(i=Upper(Substr("lemma", 1, 1))).values_list("i", flat=True).distinct())
     initiales.discard("")
     return sorted(initiales, key=lambda c: (cle_recherche(c) or c, c))
+
+
+CLES_RETOUR = ("q", "dialecte", "classe", "lettre", "page", "lang")
+
+
+def _retour(request):
+    """Paramètres de la liste d'où l'on vient (liste blanche), pour le lien « Retour aux résultats »."""
+    brut = request.GET.get("depuis", "")[:300]
+    pr = {k: v[:100] for k, v in parse_qsl(brut) if k in CLES_RETOUR and v}
+    return urlencode(pr)
+
+
+def _voisins(base, t):
+    """Mots précédent et suivant dans l'ordre alphabétique des entrées visibles."""
+    qs = base.order_by()
+    avant = (qs.filter(Q(lemma__lt=t.lemma) | Q(lemma=t.lemma, homonym_index__lt=t.homonym_index))
+             .order_by("-lemma", "-homonym_index").only("lemma", "slug", "homonym_index").first())
+    apres = (qs.filter(Q(lemma__gt=t.lemma) | Q(lemma=t.lemma, homonym_index__gt=t.homonym_index))
+             .order_by("lemma", "homonym_index").only("lemma", "slug", "homonym_index").first())
+    return avant, apres
 
 
 def _qs(request, **sauf):
@@ -97,7 +117,7 @@ def accueil(request):
         classes=PulaarPos.objects.filter(entries__isnull=False).distinct(), classe=code_classe,
         lettres=lettres, lettre=lettre, nb_resultats=nb_resultats,
         total_termes=total, termes_monolingues=monolingues, page=page,
-        qs=_qs(request), qs_lettre=_qs(request, lettre=""),
+        qs=_qs(request), qs_lettre=_qs(request, lettre=""), depuis=urlencode({k: v for k, v in request.GET.items() if k in CLES_RETOUR and v}),
         apercu_equipe=_apercu(request),
     ))
 
@@ -132,8 +152,9 @@ def terme(request, slug):
     # Média : public seulement avec consentement / droits vérifiés ; l'équipe voit tout, marqué.
     audios = [a for a in t.audios.all() if equipe or a.public]
     images = [i for i in t.images.all() if equipe or i.public]
+    avant, apres = _voisins(PulaarEntry.objects.visibles_pour(request.user), t)
     return render(request, "pulaar/terme.html", _ctx(
-        request, terme=t, traductions=traductions, non_public=non_public, audios=audios, images=images,
+        request, retour=_retour(request), mot_avant=avant, mot_apres=apres, terme=t, traductions=traductions, non_public=non_public, audios=audios, images=images,
         prononciations=list(t.pronunciations.all()), liens=_liens(request, t)))
 
 
