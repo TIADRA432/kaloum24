@@ -39,3 +39,51 @@ class TableauTests(TestCase):
     def test_filtre_inconnu_ignore(self):
         self.client.login(username="adm", password="x")
         self.assertEqual(self.client.get(reverse("pulaar_tableau"), {"manque": "nimporte"}).status_code, 200)
+
+
+class ClasseEnMasseTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command("seed_pulaar", verbosity=0)
+        src = PulaarSource.objects.create(name="Libre", rights_status="open_license")
+        cls.d = PulaarDialect.objects.get(code="fuf")
+        cls.prec, cls.nom, cls.verbe = (PulaarPos.objects.get(code=c) for c in ("a-preciser", "nom", "verbe"))
+        cls.e1 = PulaarEntry.objects.create(lemma="Mot1", dialect=cls.d, pos=cls.prec, source=src)
+        cls.e2 = PulaarEntry.objects.create(lemma="Mot2", dialect=cls.d, pos=cls.prec, source=src)
+        # collision : « Mot2 » existe déjà en classe « nom »
+        PulaarEntry.objects.create(lemma="Mot2", dialect=cls.d, pos=cls.nom, source=src)
+        get_user_model().objects.create_superuser("adm", "a@b.c", "x")
+        get_user_model().objects.create_user("simple", "s@b.c", "x")
+
+    def poster(self, **d):
+        return self.client.post(reverse("pulaar_tableau_classe"), d, follow=True)
+
+    def test_changement_en_masse_et_collision(self):
+        self.client.login(username="adm", password="x")
+        r = self.poster(ids=[self.e1.pk, self.e2.pk], pos=self.nom.pk, manque="classe", page="1")
+        self.e1.refresh_from_db(); self.e2.refresh_from_db()
+        self.assertEqual(self.e1.pos, self.nom)
+        self.assertEqual(self.e2.pos, self.prec)  # refusée : l'entrée identique existe
+        self.assertContains(r, "1 entrée(s) passée(s)")
+        self.assertContains(r, "Non modifiée(s)")
+        self.assertContains(r, "Mot2")
+
+    def test_rien_de_coche_ou_classe_absente(self):
+        self.client.login(username="adm", password="x")
+        self.assertContains(self.poster(pos=self.nom.pk), "Coche au moins un mot")
+        self.assertContains(self.poster(ids=[self.e1.pk]), "Coche au moins un mot")
+
+    def test_reserve_a_lequipe_et_post_seulement(self):
+        self.assertNotEqual(self.client.post(reverse("pulaar_tableau_classe"), {"ids": [self.e1.pk], "pos": self.nom.pk}).status_code, 200)
+        self.client.login(username="simple", password="x")
+        self.client.post(reverse("pulaar_tableau_classe"), {"ids": [self.e1.pk], "pos": self.nom.pk})
+        self.e1.refresh_from_db()
+        self.assertEqual(self.e1.pos, self.prec)
+        self.client.login(username="adm", password="x")
+        self.assertEqual(self.client.get(reverse("pulaar_tableau_classe")).status_code, 405)
+
+    def test_formulaire_affiche_dans_la_file(self):
+        self.client.login(username="adm", password="x")
+        r = self.client.get(reverse("pulaar_tableau"), {"manque": "classe"})
+        self.assertContains(r, "Appliquer aux mots cochés")
+        self.assertContains(r, f'value="{self.e1.pk}"')

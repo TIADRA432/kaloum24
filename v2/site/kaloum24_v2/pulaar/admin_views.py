@@ -4,6 +4,7 @@ import json
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.core.paginator import Paginator
+from django.db import IntegrityError, transaction
 from django.db.models import Count, Q
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
@@ -11,7 +12,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from .importer import ImportInvalide, importer, retirer_lot
-from .models import PulaarEntry, PulaarImportBatch
+from .models import PulaarEntry, PulaarImportBatch, PulaarPos
 
 TAILLE_MAX = 12 * 1024 * 1024
 
@@ -113,4 +114,34 @@ def tableau(request):
         "couverture": couverture, "par_dialecte": par_dialecte, "par_source": par_source,
         "manques": [(k, v[0]) for k, v in MANQUES.items()], "manque": manque,
         "manque_libelle": MANQUES[manque][0] if manque in MANQUES else "", "page": page,
+        "classes": PulaarPos.objects.all(),
     })
+
+
+@permission_required("pulaar.change_pulaarentry", raise_exception=True)
+@require_POST
+def tableau_classe(request):
+    """Change la classe grammaticale de plusieurs entrées d'un coup (file « classe à préciser »)."""
+    ids = [int(i) for i in request.POST.getlist("ids") if i.isdigit()][:200]
+    pos = PulaarPos.objects.filter(pk=request.POST.get("pos", "")).first() if request.POST.get("pos", "").isdigit() else None
+    retour = reverse("pulaar_tableau")
+    manque = request.POST.get("manque", "")
+    if manque in MANQUES:
+        retour += f"?manque={manque}&page={request.POST.get('page', '1') if request.POST.get('page', '1').isdigit() else 1}"
+    if not ids or pos is None:
+        messages.error(request, "Coche au moins un mot et choisis une classe.")
+        return redirect(retour)
+    modifiees, refusees = 0, []
+    for e in PulaarEntry.objects.filter(pk__in=ids):
+        try:
+            with transaction.atomic():
+                PulaarEntry.objects.filter(pk=e.pk).update(pos=pos)
+            modifiees += 1
+        except IntegrityError:  # même mot, même variété, même classe et même n° d'homonyme déjà présents
+            refusees.append(e.lemma)
+    if modifiees:
+        messages.success(request, f"{modifiees} entrée(s) passée(s) en « {pos.name_fr} ».")
+    if refusees:
+        messages.warning(request, "Non modifiée(s), une entrée identique existe déjà : " + ", ".join(refusees[:10])
+                         + ("…" if len(refusees) > 10 else "") + " — change leur numéro d'homonyme depuis la fiche.")
+    return redirect(retour)

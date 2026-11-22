@@ -27,15 +27,25 @@
 
   {% if page %}
   <h3>{{ manque_libelle }} — {{ page.paginator.count }} entrée(s)</h3>
+  <form method="post" action="{% url 'pulaar_tableau_classe' %}">
+  {% csrf_token %}
+  <input type="hidden" name="manque" value="{{ manque }}"><input type="hidden" name="page" value="{{ page.number }}">
+  <p>Pour les mots cochés : classe grammaticale
+    <select name="pos" aria-label="Nouvelle classe grammaticale">
+      <option value="">— choisir —</option>
+      {% for c in classes %}<option value="{{ c.pk }}">{{ c.name_fr }}</option>{% endfor %}
+    </select>
+    <button type="submit" class="button button-small">Appliquer aux mots cochés</button></p>
   <table class="listing">
-    <thead><tr><th>Mot</th><th>Variété</th><th>Classe</th><th>Statut</th></tr></thead>
+    <thead><tr><th><input type="checkbox" aria-label="Tout cocher" onclick="document.querySelectorAll('input[name=ids]').forEach(function(c){c.checked=this.checked}.bind(this))"></th><th>Mot</th><th>Variété</th><th>Classe</th><th>Statut</th></tr></thead>
     <tbody>
     {% for e in page %}
-      <tr><td><a href="/admin/snippets/pulaar/pulaarentry/edit/{{ e.pk }}/">{{ e.lemma }}{% if e.homonym_index > 1 %} ({{ e.homonym_index }}){% endif %}</a></td>
+      <tr><td><input type="checkbox" name="ids" value="{{ e.pk }}" aria-label="Choisir {{ e.lemma }}"></td><td><a href="/admin/snippets/pulaar/pulaarentry/edit/{{ e.pk }}/">{{ e.lemma }}{% if e.homonym_index > 1 %} ({{ e.homonym_index }}){% endif %}</a></td>
         <td>{{ e.dialect.name }}</td><td>{{ e.pos.name_fr }}</td><td>{{ e.get_status_display }}</td></tr>
     {% endfor %}
     </tbody>
   </table>
+  </form>
   {% if page.paginator.num_pages > 1 %}
   <p>{% if page.has_previous %}<a href="?manque={{ manque }}&page={{ page.previous_page_number }}">← Précédent</a>{% endif %}
     Page {{ page.number }} sur {{ page.paginator.num_pages }}
