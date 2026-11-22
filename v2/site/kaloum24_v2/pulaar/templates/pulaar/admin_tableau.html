@@ -1,0 +1,46 @@
+{% extends "wagtailadmin/base.html" %}
+{% block titletag %}Tableau de bord du dictionnaire{% endblock %}
+{% block content %}
+{% include "wagtailadmin/shared/header.html" with title="Tableau de bord du dictionnaire" icon="list-ul" %}
+<div class="nice-padding">
+  <h2>Où en est le dictionnaire</h2>
+  <table class="listing">
+    <thead><tr><th>Élément</th><th>Entrées</th><th>Part</th><th></th></tr></thead>
+    <tbody>
+    {% for libelle, valeur, total, pct in couverture %}
+      <tr><td>{{ libelle }}</td><td>{{ valeur }}</td>
+        <td>{% if total %}{{ pct }} %{% endif %}</td>
+        <td style="width:30%">{% if total %}<progress max="100" value="{{ pct }}" style="width:100%" aria-label="{{ libelle }}"></progress>{% endif %}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+  <h2>Par variété</h2>
+  <ul>{% for d in par_dialecte %}<li>{{ d.dialect__name }} : {{ d.n }}</li>{% endfor %}</ul>
+
+  <h2>Par source</h2>
+  <ul>{% for s in par_source %}<li>{{ s.source__name }} — {{ s.n }} entrée(s), droits : <code>{{ s.source__rights_status }}</code></li>{% endfor %}</ul>
+
+  <h2>À faire : ce qu'il manque</h2>
+  <p>Choisis une file de travail ; chaque mot renvoie à sa fiche d'édition.</p>
+  <p>{% for cle, libelle in manques %}<a class="button button-small{% if cle != manque %} button-secondary{% endif %}" href="?manque={{ cle }}">{{ libelle }}</a> {% endfor %}</p>
+
+  {% if page %}
+  <h3>{{ manque_libelle }} — {{ page.paginator.count }} entrée(s)</h3>
+  <table class="listing">
+    <thead><tr><th>Mot</th><th>Variété</th><th>Classe</th><th>Statut</th></tr></thead>
+    <tbody>
+    {% for e in page %}
+      <tr><td><a href="/admin/snippets/pulaar/pulaarentry/edit/{{ e.pk }}/">{{ e.lemma }}{% if e.homonym_index > 1 %} ({{ e.homonym_index }}){% endif %}</a></td>
+        <td>{{ e.dialect.name }}</td><td>{{ e.pos.name_fr }}</td><td>{{ e.get_status_display }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% if page.paginator.num_pages > 1 %}
+  <p>{% if page.has_previous %}<a href="?manque={{ manque }}&page={{ page.previous_page_number }}">← Précédent</a>{% endif %}
+    Page {{ page.number }} sur {{ page.paginator.num_pages }}
+    {% if page.has_next %}<a href="?manque={{ manque }}&page={{ page.next_page_number }}">Suivant →</a>{% endif %}</p>
+  {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

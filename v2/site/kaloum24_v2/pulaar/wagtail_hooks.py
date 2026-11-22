@@ -132,6 +132,7 @@ from . import admin_views  # noqa: E402
 @hooks.register("register_admin_urls")
 def urls_import():
     return [
+        path("dictionnaire-pulaar/tableau/", admin_views.tableau, name="pulaar_tableau"),
         path("dictionnaire-pulaar/import/", admin_views.import_lot, name="pulaar_import"),
         path("dictionnaire-pulaar/import/<int:pk>/retirer/", admin_views.retirer, name="pulaar_import_retirer"),
     ]
@@ -140,6 +141,16 @@ def urls_import():
 class ImportMenuItem(MenuItem):
     def is_shown(self, request):
         return request.user.has_perm("pulaar.add_pulaarimportbatch")
+
+
+class TableauMenuItem(MenuItem):
+    def is_shown(self, request):
+        return request.user.has_perm("pulaar.change_pulaarentry")
+
+
+@hooks.register("register_admin_menu_item")
+def menu_tableau():
+    return TableauMenuItem("Tableau de bord du dictionnaire", reverse("pulaar_tableau"), icon_name="list-ul", order=305)
 
 
 @hooks.register("register_admin_menu_item")
