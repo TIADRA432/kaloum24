@@ -93,3 +93,16 @@ class PolicePulaarTests(TestCase):
         e = PulaarEntry.objects.filter(source__rights_status="open_license").first()
         r = self.client.get(reverse("pulaar:terme", args=[e.slug]))
         self.assertContains(r, '<h1 lang="ff">')
+
+
+class DecorTests(TestCase):
+    def test_decor_present_et_decoratif(self):
+        from django.contrib.staticfiles import finders
+        r = self.client.get(reverse("pulaar:accueil"))
+        for nom in ("anneaux-or", "leppi", "vache-or", "calebasse-bordeaux", "gourde-bordeaux"):
+            self.assertContains(r, nom)
+        self.assertContains(r, 'class="tc-pied" aria-hidden="true"')
+        for f in ("leppi-h", "leppi-v", "anneaux-or", "vannerie-or", "vache-or", "calebasse-bordeaux", "gourde-bordeaux"):
+            self.assertIsNotNone(finders.find(f"pulaar/img/decor/{f}.svg"), f)
+        css = open(finders.find("pulaar/css/pulaar.css"), encoding="utf-8").read()
+        self.assertIn("prefers-reduced-motion", css)

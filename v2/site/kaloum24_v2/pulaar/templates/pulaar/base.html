@@ -8,7 +8,14 @@
   <link rel="stylesheet" href="{% static 'pulaar/css/pulaar.css' %}">
 </head>
 <body class="tc">
+  <div class="tc-decor" aria-hidden="true">
+    <span class="tc-decor__bande tc-decor__bande--gauche"></span>
+    <img class="tc-decor__picto tc-decor__calebasse" src="{% static 'pulaar/img/decor/calebasse-bordeaux.svg' %}" alt="" width="100" height="70">
+    <img class="tc-decor__picto tc-decor__gourde" src="{% static 'pulaar/img/decor/gourde-bordeaux.svg' %}" alt="" width="70" height="100">
+    <img class="tc-decor__picto tc-decor__vache" src="{% static 'pulaar/img/decor/vache-bordeaux.svg' %}" alt="" width="160" height="106">
+  </div>
   <div class="tc-entete">
+    <img class="tc-entete__anneaux" src="{% static 'pulaar/img/decor/anneaux-or.svg' %}" alt="" width="400" height="400" aria-hidden="true">
     <div class="tc-corps" style="padding-top:0;padding-bottom:0;">
       <div class="tc-entete__marque">
         <img src="{% static 'pulaar/img/tiadra/tiadra-symbol-color.svg' %}" alt="Tiadra Consortium">
@@ -28,6 +35,7 @@
       {% endif %}
       {% block entete %}{% endblock %}
     </div>
+    <div class="tc-leppi" aria-hidden="true"></div>
   </div>
 
   <div class="tc-corps">
@@ -37,6 +45,15 @@
     {% endfor %}
     {% block contenu %}{% endblock %}
   </div>
+
+  <footer class="tc-pied" aria-hidden="true">
+    <div class="tc-troupeau">
+      <img class="tc-troupeau__vache tc-troupeau__vache--1" src="{% static 'pulaar/img/decor/vache-or.svg' %}" alt="" width="160" height="106">
+      <img class="tc-troupeau__vache tc-troupeau__vache--2" src="{% static 'pulaar/img/decor/vache-or.svg' %}" alt="" width="160" height="106">
+      <img class="tc-troupeau__vache tc-troupeau__vache--3" src="{% static 'pulaar/img/decor/vache-or.svg' %}" alt="" width="160" height="106">
+    </div>
+    <div class="tc-leppi"></div>
+  </footer>
   <script src="{% static 'pulaar/js/ecoute.js' %}" defer></script>
 </body>
 </html>

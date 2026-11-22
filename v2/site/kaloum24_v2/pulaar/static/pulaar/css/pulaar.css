@@ -210,3 +210,61 @@
 /* Texte en pulaar : police dédiée (voir plus haut) */
 .tc [lang="ff"], .tc .tc-ipa, .tc input[name="q"], .tc .tc-alphabet a { font-family: var(--tc-pulaar); }
 .tc h1[lang="ff"], .tc h3[lang="ff"] { font-weight: 700; }
+
+/* ==========================================================================
+   Décor culturel de /pulaar/ — motifs et pictogrammes dessinés pour Kaloum24
+   (scripts/generer_motifs_pulaar.py) : bande tissée à losanges (leppi), anneaux
+   concentriques, vannerie en chevrons, vache, calebasse, gourde. Formes seulement :
+   aucun sens n'est attribué aux motifs. Tout est décoratif (aria-hidden) et mis
+   à l'arrêt si l'utilisateur demande moins de mouvement.
+   ========================================================================== */
+
+/* Entête : le damier Tiadra reste, on lui ajoute les anneaux (qui tournent très lentement) et la bande leppi */
+.tc-entete { position: relative; overflow: hidden; }
+.tc-entete > .tc-corps { position: relative; z-index: 1; }
+.tc-entete__anneaux { position: absolute; right: -120px; top: -110px; width: 360px; height: 360px; opacity: .28;
+  pointer-events: none; animation: tc-tourne 300s linear infinite; }
+.tc-leppi { height: 28px; background: url('../img/decor/leppi-h.svg') repeat-x left center / auto 28px;
+  position: relative; z-index: 1; }
+.tc-entete { padding-bottom: 0; }
+.tc-entete .tc-leppi { margin: 1.6rem -1.5rem 0; }
+
+/* Fond de page : vannerie très discrète en haut du corps, bande tissée verticale sur le bord (grands écrans) */
+.tc-decor { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.tc-decor__bande { display: none; position: absolute; top: 0; bottom: 0; width: 36px;
+  background: url('../img/decor/leppi-v.svg') repeat-y center top / 36px auto; }
+.tc-decor__picto { position: absolute; opacity: .07; display: none; }
+.tc-corps { position: relative; z-index: 1; }
+@media (min-width: 1180px) {
+  .tc-decor__bande--gauche { display: block; left: 0; }
+  .tc-decor__picto { display: block; }
+  .tc-decor__calebasse { right: 4%; top: 34%; width: 100px; animation: tc-balance 9s ease-in-out infinite; transform-origin: 50% 20%; }
+  .tc-decor__gourde { right: 9%; top: 62%; width: 70px; animation: tc-balance 11s ease-in-out infinite reverse; transform-origin: 50% 10%; }
+  .tc-decor__vache { left: 5%; top: 70%; width: 150px; }
+}
+
+/* Séparateurs : la barre Tiadra reste ; la ligne fine devient une frise tissée */
+.tc-separateur--fin { border: none; height: 14px; margin: 2rem 0 1.2rem;
+  background: url('../img/decor/leppi-h.svg') repeat-x left center / auto 14px; opacity: .85; }
+
+/* États vides : une calebasse plutôt qu'un texte seul */
+.tc-vide { background: url('../img/decor/calebasse-bordeaux.svg') no-repeat center top / 64px auto; padding-top: 5.2rem; opacity: .95; }
+
+/* Pied de page : la transhumance (trois vaches qui traversent lentement, à des vitesses différentes) */
+.tc-pied { margin-top: 3rem; background: var(--tc-bordeaux); position: relative; z-index: 1; overflow: hidden; }
+.tc-troupeau { position: relative; height: 92px; background:
+  url('../img/decor/vannerie-or.svg') repeat-x left bottom / auto 22px; }
+.tc-troupeau__vache { position: absolute; bottom: 14px; left: -180px; height: 62px; width: auto; opacity: .9;
+  animation: tc-traverse 80s linear infinite, tc-pas 1.6s ease-in-out infinite; }
+.tc-troupeau__vache--2 { height: 50px; opacity: .65; animation-duration: 105s, 1.9s; animation-delay: -35s, 0s; }
+.tc-troupeau__vache--3 { height: 42px; opacity: .45; animation-duration: 130s, 2.2s; animation-delay: -80s, 0s; }
+
+@keyframes tc-tourne { to { transform: rotate(360deg); } }
+@keyframes tc-balance { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+@keyframes tc-traverse { from { left: -180px; } to { left: 100%; } }
+@keyframes tc-pas { 0%, 100% { margin-bottom: 0; } 50% { margin-bottom: 3px; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .tc-entete__anneaux, .tc-decor__picto, .tc-troupeau__vache { animation: none !important; }
+  .tc-troupeau__vache--1 { left: 12%; } .tc-troupeau__vache--2 { left: 42%; } .tc-troupeau__vache--3 { left: 70%; }
+}
