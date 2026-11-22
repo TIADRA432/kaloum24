@@ -5,7 +5,7 @@
     {% if t.status == 'validated' %}<span class="tc-pastille tc-pastille--validee">Validé</span>{% else %}<span class="tc-pastille">Documenté</span>{% endif %}
   </div>
   {% if t.raison and t.raison != "mot exact" %}<span class="tc-raison">{{ t.raison }}</span>{% endif %}
-  <h3><a href="{% url 'pulaar:terme' t.slug %}{% if depuis %}?depuis={{ depuis|urlencode:'' }}{% endif %}">{{ t.lemma }}{% if t.homonym_index > 1 %}<sup>{{ t.homonym_index }}</sup>{% endif %}</a></h3>
+  <h3 lang="ff"><a href="{% url 'pulaar:terme' t.slug %}{% if depuis %}?depuis={{ depuis|urlencode:'' }}{% endif %}">{{ t.lemma }}{% if t.homonym_index > 1 %}<sup>{{ t.homonym_index }}</sup>{% endif %}</a></h3>
   {% with premier=t.senses.all.0 %}
     {% if premier %}<p lang="ff">{{ premier.text }}</p>
     {% else %}<p class="tc-vide">Définition en pulaar à venir.{% for tr in t.translations.all %}{% if forloop.first %} Traduction : {% endif %}{{ tr.term }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}

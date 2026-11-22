@@ -21,6 +21,45 @@
   src: url('../fonts/tiadra/robotoslab-700-latin.woff2') format('woff2');
 }
 
+@font-face {
+  font-family: 'Charis Pulaar';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/charis/charis-400.woff2') format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: 'Charis Pulaar';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/charis/charis-ext-400.woff2') format('woff2');
+  unicode-range: U+0181,U+0186,U+018A,U+0190,U+0198-019D,U+01B3-01B4,U+014A-014B,U+0253-0254,U+0257,U+025B,U+0272,U+0300-036F;
+}
+@font-face {
+  font-family: 'Charis Pulaar';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../fonts/charis/charis-700.woff2') format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: 'Charis Pulaar';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../fonts/charis/charis-ext-700.woff2') format('woff2');
+  unicode-range: U+0181,U+0186,U+018A,U+0190,U+0198-019D,U+01B3-01B4,U+014A-014B,U+0253-0254,U+0257,U+025B,U+0272,U+0300-036F;
+}
+
+/* Le texte EN PULAAR (mots, définitions, exemples, prononciation) utilise une police qui contient
+   ɓ ɗ ŋ ƴ et leurs majuscules (Charis SIL, licence OFL). Montserrat et Roboto Slab, qui portent
+   l'identité Tiadra, ne les contiennent pas : sans cela ces lettres s'affichaient dans une police
+   de secours, de forme irrégulière. L'interface et les titres de rubriques gardent la charte Tiadra. */
+:root { --tc-pulaar: 'Charis Pulaar', 'Charis SIL', Georgia, serif; }
+
 .tc {
   --tc-or: #D19F5E;
   --tc-bordeaux: #5D2E38;
@@ -166,3 +205,8 @@
 .tc-voisins a { display: inline-flex; align-items: center; min-height: 2.6rem; padding: 0 1rem; border: 1px solid var(--tc-or); border-radius: 2px; text-decoration: none; color: inherit; }
 .tc-voisins a:hover, .tc-voisins a:focus-visible { background: var(--tc-or); color: var(--tc-blanc); }
 .tc-carte h3 a { display: inline-block; padding: .15rem 0; }
+
+
+/* Texte en pulaar : police dédiée (voir plus haut) */
+.tc [lang="ff"], .tc .tc-ipa, .tc input[name="q"], .tc .tc-alphabet a { font-family: var(--tc-pulaar); }
+.tc h1[lang="ff"], .tc h3[lang="ff"] { font-weight: 700; }

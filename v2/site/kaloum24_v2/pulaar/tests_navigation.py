@@ -73,3 +73,23 @@ class AvertissementDroitsTests(TestCase):
         self.assertContains(r, "visibles de tout le monde")
         r = self.client.post(url, {**base, "rights_status": "to_check"}, follow=True)
         self.assertContains(r, "ne sont pas visibles du public")
+
+
+class PolicePulaarTests(TestCase):
+    def test_police_pulaar_declaree_et_presente(self):
+        import os
+        from django.contrib.staticfiles import finders
+        css = open(finders.find("pulaar/css/pulaar.css"), encoding="utf-8").read()
+        self.assertIn("'Charis Pulaar'", css)
+        self.assertIn("U+0253", css)  # ɓ
+        self.assertIn("U+0257", css)  # ɗ
+        self.assertIn("U+014A-014B", css)  # Ŋ ŋ
+        self.assertIn("U+01B3-01B4", css)  # Ƴ ƴ
+        for f in ("charis-400", "charis-700", "charis-ext-400", "charis-ext-700"):
+            self.assertTrue(os.path.exists(finders.find(f"pulaar/fonts/charis/{f}.woff2")), f)
+
+    def test_le_mot_est_balise_en_pulaar(self):
+        call_command("seed_pulaar", verbosity=0)
+        e = PulaarEntry.objects.filter(source__rights_status="open_license").first()
+        r = self.client.get(reverse("pulaar:terme", args=[e.slug]))
+        self.assertContains(r, '<h1 lang="ff">')

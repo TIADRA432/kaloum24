@@ -3,7 +3,7 @@
 {% block titre %}{{ terme.lemma }} — Dictionnaire Pulaar{% endblock %}
 
 {% block entete %}
-  <h1>{{ terme.lemma }}{% if terme.homonym_index > 1 %}<sup>{{ terme.homonym_index }}</sup>{% endif %}</h1>
+  <h1 lang="ff">{{ terme.lemma }}{% if terme.homonym_index > 1 %}<sup>{{ terme.homonym_index }}</sup>{% endif %}</h1>
   <p>
     {{ terme.pos.name_fr }} · {{ terme.dialect.name }}
     {% if terme.noun_class %} · classe {{ terme.noun_class.marker }}{% endif %}
