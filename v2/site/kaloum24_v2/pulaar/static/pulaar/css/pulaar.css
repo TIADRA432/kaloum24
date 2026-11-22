@@ -219,6 +219,8 @@
    à l'arrêt si l'utilisateur demande moins de mouvement.
    ========================================================================== */
 
+body.tc { margin: 0; }
+
 /* Entête : le damier Tiadra reste, on lui ajoute les anneaux (qui tournent très lentement) et la bande leppi */
 .tc-entete { position: relative; overflow: hidden; }
 .tc-entete > .tc-corps { position: relative; z-index: 1; }
