@@ -104,6 +104,16 @@ Chaque phase : modèle → tests → déploiement → vérification en productio
 - **Bloquant avant ouverture publique** : autorisation écrite d'Abuu Sih (remise orale seulement).
 - À confirmer : dialecte `fuc` (hypothèse), classes grammaticales (déduites par Gemini).
 
+### Contrôle qualité de l'import Abuu Sih (2026-11-22, en production, mis en attente par le propriétaire)
+
+16 099 entrées, 17 361 sens, 1 159 variantes, 265 exemples. Cas douteux restants (non corrigés, à reprendre plus tard avec un lexicographe) :
+- 48 mots vedettes contenant un espace : variantes collées (« Caakgol caakagol », « Hinnee Hinney ») ou vraies expressions (« Fendere weɗere ») — indécidable sans lecture humaine ;
+- 24 mots avec majuscule interne ; défauts d'extraction isolés (« Copoƴƴ i », « turulle (ɗee) », « Boro - boro ») ;
+- 91 définitions commençant par « ( » ; 13 définitions de moins de 8 caractères ;
+- 810 entrées en classe « à préciser » ; 7 564 sans classe nominale (normal) ;
+- les entrées d'une ou deux lettres (ƴ, Nj, Ng, Mb, Aa…) sont les lettres de l'alphabet : légitimes.
+Reprise possible : sortir ces listes pour relecture, ajuster `importer.py` (version du parseur), retirer le lot et le réimporter.
+
 ## 7. Risques
 
 - **Perdre le fil entre « dictionnaire » et « base de données de recherche »** : le modèle accepte une structure riche (racines, mutations), mais **rien n'est affiché ni rempli sans linguiste**. Une structure vide vaut mieux qu'une donnée approximative.
