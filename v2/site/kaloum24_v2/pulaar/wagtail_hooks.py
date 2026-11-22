@@ -24,9 +24,17 @@ class EntryViewSet(SnippetViewSet):
             heading="Le mot",
         ),
         InlinePanel("senses", label="Sens (définition en pulaar)"),
+        InlinePanel("pronunciations", label="Prononciation (API)", classname="collapsed"),
+        InlinePanel("audios", label="Enregistrement audio", classname="collapsed"),
+        InlinePanel("images", label="Illustration", classname="collapsed"),
         InlinePanel("variants", label="Forme variante", classname="collapsed"),
         InlinePanel("examples", label="Exemple", classname="collapsed"),
         InlinePanel("translations", label="Traduction", classname="collapsed"),
+        InlinePanel("relations", label="Lien vers une autre entrée (synonyme, contraire, dérivé…)", classname="collapsed"),
+        MultiFieldPanel(
+            [FieldPanel("origin"), FieldPanel("origin_language"), FieldPanel("etymology"), FieldPanel("usage_note")],
+            heading="Origine, étymologie et usage (à remplir par le lexicographe)", classname="collapsed",
+        ),
         MultiFieldPanel([FieldPanel("source"), FieldPanel("status")], heading="Provenance et statut"),
     ]
 

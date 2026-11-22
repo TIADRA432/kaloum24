@@ -141,3 +141,17 @@
 .tc-alphabet a:hover, .tc-alphabet a[aria-current] { background: var(--tc-or); color: var(--tc-blanc); }
 .tc-compteur { font-weight: 400; font-size: .85em; opacity: .7; }
 .tc-raison { float: right; font-size: .75rem; opacity: .7; font-style: italic; }
+
+/* Fiche : prononciation, bouton écouter, illustration, liens */
+.tc-prononciation { margin: .6rem 0 0; display: flex; flex-wrap: wrap; gap: .5rem .8rem; align-items: center; }
+.tc-ipa { font-family: "Charis SIL", "Gentium Plus", serif; font-size: 1.1rem; }
+.tc-ecoute { background: var(--tc-or); color: var(--tc-blanc); border: 0; border-radius: 2px; padding: .45rem .9rem;
+  font-weight: 600; cursor: pointer; min-height: 2.4rem; }
+.tc-ecoute:hover, .tc-ecoute[aria-pressed="true"] { background: var(--tc-bronze); }
+.tc-ecoute:focus-visible { outline: 3px solid var(--tc-or); outline-offset: 2px; }
+.tc-figure { float: right; margin: 0 0 1rem 1.2rem; max-width: min(45%, 480px); }
+.tc-figure img { max-width: 100%; height: auto; display: block; }
+.tc-figure figcaption { font-size: .8rem; opacity: .8; margin-top: .3rem; }
+.tc-liens { list-style: none; padding: 0; }
+.tc-liens li { margin: .3rem 0; }
+@media (max-width: 560px) { .tc-figure { float: none; margin: 0 0 1rem; max-width: 100%; } }

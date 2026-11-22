@@ -256,6 +256,14 @@ class PulaarEntry(ClusterableModel):
     status = models.CharField("statut", max_length=20, choices=STATUTS, default=DOCUMENTE)
     import_batch = models.ForeignKey(PulaarImportBatch, null=True, blank=True, editable=False,
                                      on_delete=models.SET_NULL, related_name="entries")
+    # Enrichissements facultatifs : vides tant qu'un lexicographe ne les remplit pas, rien n'est affiché alors.
+    ORIGINES = [("inherited", "Mot hérité (fonds peul)"), ("loan", "Emprunt"), ("unknown", "Origine inconnue")]
+    origin = models.CharField("origine du mot", max_length=12, choices=ORIGINES, blank=True,
+                              help_text="Choix du lexicographe. Jamais déduit automatiquement.")
+    origin_language = models.CharField("langue d'origine (emprunt)", max_length=80, blank=True)
+    etymology = models.TextField("étymologie", blank=True, help_text="Texte rédigé, avec ses sources.")
+    usage_note = models.TextField("note d'usage", blank=True,
+                                  help_text="Emploi, registre, remarque (rédigé par le lexicographe).")
     search_key = models.CharField(max_length=220, blank=True, default="", db_index=True, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -330,6 +338,99 @@ class PulaarEntryVariant(Orderable):
 
     def __str__(self):
         return self.form
+
+
+class PulaarPronunciation(Orderable):
+    """Prononciation écrite (alphabet phonétique international), éventuellement propre à une variété."""
+
+    entry = ParentalKey(PulaarEntry, on_delete=models.CASCADE, related_name="pronunciations")
+    ipa = models.CharField("API (alphabet phonétique)", max_length=200, help_text="Ex. [ɗem.ŋal] — à saisir par un phonéticien.")
+    dialect = models.ForeignKey(PulaarDialect, verbose_name="variété", null=True, blank=True,
+                                on_delete=models.SET_NULL, related_name="+")
+    note = models.CharField("note", max_length=200, blank=True)
+
+    class Meta(Orderable.Meta):
+        verbose_name = "prononciation"
+
+    def __str__(self):
+        return self.ipa
+
+
+class PulaarAudio(Orderable):
+    """Enregistrement de la prononciation. Public seulement avec le consentement du locuteur."""
+
+    entry = ParentalKey(PulaarEntry, on_delete=models.CASCADE, related_name="audios")
+    audio = models.ForeignKey("wagtaildocs.Document", verbose_name="fichier audio", on_delete=models.CASCADE,
+                              related_name="+", help_text="mp3, m4a, ogg ou wav, quelques secondes.")
+    speaker = models.CharField("locuteur·rice", max_length=120, blank=True, help_text="Nom ou pseudonyme.")
+    dialect = models.ForeignKey(PulaarDialect, verbose_name="variété", null=True, blank=True,
+                                on_delete=models.SET_NULL, related_name="+")
+    consent_given = models.BooleanField("consentement du locuteur obtenu", default=False,
+                                        help_text="Sans cette case cochée, l'enregistrement reste invisible au public.")
+    source = models.ForeignKey(PulaarSource, verbose_name="source", null=True, blank=True,
+                               on_delete=models.PROTECT, related_name="audios")
+
+    class Meta(Orderable.Meta):
+        verbose_name = "enregistrement audio"
+        verbose_name_plural = "enregistrements audio"
+
+    @property
+    def public(self):
+        return self.consent_given
+
+    def __str__(self):
+        return f"{self.entry_id} — {self.speaker or 'audio'}"
+
+
+class PulaarImage(Orderable):
+    """Illustration d'une entrée (un instrument, un objet…). Publique seulement si les droits sont vérifiés."""
+
+    entry = ParentalKey(PulaarEntry, on_delete=models.CASCADE, related_name="images")
+    image = models.ForeignKey("wagtailimages.Image", verbose_name="image", on_delete=models.CASCADE, related_name="+")
+    caption = models.CharField("légende", max_length=300, blank=True)
+    credit = models.CharField("crédit (auteur, licence)", max_length=300, blank=True)
+    rights_ok = models.BooleanField("droits de l'image vérifiés", default=False,
+                                    help_text="Sans cette case cochée, l'image reste invisible au public.")
+    source = models.ForeignKey(PulaarSource, verbose_name="source", null=True, blank=True,
+                               on_delete=models.PROTECT, related_name="images")
+
+    class Meta(Orderable.Meta):
+        verbose_name = "illustration"
+
+    @property
+    def public(self):
+        return self.rights_ok
+
+    def __str__(self):
+        return self.caption or f"image {self.pk}"
+
+
+class PulaarRelation(Orderable):
+    """Lien d'une entrée vers une autre : synonyme, contraire, dérivé, pluriel…"""
+
+    SYNONYME, CONTRAIRE, DERIVE, FAMILLE, PLURIEL, SINGULIER, VOIR = (
+        "synonym", "antonym", "derived", "family", "plural", "singular", "see_also")
+    TYPES = [(SYNONYME, "synonyme"), (CONTRAIRE, "contraire"), (DERIVE, "mot dérivé"),
+             (FAMILLE, "même famille de mots"), (PLURIEL, "pluriel"), (SINGULIER, "singulier"),
+             (VOIR, "voir aussi")]
+
+    entry = ParentalKey(PulaarEntry, on_delete=models.CASCADE, related_name="relations")
+    kind = models.CharField("type de lien", max_length=12, choices=TYPES)
+    target = models.ForeignKey(PulaarEntry, verbose_name="entrée liée", on_delete=models.CASCADE,
+                               related_name="relations_entrantes")
+    note = models.CharField("note", max_length=200, blank=True)
+
+    class Meta(Orderable.Meta):
+        verbose_name = "lien entre entrées"
+        verbose_name_plural = "liens entre entrées"
+        constraints = [models.UniqueConstraint(fields=["entry", "kind", "target"], name="uq_relation")]
+
+    def clean(self):
+        if self.target_id and self.target_id == self.entry_id:
+            raise ValidationError("Une entrée ne peut pas être liée à elle-même.")
+
+    def __str__(self):
+        return f"{self.get_kind_display()} : {self.target_id}"
 
 
 class PulaarExample(Orderable):

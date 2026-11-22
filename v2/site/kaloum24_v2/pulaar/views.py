@@ -9,7 +9,7 @@ from urllib.parse import urlencode
 from django.views.decorators.http import require_http_methods
 
 from .forms import ProposalForm
-from .models import PulaarDialect, PulaarDomain, PulaarEntry, PulaarPos, PulaarProposal
+from .models import PulaarDialect, PulaarDomain, PulaarEntry, PulaarPos, PulaarProposal, PulaarRelation
 from .recherche import RAISONS, chercher
 from .slug import cle_recherche, slugify_pulaar
 
@@ -33,13 +33,16 @@ def _ctx(request, **extra):
     return {"langue_ui": _langue(request), **extra}
 
 
-def _termes(request=None):
+def _termes(request=None, detail=False):
     """Entrées visibles : le public ne voit ni brouillon ni source aux droits non établis ;
     un compte d'équipe connecté voit tout (aperçu avant publication, bandeau « non public »)."""
     qs = PulaarEntry.objects.visibles_pour(getattr(request, "user", None))
-    return (qs
-            .select_related("domain", "source", "dialect", "pos")
-            .prefetch_related("senses", "variants", "translations__external_dictionary"))
+    qs = (qs.select_related("domain", "source", "dialect", "pos")
+          .prefetch_related("senses", "variants", "translations__external_dictionary"))
+    if detail:  # fiche d'un mot : médias et liens (inutiles pour une liste de cartes)
+        qs = qs.prefetch_related("pronunciations", "audios__audio", "images__image", "relations",
+                                 "relations_entrantes")
+    return qs
 
 
 def _lettres(base):
@@ -99,13 +102,39 @@ def accueil(request):
     ))
 
 
+# Sens du lien vu depuis l'entrée liée : « A a pour pluriel B » → sur B on lit « singulier : A ».
+LIEN_INVERSE = {"synonym": "synonym", "antonym": "antonym", "family": "family", "see_also": "see_also",
+                "plural": "singular", "singular": "plural", "derived": "base"}
+ETIQUETTES_LIENS = dict(PulaarRelation.TYPES, base="mot de base")
+ORDRE_LIENS = ["synonym", "antonym", "plural", "singular", "derived", "base", "family", "see_also"]
+
+
+def _liens(request, t):
+    """Liens vers d'autres entrées visibles, dans les deux sens, regroupés par type."""
+    bruts = [(r.kind, r.target_id) for r in t.relations.all()]
+    bruts += [(LIEN_INVERSE[r.kind], r.entry_id) for r in t.relations_entrantes.all()]
+    visibles = {e.pk: e for e in _termes(request).filter(pk__in={pk for _, pk in bruts})}
+    groupes = {}
+    for kind, pk in bruts:
+        e = visibles.get(pk)
+        if e and e not in groupes.setdefault(kind, []):
+            groupes[kind].append(e)
+    return [(ETIQUETTES_LIENS[k], groupes[k]) for k in ORDRE_LIENS if k in groupes]
+
+
 def terme(request, slug):
-    t = get_object_or_404(_termes(request), slug=slug)
+    t = get_object_or_404(_termes(request, detail=True), slug=slug)
     traductions = {}
     for tr in t.translations.all():
         traductions.setdefault(tr.language_code, []).append(tr)
     non_public = not (t.status != t.BROUILLON and t.source.is_publishable)
-    return render(request, "pulaar/terme.html", _ctx(request, terme=t, traductions=traductions, non_public=non_public))
+    equipe = _apercu(request)
+    # Média : public seulement avec consentement / droits vérifiés ; l'équipe voit tout, marqué.
+    audios = [a for a in t.audios.all() if equipe or a.public]
+    images = [i for i in t.images.all() if equipe or i.public]
+    return render(request, "pulaar/terme.html", _ctx(
+        request, terme=t, traductions=traductions, non_public=non_public, audios=audios, images=images,
+        prononciations=list(t.pronunciations.all()), liens=_liens(request, t)))
 
 
 def domaine(request, slug):

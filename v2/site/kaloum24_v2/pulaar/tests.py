@@ -293,11 +293,13 @@ class AdminEntreeTests(DictionnaireBase):
             "source": self.libre.pk, "status": statut,
             "senses-TOTAL_FORMS": 1 if sens else 0, "senses-INITIAL_FORMS": 0,
             "senses-MIN_NUM_FORMS": 0, "senses-MAX_NUM_FORMS": 1000,
-            "variants-TOTAL_FORMS": 0, "variants-INITIAL_FORMS": 0, "variants-MIN_NUM_FORMS": 0, "variants-MAX_NUM_FORMS": 1000,
             "examples-TOTAL_FORMS": 0, "examples-INITIAL_FORMS": 0, "examples-MIN_NUM_FORMS": 0, "examples-MAX_NUM_FORMS": 1000,
             "translations-TOTAL_FORMS": 0, "translations-INITIAL_FORMS": 0, "translations-MIN_NUM_FORMS": 0,
             "translations-MAX_NUM_FORMS": 1000,
         }
+        for nom in ("variants", "pronunciations", "audios", "images", "relations"):
+            d.update({f"{nom}-TOTAL_FORMS": 0, f"{nom}-INITIAL_FORMS": 0, f"{nom}-MIN_NUM_FORMS": 0,
+                      f"{nom}-MAX_NUM_FORMS": 1000})
         if sens:
             d.update({"senses-0-text": sens, "senses-0-ORDER": 1, "senses-0-DELETE": "", "senses-0-id": ""})
         return d

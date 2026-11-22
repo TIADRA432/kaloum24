@@ -1,4 +1,5 @@
 {% extends "pulaar/base.html" %}
+{% load wagtailimages_tags %}
 {% block titre %}{{ terme.lemma }} — Dictionnaire Pulaar{% endblock %}
 
 {% block entete %}
@@ -8,6 +9,16 @@
     {% if terme.noun_class %} · classe {{ terme.noun_class.marker }}{% endif %}
     {% if terme.domain %} · <a href="{% url 'pulaar:domaine' terme.domain.slug %}" style="color:var(--tc-or);">{{ terme.domain.name }}</a>{% endif %}
   </p>
+  {% if prononciations or audios %}
+  <p class="tc-prononciation">
+    {% for pr in prononciations %}<span class="tc-ipa" title="Prononciation (alphabet phonétique)">{{ pr.ipa }}</span>{% if pr.dialect %} <small>({{ pr.dialect.name }})</small>{% endif %}{% if not forloop.last %} · {% endif %}{% endfor %}
+    {% for a in audios %}
+      <button type="button" class="tc-ecoute" data-ecoute="audio-{{ a.pk }}" aria-pressed="false">&#9654; Écouter{% if a.speaker %} <small>({{ a.speaker }})</small>{% endif %}</button>
+      <audio id="audio-{{ a.pk }}" data-ecoute-audio preload="none" src="{{ a.audio.file.url }}"></audio>
+      {% if not a.public %}<span class="tc-pastille">Non public</span>{% endif %}
+    {% endfor %}
+  </p>
+  {% endif %}
 {% endblock %}
 
 {% block contenu %}
@@ -21,6 +32,13 @@
 {% endif %}
 
 <hr class="tc-separateur">
+
+{% for im in images %}
+<figure class="tc-figure">
+  {% image im.image width-480 as rendu %}<img src="{{ rendu.url }}" width="{{ rendu.width }}" height="{{ rendu.height }}" alt="{{ im.caption|default:terme.lemma }}" loading="lazy">
+  {% if im.caption or im.credit %}<figcaption>{{ im.caption }}{% if im.credit %} <small>— {{ im.credit }}</small>{% endif %}{% if not im.public %} <span class="tc-pastille">Non public</span>{% endif %}</figcaption>{% endif %}
+</figure>
+{% endfor %}
 
 {% if terme.variants.all %}<p class="tc-carte__meta">Autres formes : {% for v in terme.variants.all %}<span lang="ff">{{ v.form }}</span>{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
 
@@ -46,6 +64,27 @@
   <li><strong>{{ langue }}</strong> :
     {% for tr in liste %}{% if tr.lien %}<a href="{{ tr.lien }}" target="_blank" rel="noopener noreferrer nofollow">{{ tr.term }}</a> <span class="tc-carte__meta">({{ tr.external_dictionary.name }})</span>{% else %}{{ tr.term }}{% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}
   </li>
+{% endfor %}
+</ul>
+{% endif %}
+
+{% if terme.origin or terme.etymology %}
+<h3>Origine</h3>
+<p>{% if terme.origin %}<strong>{{ terme.get_origin_display }}</strong>{% if terme.origin_language %} — {{ terme.origin_language }}{% endif %}{% endif %}
+{% if terme.etymology %}{% if terme.origin %}<br>{% endif %}{{ terme.etymology|linebreaksbr }}{% endif %}</p>
+{% endif %}
+
+{% if terme.usage_note %}
+<h3>Note d'usage</h3>
+<p>{{ terme.usage_note|linebreaksbr }}</p>
+{% endif %}
+
+{% if liens %}
+<h3>Mots liés</h3>
+<ul class="tc-liens">
+{% for etiquette, entrees in liens %}
+  <li><strong>{{ etiquette|capfirst }}</strong> :
+    {% for e in entrees %}<a href="{% url 'pulaar:terme' e.slug %}" lang="ff">{{ e.lemma }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}</li>
 {% endfor %}
 </ul>
 {% endif %}
