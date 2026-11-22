@@ -25,6 +25,7 @@
 {% endblock %}
 
 {% block contenu %}
+{% if apercu_equipe %}<p class="tc-note"><strong>Aperçu équipe.</strong> Tu es connecté à l'administration : tu vois aussi les entrées dont les droits de la source ne sont pas établis. Le public ne les voit pas.</p>{% endif %}
 {% if q %}
   <h2>Résultats pour « {{ q }} »</h2>
   {% for t in resultats %}{% include "pulaar/_carte.html" %}
@@ -44,8 +45,12 @@
   {% empty %}
   <p class="tc-vide">Le dictionnaire est encore vide.</p>
   {% endfor %}
-  {% if total_termes > 100 %}
-  <p class="tc-vide">100 premiers termes affichés sur {{ total_termes }} — utilise la recherche pour trouver les autres.</p>
+  {% if page and page.paginator.num_pages > 1 %}
+  <nav class="tc-fil" aria-label="Pages">
+    {% if page.has_previous %}<a href="?page={{ page.previous_page_number }}{% if dialecte %}&dialecte={{ dialecte }}{% endif %}&lang={{ langue_ui }}">← Précédent</a>{% endif %}
+    Page {{ page.number }} sur {{ page.paginator.num_pages }}
+    {% if page.has_next %}<a href="?page={{ page.next_page_number }}{% if dialecte %}&dialecte={{ dialecte }}{% endif %}&lang={{ langue_ui }}">Suivant →</a>{% endif %}
+  </nav>
   {% endif %}
 {% endif %}
 

@@ -293,6 +293,7 @@ class AdminEntreeTests(DictionnaireBase):
             "source": self.libre.pk, "status": statut,
             "senses-TOTAL_FORMS": 1 if sens else 0, "senses-INITIAL_FORMS": 0,
             "senses-MIN_NUM_FORMS": 0, "senses-MAX_NUM_FORMS": 1000,
+            "variants-TOTAL_FORMS": 0, "variants-INITIAL_FORMS": 0, "variants-MIN_NUM_FORMS": 0, "variants-MAX_NUM_FORMS": 1000,
             "examples-TOTAL_FORMS": 0, "examples-INITIAL_FORMS": 0, "examples-MIN_NUM_FORMS": 0, "examples-MAX_NUM_FORMS": 1000,
             "translations-TOTAL_FORMS": 0, "translations-INITIAL_FORMS": 0, "translations-MIN_NUM_FORMS": 0,
             "translations-MAX_NUM_FORMS": 1000,

@@ -1,6 +1,7 @@
 <div class="tc-carte">
   <div class="tc-carte__meta">
     {{ t.pos.name_fr }} · {{ t.dialect.name }}
+    {% if not t.source.is_publishable or t.status == 'draft' %}<span class="tc-pastille">Non public</span>{% endif %}
     {% if t.status == 'validated' %}<span class="tc-pastille tc-pastille--validee">Validé</span>{% else %}<span class="tc-pastille">Documenté</span>{% endif %}
   </div>
   <h3><a href="{% url 'pulaar:terme' t.slug %}">{{ t.lemma }}{% if t.homonym_index > 1 %}<sup>{{ t.homonym_index }}</sup>{% endif %}</a></h3>

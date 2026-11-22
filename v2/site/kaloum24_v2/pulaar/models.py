@@ -181,7 +181,46 @@ class PulaarExternalDictionary(models.Model):
         return self.name
 
 
+class PulaarImportBatch(models.Model):
+    """Journal d'un import (D4) : d'où vient le fichier, quand, par qui, ce qui a été créé.
+    Permet de retirer proprement tout un lot."""
+
+    FAIT, RETIRE = "done", "removed"
+    STATUTS = [(FAIT, "Importé"), (RETIRE, "Retiré")]
+
+    source = models.ForeignKey("PulaarSource", verbose_name="source", on_delete=models.PROTECT,
+                               related_name="import_batches")
+    file_name = models.CharField("fichier", max_length=255)
+    file_sha256 = models.CharField("empreinte SHA-256", max_length=64)
+    parser_version = models.CharField("version du traitement", max_length=60)
+    imported_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, editable=False,
+                                    on_delete=models.SET_NULL, related_name="+")
+    imported_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField("statut", max_length=10, choices=STATUTS, default=FAIT)
+    entries_created = models.PositiveIntegerField("entrées créées", default=0)
+    entries_skipped = models.PositiveIntegerField("entrées déjà présentes", default=0)
+    senses_created = models.PositiveIntegerField("sens créés", default=0)
+    examples_created = models.PositiveIntegerField("exemples créés", default=0)
+    variants_created = models.PositiveIntegerField("formes variantes créées", default=0)
+    notes = models.TextField("notes (corrections appliquées…)", blank=True)
+
+    class Meta:
+        ordering = ["-imported_at"]
+        verbose_name = "lot d'import"
+        verbose_name_plural = "lots d'import"
+
+    def __str__(self):
+        return f"{self.file_name} ({self.imported_at:%Y-%m-%d})"
+
+
 class EntreeQuerySet(models.QuerySet):
+    def visibles_pour(self, user):
+        """Public : `publiques()`. Équipe connectée (aperçu avant publication) : tout,
+        y compris les sources aux droits non établis, avec bandeau « non public »."""
+        if user is not None and user.is_authenticated and user.is_staff:
+            return self.all()
+        return self.publiques()
+
     def publiques(self):
         """Ce que voit le public : ni brouillon, ni source aux droits non établis."""
         return self.exclude(status=PulaarEntry.BROUILLON).filter(source__rights_status__in=PulaarSource.PUBLIABLES)
@@ -215,6 +254,8 @@ class PulaarEntry(ClusterableModel):
     source = models.ForeignKey(PulaarSource, verbose_name="source", on_delete=models.PROTECT,
                                related_name="entries")
     status = models.CharField("statut", max_length=20, choices=STATUTS, default=DOCUMENTE)
+    import_batch = models.ForeignKey(PulaarImportBatch, null=True, blank=True, editable=False,
+                                     on_delete=models.SET_NULL, related_name="entries")
     created_at = models.DateTimeField(auto_now_add=True)
 
     objects = EntreeQuerySet.as_manager()
@@ -260,6 +301,23 @@ class PulaarSense(Orderable):
 
     def __str__(self):
         return f"{self.entry_id} — {self.text[:40]}"
+
+
+class PulaarEntryVariant(Orderable):
+    """Autre forme du mot vedette (variante écrite, forme voisine) telle que la donne la source.
+    Aucune étiquette de dialecte n'est supposée."""
+
+    entry = ParentalKey(PulaarEntry, on_delete=models.CASCADE, related_name="variants")
+    form = models.CharField("forme", max_length=200)
+    note = models.CharField("note", max_length=200, blank=True)
+
+    class Meta(Orderable.Meta):
+        verbose_name = "forme variante"
+        verbose_name_plural = "formes variantes"
+        constraints = [models.UniqueConstraint(fields=["entry", "form"], name="uq_variant_entry_form")]
+
+    def __str__(self):
+        return self.form
 
 
 class PulaarExample(Orderable):

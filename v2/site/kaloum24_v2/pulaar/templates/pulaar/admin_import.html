@@ -1,0 +1,62 @@
+{% extends "wagtailadmin/base.html" %}
+{% block titletag %}Importer un lot du dictionnaire{% endblock %}
+{% block content %}
+{% include "wagtailadmin/shared/header.html" with title="Importer un lot du dictionnaire" icon="upload" %}
+<div class="nice-padding">
+  <p>Choisis un ou plusieurs fichiers <code>.json</code> au format « v6 » (les lots <code>lot_01…lot_10</code>
+    ou le dictionnaire complet). Les fichiers sont envoyés <strong>un par un</strong>. Rien n'est publié :
+    la source est créée avec les droits <strong>« à vérifier »</strong>, les entrées sont <strong>« documentées »</strong>
+    et visibles seulement des comptes connectés à l'administration. Un fichier déjà importé est ignoré (pas de doublon).</p>
+  <p><strong>{{ total_entrees }}</strong> entrée(s) dans le dictionnaire.</p>
+  <form id="import-form" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="file" name="fichier" id="fichiers" accept=".json,application/json" multiple required>
+    <button type="submit" class="button" id="envoyer">Importer</button>
+  </form>
+  <ul id="resultats" style="margin-top:1rem;"></ul>
+
+  <h2>Lots importés</h2>
+  <table class="listing">
+    <thead><tr><th>Fichier</th><th>Source</th><th>Date</th><th>Créées</th><th>Ignorées</th><th>Sens</th><th>Statut</th><th></th></tr></thead>
+    <tbody>
+    {% for l in lots %}
+      <tr>
+        <td title="SHA-256 {{ l.file_sha256 }}">{{ l.file_name }}</td>
+        <td>{{ l.source.name }} <small>({{ l.source.get_rights_status_display }})</small></td>
+        <td>{{ l.imported_at|date:"d/m/Y H:i" }}</td>
+        <td>{{ l.entries_created }}</td><td>{{ l.entries_skipped }}</td><td>{{ l.senses_created }}</td>
+        <td>{{ l.get_status_display }}</td>
+        <td>{% if l.status == "done" and perms.pulaar.delete_pulaarimportbatch %}
+          <form method="post" action="{% url 'pulaar_import_retirer' l.pk %}" onsubmit="return confirm('Retirer ce lot ? Les entrées créées par ce lot seront supprimées.');">
+            {% csrf_token %}<button type="submit" class="button button-small button-secondary no">Retirer</button></form>{% endif %}</td>
+      </tr>
+      {% if l.notes %}<tr><td colspan="8"><small>{{ l.notes }}</small></td></tr>{% endif %}
+    {% empty %}<tr><td colspan="8">Aucun import pour l'instant.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+<script>
+(function () {
+  var form = document.getElementById("import-form");
+  var liste = document.getElementById("resultats");
+  form.addEventListener("submit", function (ev) {
+    var fichiers = Array.prototype.slice.call(document.getElementById("fichiers").files);
+    if (!fichiers.length || !window.fetch) return;   // sans JS : envoi classique
+    ev.preventDefault();
+    var bouton = document.getElementById("envoyer"); bouton.disabled = true;
+    var token = form.querySelector("[name=csrfmiddlewaretoken]").value;
+    fichiers.sort(function (a, b) { return a.name < b.name ? -1 : 1; });
+    (function suivant(i) {
+      if (i >= fichiers.length) { bouton.disabled = false; var f = document.createElement("li"); f.textContent = "Terminé : recharge la page pour voir le journal des lots."; liste.appendChild(f); return; }
+      var li = document.createElement("li"); li.textContent = fichiers[i].name + " : envoi en cours…"; liste.appendChild(li);
+      var fd = new FormData(); fd.append("fichier", fichiers[i]); fd.append("csrfmiddlewaretoken", token);
+      fetch(form.action || window.location.href, {method: "POST", body: fd, headers: {"X-Requested-With": "XMLHttpRequest"}, credentials: "same-origin"})
+        .then(function (r) { return r.json().catch(function () { return {ok: false, message: "Réponse inattendue du serveur (code " + r.status + ")."}; }); })
+        .then(function (j) { li.textContent = (j.ok ? "✔ " : "✘ ") + j.message; if (j.ok) suivant(i + 1); else bouton.disabled = false; })
+        .catch(function () { li.textContent = "✘ " + fichiers[i].name + " : échec réseau ; recommence avec ce fichier (les lots déjà importés sont ignorés)."; bouton.disabled = false; });
+    })(0);
+  });
+})();
+</script>
+{% endblock %}

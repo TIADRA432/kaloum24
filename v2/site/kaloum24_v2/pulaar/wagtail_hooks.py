@@ -24,6 +24,7 @@ class EntryViewSet(SnippetViewSet):
             heading="Le mot",
         ),
         InlinePanel("senses", label="Sens (définition en pulaar)"),
+        InlinePanel("variants", label="Forme variante", classname="collapsed"),
         InlinePanel("examples", label="Exemple", classname="collapsed"),
         InlinePanel("translations", label="Traduction", classname="collapsed"),
         MultiFieldPanel([FieldPanel("source"), FieldPanel("status")], heading="Provenance et statut"),
@@ -111,3 +112,28 @@ class PulaarGroup(SnippetViewSetGroup):
 
 
 register_snippet(PulaarGroup)
+
+
+from django.urls import path, reverse  # noqa: E402
+from wagtail import hooks  # noqa: E402
+from wagtail.admin.menu import MenuItem  # noqa: E402
+
+from . import admin_views  # noqa: E402
+
+
+@hooks.register("register_admin_urls")
+def urls_import():
+    return [
+        path("dictionnaire-pulaar/import/", admin_views.import_lot, name="pulaar_import"),
+        path("dictionnaire-pulaar/import/<int:pk>/retirer/", admin_views.retirer, name="pulaar_import_retirer"),
+    ]
+
+
+class ImportMenuItem(MenuItem):
+    def is_shown(self, request):
+        return request.user.has_perm("pulaar.add_pulaarimportbatch")
+
+
+@hooks.register("register_admin_menu_item")
+def menu_import():
+    return ImportMenuItem("Importer un lot (dictionnaire)", reverse("pulaar_import"), icon_name="upload", order=310)

@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.core.paginator import Paginator
 from django.core.cache import cache
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
@@ -10,6 +11,13 @@ from .models import PulaarDialect, PulaarDomain, PulaarEntry, PulaarProposal
 from .slug import slugify_pulaar
 
 PROPOSITIONS_PAR_HEURE = 5
+PAR_PAGE = 100
+
+
+def _apercu(request):
+    """Vrai si l'équipe connectée voit des entrées que le public ne voit pas."""
+    u = request.user
+    return bool(u.is_authenticated and u.is_staff)
 
 
 def _langue(request):
@@ -21,17 +29,19 @@ def _ctx(request, **extra):
     return {"langue_ui": _langue(request), **extra}
 
 
-def _termes():
-    """Entrées visibles du public (ni brouillon, ni source aux droits non établis)."""
-    return (PulaarEntry.objects.publiques()
+def _termes(request=None):
+    """Entrées visibles : le public ne voit ni brouillon ni source aux droits non établis ;
+    un compte d'équipe connecté voit tout (aperçu avant publication, bandeau « non public »)."""
+    qs = PulaarEntry.objects.visibles_pour(getattr(request, "user", None))
+    return (qs
             .select_related("domain", "source", "dialect", "pos")
-            .prefetch_related("senses", "translations__external_dictionary"))
+            .prefetch_related("senses", "variants", "translations__external_dictionary"))
 
 
 def accueil(request):
     q = request.GET.get("q", "").strip()[:100]
     code_dialecte = request.GET.get("dialecte", "").strip()[:10]
-    base = _termes()
+    base = _termes(request)
     if code_dialecte:
         base = base.filter(dialect__code=code_dialecte)
     resultats = []
@@ -43,6 +53,7 @@ def accueil(request):
                 Q(lemma__icontains=q)
                 | Q(senses__text__icontains=q)
                 | Q(translations__term__icontains=q)
+                | Q(variants__form__icontains=q)
                 | Q(slug__icontains=slugify_pulaar(q))
             ).distinct()[:30]
         )
@@ -51,25 +62,31 @@ def accueil(request):
     # honnêtement la distance restante.
     monolingues = base.filter(senses__isnull=False).distinct().count()
     # Sans recherche on liste quand même les entrées (page vide = visiteur perdu).
-    tous = [] if q else list(base.order_by("lemma")[:100])
+    page = None
+    tous = []
+    if not q:
+        page = Paginator(base.order_by("lemma", "homonym_index"), PAR_PAGE).get_page(request.GET.get("page"))
+        tous = list(page)
     return render(request, "pulaar/accueil.html", _ctx(
         request, q=q, resultats=resultats, domaines=PulaarDomain.objects.all(),
         dialectes=PulaarDialect.objects.filter(entries__isnull=False).distinct(), dialecte=code_dialecte,
-        total_termes=total, tous_termes=tous, termes_monolingues=monolingues,
+        total_termes=total, tous_termes=tous, termes_monolingues=monolingues, page=page,
+        apercu_equipe=_apercu(request),
     ))
 
 
 def terme(request, slug):
-    t = get_object_or_404(_termes(), slug=slug)
+    t = get_object_or_404(_termes(request), slug=slug)
     traductions = {}
     for tr in t.translations.all():
         traductions.setdefault(tr.language_code, []).append(tr)
-    return render(request, "pulaar/terme.html", _ctx(request, terme=t, traductions=traductions))
+    non_public = not (t.status != t.BROUILLON and t.source.is_publishable)
+    return render(request, "pulaar/terme.html", _ctx(request, terme=t, traductions=traductions, non_public=non_public))
 
 
 def domaine(request, slug):
     d = get_object_or_404(PulaarDomain, slug=slug)
-    termes = _termes().filter(domain=d).order_by("lemma")
+    termes = _termes(request).filter(domain=d).order_by("lemma")
     return render(request, "pulaar/domaine.html", _ctx(request, domaine=d, termes=termes))
 
 

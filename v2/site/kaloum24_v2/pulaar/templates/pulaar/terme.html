@@ -12,6 +12,7 @@
 
 {% block contenu %}
 <p class="tc-fil"><a href="{% url 'pulaar:accueil' %}">← Retour à la recherche</a></p>
+{% if non_public %}<p class="tc-note"><strong>Non public.</strong> Aperçu réservé à l'équipe : les droits de réutilisation de la source ({{ terme.source.get_rights_status_display|lower }}) ne sont pas établis.</p>{% endif %}
 
 {% if terme.status == 'validated' %}
 <span class="tc-pastille tc-pastille--validee">Validé</span>
@@ -20,6 +21,8 @@
 {% endif %}
 
 <hr class="tc-separateur">
+
+{% if terme.variants.all %}<p class="tc-carte__meta">Autres formes : {% for v in terme.variants.all %}<span lang="ff">{{ v.form }}</span>{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
 
 <h3>Pulaar</h3>
 {% for s in terme.senses.all %}
