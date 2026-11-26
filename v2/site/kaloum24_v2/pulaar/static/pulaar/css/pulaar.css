@@ -270,3 +270,16 @@ body.tc { margin: 0; }
   .tc-entete__anneaux, .tc-decor__picto, .tc-troupeau__vache { animation: none !important; }
   .tc-troupeau__vache--1 { left: 12%; } .tc-troupeau__vache--2 { left: 42%; } .tc-troupeau__vache--3 { left: 70%; }
 }
+
+
+/* Liens automatiques dans les définitions : discrets, pour que le texte reste lisible */
+a.tc-lien { color: inherit; text-decoration: underline dotted; text-decoration-color: var(--tc-or, #D19F5E);
+  text-underline-offset: 3px; text-decoration-thickness: 1.5px; }
+a.tc-lien:hover, a.tc-lien:focus-visible { color: var(--tc-bordeaux, #5D2E38); text-decoration-style: solid; }
+a.tc-lien[data-match="approx"], a.tc-lien[data-match="mutation"] { text-decoration-style: dashed; }
+a.tc-lien[data-homonyms]::after { content: "\00a0\2026"; font-size: .7em; color: var(--tc-gris-doux, #8A7B76); }
+.tc-homonymes { position: absolute; z-index: 20; background: #fff; border: 1px solid var(--tc-or, #D19F5E);
+  border-radius: 6px; padding: .4rem .6rem; box-shadow: 0 4px 14px rgba(59,29,35,.18); font-size: .9rem;
+  max-width: 18rem; line-height: 1.4; }
+.tc-homonymes strong { display: block; font-size: .75rem; color: var(--tc-gris-doux, #8A7B76); font-weight: 600; }
+.tc-homonymes a { display: block; padding: .1rem 0; }

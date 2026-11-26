@@ -51,7 +51,7 @@
 
 <h3>Pulaar</h3>
 {% for s in terme.senses.all %}
-  <p lang="ff">{% if terme.senses.all|length > 1 %}<strong>{{ forloop.counter }}.</strong> {% endif %}{{ s.text }}
+  <p lang="ff">{% if terme.senses.all|length > 1 %}<strong>{{ forloop.counter }}.</strong> {% endif %}{{ s.rendu }}
     <span class="tc-carte__meta">— {{ s.effective_source.name }}{% if s.source_locator %}, {{ s.source_locator }}{% endif %}</span></p>
 {% empty %}
   <p class="tc-vide">Ce mot n'a pas encore de définition en pulaar.

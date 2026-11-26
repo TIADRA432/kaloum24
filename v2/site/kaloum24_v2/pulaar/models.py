@@ -22,7 +22,7 @@ from modelcluster.models import ClusterableModel
 from wagtail.models import Orderable
 
 from .admin_forms import EntryAdminForm
-from .slug import cle_recherche, slug_unique
+from .slug import cle_recherche, forme_exacte, slug_unique
 
 SOURCE_COMMUNAUTE = "communaute"
 DIALECTE_PAR_DEFAUT = "fuf"
@@ -302,10 +302,21 @@ class PulaarSense(Orderable):
                                help_text="Vide = même source que l'entrée.")
     source_locator = models.CharField("page / n° d'entrée", max_length=100, blank=True)
     text_key = models.TextField(blank=True, default="", editable=False)
+    # Définition avec liens vers les autres mots du dictionnaire, calculée à l'enregistrement
+    # (voir liens.py). Vide = pas encore calculée : on affiche alors le texte brut.
+    text_html = models.TextField(blank=True, default="", editable=False)
+    liens_version = models.CharField(max_length=20, blank=True, default="", editable=False)
 
     def save(self, *args, **kwargs):
         self.text_key = cle_recherche(self.text)
+        self.text_html, self.liens_version = "", ""  # recalculés juste après (signal)
         super().save(*args, **kwargs)
+
+    @property
+    def rendu(self):
+        """Définition prête à afficher : avec liens si calculée, sinon texte brut (échappé par le gabarit)."""
+        from django.utils.safestring import mark_safe
+        return mark_safe(self.text_html) if self.text_html else self.text
 
     class Meta(Orderable.Meta):
         verbose_name = "sens"
@@ -562,3 +573,61 @@ def mot_du_jour(jour=None):
         return None
     entree = qs[jour.toordinal() % total]
     return {"terme": entree, "definition": entree.senses.first()}
+
+
+class PulaarStopword(models.Model):
+    """Mot qu'on ne transforme pas en lien dans les définitions (mots-outils, mots trop banals).
+
+    Deux origines : « automatique » (mots présents plus de N fois dans les définitions : calculé par
+    `hypertextualiser`, purement statistique, aucun jugement linguistique) et « manuel » (choisi par
+    l'équipe). Une ligne manuelle l'emporte toujours : mode « exclure » = jamais de lien ; mode
+    « lier » = garder le lien même si le mot est très fréquent ou très court."""
+
+    EXCLURE, LIER = "exclude", "link"
+    MODES = [(EXCLURE, "Ne pas lier"), (LIER, "Toujours lier")]
+    AUTO, MANUEL = "auto", "manual"
+    ORIGINES = [(AUTO, "Automatique (fréquence)"), (MANUEL, "Choisi par l'équipe")]
+
+    forme = models.CharField("mot", max_length=80)
+    cle = models.CharField(max_length=80, unique=True, editable=False)
+    mode = models.CharField("effet", max_length=8, choices=MODES, default=EXCLURE)
+    origine = models.CharField("origine", max_length=8, choices=ORIGINES, default=MANUEL)
+    occurrences = models.PositiveIntegerField("occurrences dans les définitions", default=0, editable=False)
+    note = models.CharField("note", max_length=200, blank=True)
+
+    class Meta:
+        ordering = ["-occurrences", "forme"]
+        verbose_name = "mot sans lien"
+        verbose_name_plural = "mots sans lien (mots-outils)"
+
+    def save(self, *args, **kwargs):
+        # Toute sauvegarde passe par une personne (le calcul automatique utilise bulk_create) :
+        # la ligne devient « manuelle » et n'est plus jamais recalculée ni écrasée.
+        self.cle = forme_exacte(self.forme)
+        self.origine = self.MANUEL
+        PulaarStopword.objects.filter(cle=self.cle, origine=self.AUTO).exclude(pk=self.pk).delete()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.forme
+
+
+class PulaarMutation(models.Model):
+    """Alternance de consonne initiale (ex. g ↔ w) utilisée pour retrouver un mot sous une autre forme.
+
+    DÉSACTIVÉE par défaut et jamais pré-remplie : les paires doivent être fournies et validées par
+    un lexicographe (IA ≠ autorité linguistique). Mesurer d'abord avec
+    `manage.py hypertextualiser --rapport --paires g:w,...`."""
+
+    initiale_a = models.CharField("initiale A", max_length=3)
+    initiale_b = models.CharField("initiale B", max_length=3)
+    actif = models.BooleanField("utiliser pour les liens", default=False)
+    note = models.CharField("note / source de la règle", max_length=200, blank=True)
+
+    class Meta:
+        verbose_name = "alternance de consonne"
+        verbose_name_plural = "alternances de consonnes"
+        constraints = [models.UniqueConstraint(fields=["initiale_a", "initiale_b"], name="uq_mutation")]
+
+    def __str__(self):
+        return f"{self.initiale_a} ↔ {self.initiale_b}"

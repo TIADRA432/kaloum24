@@ -21,6 +21,13 @@
   <h2>Par source</h2>
   <ul>{% for s in par_source %}<li>{{ s.source__name }} — {{ s.n }} entrée(s), droits : <code>{{ s.source__rights_status }}</code></li>{% endfor %}</ul>
 
+  <h2>Liens dans les définitions</h2>
+  <p>{{ liens.avec_liens }} définition(s) sur {{ liens.sens }} contiennent au moins un lien vers un autre mot
+    ({{ liens.calcules }} calculée(s)). Les liens se mettent à jour tout seuls quand on modifie un mot ; ce bouton
+    sert après un import ou pour changer le seuil des mots très fréquents.</p>
+  <form method="post" action="{% url 'pulaar_tableau_liens' %}">{% csrf_token %}
+    <button type="submit" class="button button-small">Recalculer tous les liens</button></form>
+
   <h2>À faire : ce qu'il manque</h2>
   <p>Choisis une file de travail ; chaque mot renvoie à sa fiche d'édition.</p>
   <p>{% for cle, libelle in manques %}<a class="button button-small{% if cle != manque %} button-secondary{% endif %}" href="?manque={{ cle }}">{{ libelle }}</a> {% endfor %}</p>

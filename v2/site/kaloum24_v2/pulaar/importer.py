@@ -15,6 +15,7 @@ import re
 
 from django.db import transaction
 
+from . import liens
 from .models import (
     PulaarDialect, PulaarEntry, PulaarEntryVariant, PulaarExample, PulaarImportBatch, PulaarNounClass,
     PulaarPos, PulaarSense, PulaarSource,
@@ -227,13 +228,16 @@ def importer(data, contenu_brut, nom_fichier, utilisateur=None):
             "telle quelle par la source : à relire."
         )
         lot.save()
+    # Les définitions du lot (et celles des lots précédents qui citent ses mots) reçoivent leurs liens.
+    liens.relier_en_retard()
     return lot
 
 
 def retirer_lot(lot):
     """Supprime toutes les entrées d'un lot (sens, exemples, variantes en cascade)."""
-    with transaction.atomic():
+    with liens.suspendre(), transaction.atomic():
         n, _ = PulaarEntry.objects.filter(import_batch=lot).delete()
         lot.status = PulaarImportBatch.RETIRE
         lot.save(update_fields=["status"])
+    liens.relier_sens(tous=True)  # plus aucun lien vers les mots retirés
     return n

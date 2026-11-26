@@ -114,6 +114,35 @@ Chaque phase : modèle → tests → déploiement → vérification en productio
 - les entrées d'une ou deux lettres (ƴ, Nj, Ng, Mb, Aa…) sont les lettres de l'alphabet : légitimes.
 Reprise possible : sortir ces listes pour relecture, ajuster `importer.py` (version du parseur), retirer le lot et le réimporter.
 
+## 6 bis. Liens automatiques dans les définitions (faisabilité mesurée le 2026-11-26)
+
+**Demande** : transformer chaque mot d'une définition qui est lui-même une entrée en lien cliquable (lemmatisation, flexions, alternances de consonnes initiales, homonymes, mots-outils, résultat pré-calculé).
+
+**Mesures sur les 17 361 définitions en production** (lecture seule, SQL) :
+
+| Mesure | Résultat |
+|---|---|
+| Mots dans les définitions | 115 114 occurrences, 19 892 formes distinctes |
+| Correspondance exacte avec un lemme ou une variante (autre entrée) | **63 %** des occurrences (59 154 avec ≥ 3 lettres) |
+| … dont 15 mots seulement (*ina, ko, e, huunde, noon, mum, no, neɗɗo, goɗɗo, mbaydi…*) | 16 600 liens : du bruit, pas de l'aide |
+| Après retrait des mots présents plus de 500 fois (25 mots) | 38 357 liens, **91 % des définitions** ont au moins un lien |
+| Occurrences sans correspondance exacte | 35 % (14 343 formes distinctes) : surtout des formes conjuguées ou fléchies (*waɗa, tawi, wayi, njamɗe…*) |
+| Retrouvées en ignorant ɓ ɗ ŋ ƴ (*ƴettude* → *Yettude*) | 912 occurrences seulement (1,5 %), avec risque de faux liens (*ɓe* ≠ *be*) |
+| Retrouvées par alternance d'initiale (g/w, h/k, w/b… testées comme hypothèses) | de 2 à 666 occurrences par paire, **mais la plupart sont des faux rapprochements** (*waɗa* → *gaɗa*) |
+
+**Ce qui est livré (fiable)** : tokenisation Unicode qui conserve ponctuation, espaces, lettres spéciales, Adlam ; correspondance **exacte** (casse ignorée) sur lemmes et formes variantes ; homonymes (lien principal = même variété puis plus petit n° d'homonyme, les autres dans `data-alternatives`, liste au survol/clavier) ; jamais d'auto-lien ; un lien par cible et par définition ; mots-outils : exclusion **automatique par fréquence** (statistique, aucun jugement de grammaire) + liste modifiable par l'équipe (« ne pas lier » / « toujours lier ») ; résultat stocké dans `PulaarSense.text_html`, recalculé par signaux (nouveau mot, mot supprimé, variante, définition modifiée, changement de droits d'une source) ; commande `hypertextualiser` (rattrapage, `--tout`, `--simuler`) exécutée à chaque déploiement.
+
+**Règle de visibilité (essentielle)** : une définition d'une entrée *publique* ne pointe que vers des entrées *publiques* ; sinon le public verrait des liens vers des pages en 404 et la liste des mots non publics. Un changement de droits d'une source recalcule tout.
+
+**Ce qui n'est PAS livré, et pourquoi** :
+- **Lemmatisation des flexions** (pluriels, conjugaisons, extensions verbales) : elle demande des paradigmes validés (classes nominales, conjugaisons, suffixes) qui n'existent pas dans la base ; les deviner créerait des liens faux sans qu'on s'en aperçoive. Les entrées verbales sont à l'infinitif (*waɗde*), les définitions emploient des formes conjuguées (*waɗa*).
+- **Alternances de consonnes** : le mécanisme existe (table « Alternances de consonnes », paires désactivées, jamais pré-remplies) mais, sans la classe nominale du mot, une alternance seule donne trop de faux rapprochements. À activer paire par paire, après `hypertextualiser --rapport --paires g:w` et validation par un lexicographe.
+- **Rapprochement sans lettres spéciales** : prévu (`LIENS_APPROX`), désactivé par défaut.
+- **Expressions à plusieurs mots** (48 entrées) : non liables mot à mot.
+- Les exemples et les traductions ne sont pas hypertextualisés (extension possible).
+
+**Pour monter en précision plus tard** : (1) remplir la classe nominale des noms, (2) fournir à la base les paires singulier/pluriel (relations « pluriel » / « singulier » déjà prévues), (3) valider un tableau de suffixes verbaux avec la source citée. Chaque règle validée alimente le palier suivant sans toucher au reste.
+
 ## 7. Risques
 
 - **Perdre le fil entre « dictionnaire » et « base de données de recherche »** : le modèle accepte une structure riche (racines, mutations), mais **rien n'est affiché ni rempli sans linguiste**. Une structure vide vaut mieux qu'une donnée approximative.

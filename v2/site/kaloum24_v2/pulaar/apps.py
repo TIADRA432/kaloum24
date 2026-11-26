@@ -6,3 +6,6 @@ class PulaarConfig(AppConfig):
     name = "kaloum24_v2.pulaar"
     label = "pulaar"
     verbose_name = "Dictionnaire Pulaar"
+
+    def ready(self):
+        from . import signaux  # noqa: F401  (recalcul des liens des définitions)

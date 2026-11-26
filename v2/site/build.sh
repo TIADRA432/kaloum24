@@ -12,4 +12,5 @@ python manage.py seed_pulaar
 python manage.py publier_articles || echo "publier_articles : échec ignoré, le site reste en ligne"
 python manage.py importer_prix_pam || echo "importer_prix_pam : échec ignoré, le site reste en ligne"
 python manage.py importer_change_bcrg || echo "importer_change_bcrg : échec ignoré, le site reste en ligne"
+python manage.py hypertextualiser || echo "hypertextualiser : échec ignoré, le site reste en ligne"
 python manage.py verifier_dictionnaire || echo "verifier_dictionnaire : violations signalées (voir ci-dessus), le site reste en ligne"

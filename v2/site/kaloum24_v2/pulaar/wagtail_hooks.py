@@ -6,7 +6,7 @@ from wagtail.snippets.views.snippets import SnippetViewSet, SnippetViewSetGroup
 
 from .models import (
     PulaarDialect, PulaarDomain, PulaarEntry, PulaarExternalDictionary, PulaarNounClass, PulaarPos,
-    PulaarProposal, PulaarSource,
+    PulaarMutation, PulaarProposal, PulaarSource, PulaarStopword,
 )
 
 
@@ -110,9 +110,27 @@ class ProposalViewSet(SnippetViewSet):
     ]
 
 
+class StopwordViewSet(SnippetViewSet):
+    model = PulaarStopword
+    icon = "cross"
+    menu_label = "Mots sans lien (mots-outils)"
+    list_display = ["forme", "mode", "origine", "occurrences", "note"]
+    list_filter = ["origine", "mode"]
+    search_fields = ["forme"]
+    panels = [FieldPanel("forme"), FieldPanel("mode"), FieldPanel("note")]
+
+
+class MutationViewSet(SnippetViewSet):
+    model = PulaarMutation
+    icon = "repeat"
+    menu_label = "Alternances de consonnes"
+    list_display = ["initiale_a", "initiale_b", "actif", "note"]
+    panels = [FieldPanel("initiale_a"), FieldPanel("initiale_b"), FieldPanel("actif"), FieldPanel("note")]
+
+
 class PulaarGroup(SnippetViewSetGroup):
     items = [EntryViewSet, ProposalViewSet, SourceViewSet, DialectViewSet, PosViewSet, NounClassViewSet,
-             ExternalDictionaryViewSet, DomainViewSet]
+             ExternalDictionaryViewSet, DomainViewSet, StopwordViewSet, MutationViewSet]
     menu_icon = "globe"
     menu_label = "Dictionnaire Pulaar"
     menu_name = "pulaar"
@@ -133,6 +151,7 @@ from . import admin_views  # noqa: E402
 def urls_import():
     return [
         path("dictionnaire-pulaar/tableau/", admin_views.tableau, name="pulaar_tableau"),
+        path("dictionnaire-pulaar/tableau/liens/", admin_views.tableau_liens, name="pulaar_tableau_liens"),
         path("dictionnaire-pulaar/tableau/csv/", admin_views.tableau_csv, name="pulaar_tableau_csv"),
         path("dictionnaire-pulaar/tableau/classe/", admin_views.tableau_classe, name="pulaar_tableau_classe"),
         path("dictionnaire-pulaar/import/", admin_views.import_lot, name="pulaar_import"),

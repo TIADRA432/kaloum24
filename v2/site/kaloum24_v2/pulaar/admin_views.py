@@ -12,6 +12,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
+from . import liens
 from .importer import ImportInvalide, importer, retirer_lot
 from .models import PulaarEntry, PulaarImportBatch, PulaarPos
 
@@ -116,7 +117,7 @@ def tableau(request):
         "couverture": couverture, "par_dialecte": par_dialecte, "par_source": par_source,
         "manques": [(k, v[0]) for k, v in MANQUES.items()], "manque": manque,
         "manque_libelle": MANQUES[manque][0] if manque in MANQUES else "", "page": page,
-        "classes": PulaarPos.objects.all(),
+        "classes": PulaarPos.objects.all(), "liens": liens.stats(),
     })
 
 
@@ -167,3 +168,13 @@ def tableau_csv(request):
         w.writerow([e.pk, e.lemma, e.homonym_index, e.dialect.name, e.pos.name_fr, e.status,
                     e.source.name if e.source_id else "", (sens.text if sens else "")[:300]])
     return rep
+
+
+@permission_required("pulaar.change_pulaarentry", raise_exception=True)
+@require_POST
+def tableau_liens(request):
+    """Recalcule les liens de toutes les définitions (après un import, une règle d'exclusion…)."""
+    r = liens.recalculer_tout()
+    messages.success(request, f"Liens recalculés : {r['sens']} définition(s), {r['liens']} lien(s) ; "
+                              f"{r['mots_outils']} mot(s) très fréquent(s) laissé(s) sans lien.")
+    return redirect(reverse("pulaar_tableau"))

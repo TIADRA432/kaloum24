@@ -234,6 +234,13 @@ File de relecture des propositions du public. Jamais publiée directement.
 - **Champs facultatifs, rien d'affiché tant qu'ils sont vides** : `PulaarPronunciation` (API, variété), `PulaarAudio` (document Wagtail, locuteur, **public seulement si consentement coché**), `PulaarImage` (image Wagtail, légende, crédit, **public seulement si droits vérifiés**), `PulaarRelation` (synonyme, contraire, dérivé, même famille, pluriel, singulier, voir aussi ; affichée dans les deux sens, jamais vers une entrée non visible), et sur l'entrée : `origin` (hérité / emprunt / inconnu, choix du lexicographe), `origin_language`, `etymology`, `usage_note`.
 - Stockage média Supabase : types audio (mp3, m4a, aac, ogg, wav, webm, flac) autorisés le 2026-11-22 (ils étaient refusés, y compris pour la version audio des articles) ; limite 10 Mo par fichier inchangée.
 
+## 5 quater. Liens dans les définitions (migration 0006, 2026-11-26)
+
+- `pulaar_pulaarsense` : `text_html` (définition avec liens `<a class="tc-lien" data-entry-id data-match data-homonyms data-alternatives>`, calculée à l'enregistrement, vide = pas encore calculée → texte brut) et `liens_version` (`liens-v1`, permet de tout refaire après un changement de règles).
+- `pulaar_pulaarstopword` : mots sans lien. `forme`, `cle` (forme exacte), `mode` (`exclude` / `link`), `origine` (`auto` = fréquence, recréée à chaque recalcul complet ; `manual` = équipe, jamais écrasée), `occurrences`.
+- `pulaar_pulaarmutation` : alternances d'initiales `(initiale_a, initiale_b, actif)`, désactivées par défaut.
+- Code : `liens.py` (tokenisation, index, résolution, stockage), `signaux.py` (recalcul après validation de la transaction), commande `hypertextualiser`. Voir `PLAN_DICTIONNAIRE_PULAAR.md` §6 bis.
+
 ## 6. Ce qui n'est pas encore modélisé (phases suivantes)
 
 - Zone d'import : lots faits ; reste le texte brut conservé, l'auteur parseur / IA / humain et le relecteur nominatif.

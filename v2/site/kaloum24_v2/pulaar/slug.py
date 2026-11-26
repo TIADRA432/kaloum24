@@ -51,3 +51,13 @@ def cle_recherche(texte: str) -> str:
     texte = unicodedata.normalize("NFKD", texte).encode("ascii", "ignore").decode("ascii").lower()
     texte = re.sub(r"[^a-z0-9\s]", " ", texte)
     return re.sub(r"\s+", " ", texte).strip()
+
+
+def forme_exacte(texte: str) -> str:
+    """Forme de comparaison STRICTE d'un mot : NFC, minuscules (casefold), apostrophes unifiées.
+    Contrairement à `cle_recherche`, elle conserve ɓ ɗ ŋ ƴ et les accents : « ɓe » et « be »
+    restent deux mots. Sert aux liens automatiques des définitions."""
+    t = unicodedata.normalize("NFC", texte).casefold()
+    for a in "’ʼ‘`´":
+        t = t.replace(a, "'")
+    return t.strip("-' ")
