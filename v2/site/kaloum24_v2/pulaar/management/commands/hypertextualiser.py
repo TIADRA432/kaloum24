@@ -12,6 +12,7 @@ import time
 from django.core.management.base import BaseCommand
 
 from kaloum24_v2.pulaar import liens
+from kaloum24_v2.pulaar.models import PulaarStopword
 
 
 class Command(BaseCommand):
@@ -45,6 +46,11 @@ class Command(BaseCommand):
             self.stdout.write(f"{r['mots_outils']} mots trop fréquents laissés sans lien (automatique).")
         elif o["tout"]:
             n, nb = liens.relier_sens(tous=True, simuler=True)
+        elif not PulaarStopword.objects.exists():
+            # Premier passage (ou liste vidée) : le seuil de fréquence n'a jamais été calculé, on fait tout.
+            r = liens.recalculer_tout(o["seuil"])
+            n, nb = r["sens"], r["liens"]
+            self.stdout.write(f"Premier calcul : {r['mots_outils']} mots trop fréquents laissés sans lien.")
         else:
             n, nb = liens.relier_en_retard()
         s = liens.stats()

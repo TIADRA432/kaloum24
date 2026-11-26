@@ -249,3 +249,14 @@ class MutationsEtCommandeTests(LiensBase):
         self.assertEqual(self.client.post(url).status_code, 302)
         self.assertIn("<a ", self.html(e))
         self.assertContains(self.client.get(reverse("pulaar_tableau")), "Recalculer tous les liens")
+
+
+class PremierPassageTests(LiensBase):
+    def test_premier_passage_calcule_les_mots_outils(self):
+        cree("neɗɗo", source=self.libre)
+        for i in range(3):
+            cree(f"mot{i}x", "neɗɗo", source=self.libre)
+        with self.settings(LIENS_FREQUENCE_MAX=3):
+            call_command("hypertextualiser", verbosity=0)
+        self.assertTrue(PulaarStopword.objects.filter(cle="neɗɗo", origine="auto").exists())
+        self.assertNotIn("<a ", self.html(PulaarEntry.objects.get(lemma="mot0x")))
